@@ -1,0 +1,272 @@
+#!/usr/bin/env sh
+set -eu
+
+log() {
+	printf '[community-bootstrap] %s\n' "$*" >&2
+}
+
+wait_http() {
+	url="$1"
+	name="$2"
+	timeout_seconds="${3:-120}"
+	deadline=$(( $(date +%s) + timeout_seconds ))
+	while [ "$(date +%s)" -lt "$deadline" ]; do
+		if curl -fsS "$url" >/dev/null 2>&1; then
+			log "$name ready: $url"
+			return 0
+		fi
+		sleep 2
+	done
+	log "$name did not become ready within ${timeout_seconds}s: $url"
+	return 1
+}
+
+wait_either_http() {
+	first_url="$1"
+	first_name="$2"
+	second_url="$3"
+	second_name="$4"
+	timeout_seconds="${5:-120}"
+	deadline=$(( $(date +%s) + timeout_seconds ))
+	while [ "$(date +%s)" -lt "$deadline" ]; do
+		if curl -fsS "$first_url" >/dev/null 2>&1; then
+			log "$first_name ready: $first_url"
+			return 0
+		fi
+		if curl -fsS "$second_url" >/dev/null 2>&1; then
+			log "$second_name ready: $second_url"
+			return 0
+		fi
+		sleep 2
+	done
+	log "$first_name or $second_name did not become ready within ${timeout_seconds}s: $first_url $second_url"
+	return 1
+}
+
+binary_size_bytes() {
+	raw="$(printf '%s' "$1" | tr -d ' \t\r\n' | tr '[:lower:]' '[:upper:]')"
+	name="$2"
+	number="$(printf '%s' "$raw" | sed 's/^\([0-9][0-9]*\).*/\1/')"
+	case "$number" in
+		''|*[!0-9]*)
+			log "invalid $name=$1"
+			exit 2
+			;;
+	esac
+	if [ -z "$raw" ]; then
+		log "invalid $name=$1"
+		exit 2
+	fi
+	suffix="${raw#$number}"
+	case "$suffix" in
+		''|B)
+			multiplier=1
+			;;
+		K|KB|KI|KIB)
+			multiplier=1024
+			;;
+		M|MB|MI|MIB)
+			multiplier=1048576
+			;;
+		G|GB|GI|GIB)
+			multiplier=1073741824
+			;;
+		T|TB|TI|TIB)
+			multiplier=1099511627776
+			;;
+		*)
+			log "invalid $name suffix: $1"
+			exit 2
+			;;
+	esac
+	printf '%s\n' "$(( number * multiplier ))"
+}
+
+sbsctl_run() {
+	/usr/local/bin/sbsctl "$@"
+}
+
+cluster_id="${NAMROS_COMMUNITY_CLUSTER_ID:-namros-community}"
+sbs_cluster_id="${NAMROS_COMMUNITY_SBS_CLUSTER_ID:-namros-community-sbs}"
+admin_endpoint="${NAMROS_COMMUNITY_SBS_ADMIN_ENDPOINT:-sbs-admin-lb:9443}"
+volume_id="${NAMROS_COMMUNITY_SBS_VOLUME_ID:-18a00001}"
+volume_ids="${NAMROS_COMMUNITY_SBS_VOLUME_IDS:-}"
+volume_size="${NAMROS_COMMUNITY_SBS_VOLUME_SIZE:-64M}"
+block_size="${NAMROS_COMMUNITY_SBS_BLOCK_SIZE:-4K}"
+allocation_chunk_size="${NAMROS_COMMUNITY_SBS_ALLOCATION_CHUNK_SIZE:-1M}"
+allocation_page_size="${NAMROS_COMMUNITY_SBS_ALLOCATION_PAGE_SIZE:-4M}"
+replication_factor="${NAMROS_COMMUNITY_SBS_REPLICATION_FACTOR:-2}"
+timeout="${NAMROS_COMMUNITY_SBS_TIMEOUT:-20s}"
+sbs_service_1_ready_url="${NAMROS_COMMUNITY_SBS_SERVICE_1_READY_URL:-http://sbs-service-1:9081/readyz}"
+sbs_service_2_ready_url="${NAMROS_COMMUNITY_SBS_SERVICE_2_READY_URL:-http://sbs-service-2:9081/readyz}"
+sbs_admin_lb_settle_seconds="${NAMROS_COMMUNITY_SBS_ADMIN_LB_SETTLE_SECONDS:-5}"
+sbs_data_1_ready_url="${NAMROS_COMMUNITY_SBS_DATA_1_READY_URL:-http://sbs-data-1:9082/readyz}"
+sbs_data_2_ready_url="${NAMROS_COMMUNITY_SBS_DATA_2_READY_URL:-http://sbs-data-2:9082/readyz}"
+sbs_data_3_ready_url="${NAMROS_COMMUNITY_SBS_DATA_3_READY_URL:-http://sbs-data-3:9082/readyz}"
+sbs_data_4_ready_url="${NAMROS_COMMUNITY_SBS_DATA_4_READY_URL:-http://sbs-data-4:9082/readyz}"
+sbs_data_1_node_id="${NAMROS_COMMUNITY_SBS_DATA_1_NODE_ID:-sbs-data-1}"
+sbs_data_2_node_id="${NAMROS_COMMUNITY_SBS_DATA_2_NODE_ID:-sbs-data-2}"
+sbs_data_3_node_id="${NAMROS_COMMUNITY_SBS_DATA_3_NODE_ID:-sbs-data-3}"
+sbs_data_4_node_id="${NAMROS_COMMUNITY_SBS_DATA_4_NODE_ID:-sbs-data-4}"
+sbs_data_1_grpc_endpoint="${NAMROS_COMMUNITY_SBS_DATA_1_GRPC_ENDPOINT:-sbs-data-1:9444}"
+sbs_data_2_grpc_endpoint="${NAMROS_COMMUNITY_SBS_DATA_2_GRPC_ENDPOINT:-sbs-data-2:9444}"
+sbs_data_3_grpc_endpoint="${NAMROS_COMMUNITY_SBS_DATA_3_GRPC_ENDPOINT:-sbs-data-3:9444}"
+sbs_data_4_grpc_endpoint="${NAMROS_COMMUNITY_SBS_DATA_4_GRPC_ENDPOINT:-sbs-data-4:9444}"
+sbs_data_1_admin_http_endpoint="${NAMROS_COMMUNITY_SBS_DATA_1_ADMIN_HTTP_ENDPOINT:-http://sbs-data-1:9082}"
+sbs_data_2_admin_http_endpoint="${NAMROS_COMMUNITY_SBS_DATA_2_ADMIN_HTTP_ENDPOINT:-http://sbs-data-2:9082}"
+sbs_data_3_admin_http_endpoint="${NAMROS_COMMUNITY_SBS_DATA_3_ADMIN_HTTP_ENDPOINT:-http://sbs-data-3:9082}"
+sbs_data_4_admin_http_endpoint="${NAMROS_COMMUNITY_SBS_DATA_4_ADMIN_HTTP_ENDPOINT:-http://sbs-data-4:9082}"
+sbs_data_1_zone="${NAMROS_COMMUNITY_SBS_DATA_1_ZONE:-zone-a}"
+sbs_data_2_zone="${NAMROS_COMMUNITY_SBS_DATA_2_ZONE:-zone-a}"
+sbs_data_3_zone="${NAMROS_COMMUNITY_SBS_DATA_3_ZONE:-zone-b}"
+sbs_data_4_zone="${NAMROS_COMMUNITY_SBS_DATA_4_ZONE:-zone-b}"
+volume_size_bytes="$(binary_size_bytes "$volume_size" volume_size)"
+block_size_bytes="$(binary_size_bytes "$block_size" block_size)"
+allocation_chunk_size_bytes="$(binary_size_bytes "$allocation_chunk_size" allocation_chunk_size)"
+allocation_page_size_bytes="$(binary_size_bytes "$allocation_page_size" allocation_page_size)"
+
+wait_either_http "$sbs_service_1_ready_url" sbs-service-1 "$sbs_service_2_ready_url" sbs-service-2
+case "$sbs_admin_lb_settle_seconds" in
+	''|*[!0-9]*)
+		log "invalid NAMROS_COMMUNITY_SBS_ADMIN_LB_SETTLE_SECONDS=$sbs_admin_lb_settle_seconds"
+		exit 2
+		;;
+	0)
+		;;
+	*)
+		log "allow SBS admin load balancer health checks to converge: ${sbs_admin_lb_settle_seconds}s"
+		sleep "$sbs_admin_lb_settle_seconds"
+		;;
+esac
+wait_http "$sbs_data_1_ready_url" sbs-data-1
+wait_http "$sbs_data_2_ready_url" sbs-data-2
+wait_http "$sbs_data_3_ready_url" sbs-data-3
+wait_http "$sbs_data_4_ready_url" sbs-data-4
+
+if sbsctl_run cluster status \
+	--admin-endpoint "$admin_endpoint" \
+	--cluster-id "$cluster_id" \
+	--sbs-cluster-id "$sbs_cluster_id" \
+	--timeout "$timeout" >/dev/null 2>&1; then
+	log "cluster already initialized: $cluster_id/$sbs_cluster_id"
+else
+	log "initialize cluster: $cluster_id/$sbs_cluster_id"
+	sbsctl_run cluster init \
+		--admin-endpoint "$admin_endpoint" \
+		--cluster-id "$cluster_id" \
+		--sbs-cluster-id "$sbs_cluster_id" \
+		--actor container-bootstrap \
+		--reason namros-community-container \
+		--timeout "$timeout" >/dev/null
+fi
+
+join_node() {
+	node_id="$1"
+	grpc_endpoint="$2"
+	admin_http="$3"
+	zone="$4"
+
+	status_json=""
+	if status_json="$(sbsctl_run node status \
+		--admin-endpoint "$admin_endpoint" \
+		--cluster-id "$cluster_id" \
+		--sbs-cluster-id "$sbs_cluster_id" \
+		--node-id "$node_id" \
+		--output json \
+		--timeout "$timeout" 2>/dev/null)"; then
+		current_grpc="$(printf '%s\n' "$status_json" | jq -r '.node.grpc_endpoint // ""')"
+		current_admin_http="$(printf '%s\n' "$status_json" | jq -r '.node.admin_http_endpoint // ""')"
+		current_zone="$(printf '%s\n' "$status_json" | jq -r '.node.zone // ""')"
+		if [ "$current_grpc" = "$grpc_endpoint" ] \
+			&& [ "$current_admin_http" = "$admin_http" ] \
+			&& [ "$current_zone" = "$zone" ]; then
+			log "node already joined: $node_id"
+			return 0
+		fi
+		log "node metadata mismatch: $node_id grpc=${current_grpc:-unset}->${grpc_endpoint} admin_http=${current_admin_http:-unset}->${admin_http} zone=${current_zone:-unset}->${zone}; rejoining"
+	fi
+
+	log "join node: $node_id grpc=$grpc_endpoint zone=$zone"
+	sbsctl_run node join \
+		--admin-endpoint "$admin_endpoint" \
+		--cluster-id "$cluster_id" \
+		--sbs-cluster-id "$sbs_cluster_id" \
+		--node-id "$node_id" \
+		--grpc-endpoint "$grpc_endpoint" \
+		--admin-http-endpoint "$admin_http" \
+		--zone "$zone" \
+		--auto-create-zone \
+		--actor container-bootstrap \
+		--reason namros-community-container \
+		--timeout "$timeout" >/dev/null
+}
+
+join_node "$sbs_data_1_node_id" "$sbs_data_1_grpc_endpoint" "$sbs_data_1_admin_http_endpoint" "$sbs_data_1_zone"
+join_node "$sbs_data_2_node_id" "$sbs_data_2_grpc_endpoint" "$sbs_data_2_admin_http_endpoint" "$sbs_data_2_zone"
+join_node "$sbs_data_3_node_id" "$sbs_data_3_grpc_endpoint" "$sbs_data_3_admin_http_endpoint" "$sbs_data_3_zone"
+join_node "$sbs_data_4_node_id" "$sbs_data_4_grpc_endpoint" "$sbs_data_4_admin_http_endpoint" "$sbs_data_4_zone"
+
+create_volume() {
+	volume_id="$1"
+	if sbsctl_run volume status \
+		--admin-endpoint "$admin_endpoint" \
+		--cluster-id "$cluster_id" \
+		--sbs-cluster-id "$sbs_cluster_id" \
+		--volume-id "$volume_id" \
+		--timeout "$timeout" >/dev/null 2>&1; then
+		log "volume already exists: $volume_id"
+		return 0
+	fi
+
+	log "create replicated volume: $volume_id"
+	sbsctl_run volume create \
+		--admin-endpoint "$admin_endpoint" \
+		--cluster-id "$cluster_id" \
+		--sbs-cluster-id "$sbs_cluster_id" \
+		--volume-id "$volume_id" \
+		--size "$volume_size" \
+		--block-size "$block_size" \
+		--allocation-chunk-size "$allocation_chunk_size" \
+		--allocation-page-size "$allocation_page_size" \
+		--replication-factor "$replication_factor" \
+		--redundancy-backend replicated \
+		--actor container-bootstrap \
+		--reason namros-community-container \
+		--timeout "$timeout" >/dev/null
+}
+
+materialize_volume_on_node() {
+	volume_id="$1"
+	node_id="$2"
+	admin_http="$3"
+	url="${admin_http%/}/debug/materialize-volume?volume_id=$volume_id&size_bytes=$volume_size_bytes&block_size=$block_size_bytes&prefix=sbs-$volume_id&allocation_chunk_size_bytes=$allocation_chunk_size_bytes&allocation_page_bytes=$allocation_page_size_bytes"
+	log "materialize volume on $node_id: $volume_id"
+	curl -fsS -X POST "$url" >/dev/null
+}
+
+materialize_volume() {
+	volume_id="$1"
+	materialize_volume_on_node "$volume_id" "$sbs_data_1_node_id" "$sbs_data_1_admin_http_endpoint"
+	materialize_volume_on_node "$volume_id" "$sbs_data_2_node_id" "$sbs_data_2_admin_http_endpoint"
+	materialize_volume_on_node "$volume_id" "$sbs_data_3_node_id" "$sbs_data_3_admin_http_endpoint"
+	materialize_volume_on_node "$volume_id" "$sbs_data_4_node_id" "$sbs_data_4_admin_http_endpoint"
+}
+
+if [ -z "$volume_ids" ]; then
+	volume_ids="$volume_id"
+fi
+
+old_ifs="$IFS"
+IFS=,
+for raw_volume_id in $volume_ids; do
+	IFS="$old_ifs"
+	trimmed_volume_id="$(printf '%s' "$raw_volume_id" | tr -d ' \t\r\n')"
+	if [ -n "$trimmed_volume_id" ]; then
+		create_volume "$trimmed_volume_id"
+		materialize_volume "$trimmed_volume_id"
+	fi
+	IFS=,
+done
+IFS="$old_ifs"
+
+log "bootstrap complete"

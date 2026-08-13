@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="260" viewBox="0 0 980 260" role="img" aria-labelledby="title desc">
+  <title id="title">SBS EC route</title>
+  <desc id="desc">Enterprise storage class routing sends EC objects to SBS shard routes.</desc>
+  <rect width="980" height="260" fill="#fff"/>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#566372"/></marker></defs>
+  <style>.b{fill:#eef4f7;stroke:#0b6b8f;stroke-width:2}.e{fill:#fff3e8;stroke:#9b3d36;stroke-width:2}.t{font:700 14px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;fill:#17202a}.s{font:12px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;fill:#566372}.l{stroke:#566372;stroke-width:2;marker-end:url(#arrow)}</style>
+  <rect class="b" x="34" y="88" width="150" height="72" rx="8"/><text class="t" x="78" y="118">S3 PUT</text><text class="s" x="62" y="140">storage class</text>
+  <rect class="b" x="244" y="88" width="160" height="72" rx="8"/><text class="t" x="286" y="118">Classroute</text><text class="s" x="279" y="140">EC or replicated</text>
+  <rect class="e" x="464" y="88" width="160" height="72" rx="8"/><text class="t" x="512" y="118">SBS EC</text><text class="s" x="502" y="140">EC_4_2 shards</text>
+  <rect class="e" x="704" y="34" width="110" height="54" rx="8"/><text class="t" x="733" y="66">shard 0</text>
+  <rect class="e" x="704" y="104" width="110" height="54" rx="8"/><text class="t" x="733" y="136">shard 1</text>
+  <rect class="e" x="704" y="174" width="110" height="54" rx="8"/><text class="t" x="733" y="206">shard N</text>
+  <line class="l" x1="184" y1="124" x2="244" y2="124"/><line class="l" x1="404" y1="124" x2="464" y2="124"/>
+  <line class="l" x1="624" y1="112" x2="704" y2="62"/><line class="l" x1="624" y1="124" x2="704" y2="130"/><line class="l" x1="624" y1="138" x2="704" y2="202"/>
+</svg>
+

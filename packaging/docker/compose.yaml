@@ -1,0 +1,605 @@
+services:
+  gateway:
+    profiles:
+      - local
+    image: ${NAMROS_GATEWAY_IMAGE:-namros-gateway}:${NAMROS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.gateway
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    environment:
+      NAMROS_LISTEN: 0.0.0.0:9000
+      NAMROS_REGION: ${NAMROS_REGION:-us-east-1}
+      NAMROS_METADATA_BACKEND: pebble
+      NAMROS_METADATA_PATH: /var/lib/namros/meta
+      NAMROS_STORAGE_BACKEND: local
+      NAMROS_STORAGE_PATH: /var/lib/namros/segments
+      NAMROS_ROOT_ACCESS_KEY_ID_FILE: /run/secrets/namros_root_access_key_id
+      NAMROS_ROOT_SECRET_ACCESS_KEY_FILE: /run/secrets/namros_root_secret_access_key
+    secrets:
+      - namros_root_access_key_id
+      - namros_root_secret_access_key
+    ports:
+      - 127.0.0.1:${NAMROS_LOCAL_PORT:-9000}:9000
+    volumes:
+      - namros-local-meta:/var/lib/namros/meta
+      - namros-local-segments:/var/lib/namros/segments
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9000/readyz >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 5s
+
+  tools:
+    profiles:
+      - local
+    image: ${NAMROS_TOOLS_IMAGE:-namros-tools}:${NAMROS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.tools
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    environment:
+      NAMROS_ENDPOINT: http://gateway:9000
+      NAMROS_REGION: ${NAMROS_REGION:-us-east-1}
+      NAMROS_ROOT_ACCESS_KEY_ID_FILE: /run/secrets/namros_root_access_key_id
+      NAMROS_ROOT_SECRET_ACCESS_KEY_FILE: /run/secrets/namros_root_secret_access_key
+    secrets:
+      - namros_root_access_key_id
+      - namros_root_secret_access_key
+    depends_on:
+      gateway:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  etcd:
+    profiles:
+      - community
+    image: ${NAMROS_ETCD_IMAGE:-gcr.io/etcd-development/etcd:v3.6.8}
+    command:
+      - /usr/local/bin/etcd
+      - --name=etcd0
+      - --data-dir=/etcd-data
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://etcd:2379
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --initial-advertise-peer-urls=http://etcd:2380
+      - --initial-cluster=etcd0=http://etcd:2380
+      - --initial-cluster-state=new
+      - --initial-cluster-token=namros-community
+    volumes:
+      - namros-community-etcd:/etcd-data
+
+  pd:
+    profiles:
+      - community
+    image: ${NAMROS_PD_IMAGE:-pingcap/pd:v8.5.7}
+    command:
+      - --name=pd
+      - --data-dir=/pd
+      - --client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://pd:2379
+      - --peer-urls=http://0.0.0.0:2380
+      - --advertise-peer-urls=http://pd:2380
+      - --initial-cluster=pd=http://pd:2380
+    volumes:
+      - namros-community-pd:/pd
+
+  tikv:
+    profiles:
+      - community
+    image: ${NAMROS_TIKV_IMAGE:-pingcap/tikv:v8.5.7}
+    command:
+      - --addr=0.0.0.0:20160
+      - --advertise-addr=tikv:20160
+      - --data-dir=/tikv
+      - --pd=pd:2379
+    depends_on:
+      - pd
+    ulimits:
+      nofile:
+        soft: 200000
+        hard: 200000
+    volumes:
+      - namros-community-tikv:/tikv
+
+  sbs-service-1:
+    profiles:
+      - community
+    image: ${NAMROS_SBS_SERVICE_IMAGE:-namros-sbs-service}:${NAMROS_SBS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.sbs
+      target: sbs-service
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    command:
+      - --cluster-id=${NAMROS_COMMUNITY_CLUSTER_ID:-namros-community}
+      - --sbs-cluster-id=${NAMROS_COMMUNITY_SBS_CLUSTER_ID:-namros-community-sbs}
+      - --node-id=sbs-service-1
+      - --metadata-backend=tikv
+      - --tikv-pd-endpoints=pd:2379
+      - --grpc-listen=0.0.0.0:9443
+      - --http-listen=0.0.0.0:9081
+      - --payload-root=/var/lib/namrbd/sbs-payload
+    depends_on:
+      - tikv
+    volumes:
+      - namros-community-sbs-service-1:/var/lib/namrbd/sbs-payload
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9081/readyz >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 36
+      start_period: 10s
+
+  sbs-service-2:
+    profiles:
+      - community
+    image: ${NAMROS_SBS_SERVICE_IMAGE:-namros-sbs-service}:${NAMROS_SBS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.sbs
+      target: sbs-service
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    command:
+      - --cluster-id=${NAMROS_COMMUNITY_CLUSTER_ID:-namros-community}
+      - --sbs-cluster-id=${NAMROS_COMMUNITY_SBS_CLUSTER_ID:-namros-community-sbs}
+      - --node-id=sbs-service-2
+      - --metadata-backend=tikv
+      - --tikv-pd-endpoints=pd:2379
+      - --grpc-listen=0.0.0.0:9443
+      - --http-listen=0.0.0.0:9081
+      - --payload-root=/var/lib/namrbd/sbs-payload
+    depends_on:
+      - tikv
+    volumes:
+      - namros-community-sbs-service-2:/var/lib/namrbd/sbs-payload
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9081/readyz >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 36
+      start_period: 10s
+
+  sbs-data-1:
+    profiles:
+      - community
+    image: ${NAMROS_SBS_DATA_IMAGE:-namros-sbs-data}:${NAMROS_SBS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.sbs
+      target: sbs-data
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    command:
+      - --path=/var/lib/namrbd/sbs-data
+      - --grpc-listen=0.0.0.0:9444
+      - --http-listen=0.0.0.0:9082
+    volumes:
+      - namros-community-sbs-data-1:/var/lib/namrbd/sbs-data
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9082/readyz >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 5s
+
+  sbs-data-2:
+    profiles:
+      - community
+    image: ${NAMROS_SBS_DATA_IMAGE:-namros-sbs-data}:${NAMROS_SBS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.sbs
+      target: sbs-data
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    command:
+      - --path=/var/lib/namrbd/sbs-data
+      - --grpc-listen=0.0.0.0:9444
+      - --http-listen=0.0.0.0:9082
+    volumes:
+      - namros-community-sbs-data-2:/var/lib/namrbd/sbs-data
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9082/readyz >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 5s
+
+  sbs-data-3:
+    profiles:
+      - community
+    image: ${NAMROS_SBS_DATA_IMAGE:-namros-sbs-data}:${NAMROS_SBS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.sbs
+      target: sbs-data
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    command:
+      - --path=/var/lib/namrbd/sbs-data
+      - --grpc-listen=0.0.0.0:9444
+      - --http-listen=0.0.0.0:9082
+    volumes:
+      - namros-community-sbs-data-3:/var/lib/namrbd/sbs-data
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9082/readyz >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 5s
+
+  sbs-data-4:
+    profiles:
+      - community
+    image: ${NAMROS_SBS_DATA_IMAGE:-namros-sbs-data}:${NAMROS_SBS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.sbs
+      target: sbs-data
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    command:
+      - --path=/var/lib/namrbd/sbs-data
+      - --grpc-listen=0.0.0.0:9444
+      - --http-listen=0.0.0.0:9082
+    volumes:
+      - namros-community-sbs-data-4:/var/lib/namrbd/sbs-data
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9082/readyz >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 5s
+
+  sbs-admin-lb:
+    profiles:
+      - community
+    image: ${NAMROS_HAPROXY_IMAGE:-haproxy:3.0-alpine}
+    volumes:
+      - ./haproxy/sbs-admin.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      sbs-service-1:
+        condition: service_started
+      sbs-service-2:
+        condition: service_started
+
+  sbs-data-lb:
+    profiles:
+      - community
+    image: ${NAMROS_HAPROXY_IMAGE:-haproxy:3.0-alpine}
+    volumes:
+      - ./haproxy/sbs-data.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      sbs-data-1:
+        condition: service_healthy
+      sbs-data-2:
+        condition: service_healthy
+      sbs-data-3:
+        condition: service_healthy
+      sbs-data-4:
+        condition: service_healthy
+
+  sbs-bootstrap:
+    profiles:
+      - community
+    image: ${NAMROS_SBSCTL_IMAGE:-namros-sbsctl}:${NAMROS_SBS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.sbs
+      target: sbsctl
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    environment:
+      NAMROS_COMMUNITY_CLUSTER_ID: ${NAMROS_COMMUNITY_CLUSTER_ID:-namros-community}
+      NAMROS_COMMUNITY_SBS_CLUSTER_ID: ${NAMROS_COMMUNITY_SBS_CLUSTER_ID:-namros-community-sbs}
+      NAMROS_COMMUNITY_SBS_ADMIN_ENDPOINT: sbs-admin-lb:9443
+      NAMROS_COMMUNITY_SBS_VOLUME_ID: ${NAMROS_COMMUNITY_SBS_VOLUME_ID:-18a00001}
+      NAMROS_COMMUNITY_SBS_VOLUME_IDS: ${NAMROS_COMMUNITY_SBS_VOLUME_IDS:-18a00001,18a00002}
+      NAMROS_COMMUNITY_SBS_VOLUME_SIZE: ${NAMROS_COMMUNITY_SBS_VOLUME_SIZE:-64M}
+      NAMROS_COMMUNITY_SBS_BLOCK_SIZE: ${NAMROS_COMMUNITY_SBS_BLOCK_SIZE:-4K}
+      NAMROS_COMMUNITY_SBS_ALLOCATION_CHUNK_SIZE: ${NAMROS_COMMUNITY_SBS_ALLOCATION_CHUNK_SIZE:-1M}
+      NAMROS_COMMUNITY_SBS_ALLOCATION_PAGE_SIZE: ${NAMROS_COMMUNITY_SBS_ALLOCATION_PAGE_SIZE:-4M}
+      NAMROS_COMMUNITY_SBS_REPLICATION_FACTOR: ${NAMROS_COMMUNITY_SBS_REPLICATION_FACTOR:-2}
+    depends_on:
+      sbs-admin-lb:
+        condition: service_started
+      sbs-data-lb:
+        condition: service_started
+    volumes:
+      - ./bin/namros-container-community-bootstrap:/usr/local/bin/namros-container-community-bootstrap:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    command: namros-container-community-bootstrap
+
+  namros-pool-bootstrap:
+    profiles:
+      - community
+    image: ${NAMROS_TOOLS_IMAGE:-namros-tools}:${NAMROS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.tools
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    environment:
+      NAMROS_METADATA_BACKEND: tikv
+      NAMROS_TIKV_PD_ENDPOINTS: pd:2379
+      NAMROS_COMMUNITY_SBS_VOLUME_IDS: ${NAMROS_COMMUNITY_SBS_VOLUME_IDS:-18a00001,18a00002}
+      NAMROS_COMMUNITY_SBS_VOLUME_POOL_ID: ${NAMROS_COMMUNITY_SBS_VOLUME_POOL_ID:-object-pool}
+      NAMROS_COMMUNITY_SBS_VOLUME_POOL_GENERATION: ${NAMROS_COMMUNITY_SBS_VOLUME_POOL_GENERATION:-0}
+      NAMROS_COMMUNITY_SBS_ADMIN_ENDPOINT: sbs-admin-lb:9443
+      NAMROS_COMMUNITY_SBS_DATA_ENDPOINT: ${NAMROS_COMMUNITY_SBS_DATA_ENDPOINT:-sbs-data-1:9444}
+      NAMROS_COMMUNITY_SBS_DATA_ENDPOINTS: ${NAMROS_COMMUNITY_SBS_DATA_ENDPOINTS:-sbs-data-1:9444,sbs-data-2:9444}
+      NAMROS_COMMUNITY_SBS_CHUNK_SIZE_BYTES: ${NAMROS_COMMUNITY_SBS_CHUNK_SIZE_BYTES:-1048576}
+    depends_on:
+      sbs-bootstrap:
+        condition: service_completed_successfully
+      tikv:
+        condition: service_started
+    volumes:
+      - ./bin/namros-container-volume-pool-bootstrap:/usr/local/bin/namros-container-volume-pool-bootstrap:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    command: namros-container-volume-pool-bootstrap
+
+  namros-gateway-a:
+    profiles:
+      - community
+    image: ${NAMROS_GATEWAY_IMAGE:-namros-gateway}:${NAMROS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.gateway
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    environment:
+      NAMROS_LISTEN: 0.0.0.0:9000
+      NAMROS_DEPLOYMENT_PROFILE: ${NAMROS_COMMUNITY_DEPLOYMENT_PROFILE:-production}
+      NAMROS_REGION: ${NAMROS_REGION:-us-east-1}
+      NAMROS_METADATA_BACKEND: tikv
+      NAMROS_TIKV_PD_ENDPOINTS: pd:2379
+      NAMROS_STORAGE_BACKEND: sbs-cluster
+      NAMROS_GC_CANDIDATE_QUEUE: metadata
+      NAMROS_SBS_ADMIN_ENDPOINT: sbs-admin-lb:9443
+      NAMROS_SBS_DATA_ENDPOINT: ${NAMROS_COMMUNITY_SBS_DATA_ENDPOINT:-sbs-data-1:9444}
+      NAMROS_SBS_VOLUME_ID: ${NAMROS_COMMUNITY_SBS_VOLUME_ID:-18a00001}
+      NAMROS_SBS_VOLUME_POOL_ID: ${NAMROS_COMMUNITY_SBS_VOLUME_POOL_ID:-object-pool}
+      NAMROS_SBS_CHUNK_SIZE_BYTES: ${NAMROS_COMMUNITY_SBS_CHUNK_SIZE_BYTES:-1048576}
+      NAMROS_SBS_GATEWAY_ID: namros-gateway-a
+      NAMROS_SBS_ATTACHMENT_ID: ${NAMROS_COMMUNITY_SBS_ATTACHMENT_ID:-att-namros-community-object-pool}
+      NAMROS_SBS_GENERATION: 1
+      NAMROS_SBS_WRITER_GROUP_ID: ${NAMROS_COMMUNITY_SBS_WRITER_GROUP_ID:-namros-community-writers}
+      NAMROS_SBS_SESSION_ID: namros-gateway-a-session-1
+      NAMROS_SBS_VOLUME_EPOCH: ${NAMROS_COMMUNITY_SBS_VOLUME_EPOCH:-1}
+      NAMROS_COORDINATION_BACKEND: etcd
+      NAMROS_ETCD_ENDPOINTS: http://etcd:2379
+      NAMROS_GATEWAY_INSTANCE_ID: namros-gateway-a
+      NAMROS_GATEWAY_ADVERTISE_ENDPOINT: http://namros-gateway-a:9000
+      NAMROS_ROOT_ACCESS_KEY_ID_FILE: /run/secrets/namros_root_access_key_id
+      NAMROS_ROOT_SECRET_ACCESS_KEY_FILE: /run/secrets/namros_root_secret_access_key
+    secrets:
+      - namros_root_access_key_id
+      - namros_root_secret_access_key
+    depends_on:
+      etcd:
+        condition: service_started
+      tikv:
+        condition: service_started
+      sbs-admin-lb:
+        condition: service_started
+      sbs-data-lb:
+        condition: service_started
+      namros-pool-bootstrap:
+        condition: service_completed_successfully
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9000/readyz >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 36
+      start_period: 10s
+
+  namros-gateway-b:
+    profiles:
+      - community
+    image: ${NAMROS_GATEWAY_IMAGE:-namros-gateway}:${NAMROS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.gateway
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    environment:
+      NAMROS_LISTEN: 0.0.0.0:9000
+      NAMROS_DEPLOYMENT_PROFILE: ${NAMROS_COMMUNITY_DEPLOYMENT_PROFILE:-production}
+      NAMROS_REGION: ${NAMROS_REGION:-us-east-1}
+      NAMROS_METADATA_BACKEND: tikv
+      NAMROS_TIKV_PD_ENDPOINTS: pd:2379
+      NAMROS_STORAGE_BACKEND: sbs-cluster
+      NAMROS_GC_CANDIDATE_QUEUE: metadata
+      NAMROS_SBS_ADMIN_ENDPOINT: sbs-admin-lb:9443
+      NAMROS_SBS_DATA_ENDPOINT: ${NAMROS_COMMUNITY_SBS_DATA_ENDPOINT:-sbs-data-1:9444}
+      NAMROS_SBS_VOLUME_ID: ${NAMROS_COMMUNITY_SBS_VOLUME_ID:-18a00001}
+      NAMROS_SBS_VOLUME_POOL_ID: ${NAMROS_COMMUNITY_SBS_VOLUME_POOL_ID:-object-pool}
+      NAMROS_SBS_CHUNK_SIZE_BYTES: ${NAMROS_COMMUNITY_SBS_CHUNK_SIZE_BYTES:-1048576}
+      NAMROS_SBS_GATEWAY_ID: namros-gateway-b
+      NAMROS_SBS_ATTACHMENT_ID: ${NAMROS_COMMUNITY_SBS_ATTACHMENT_ID:-att-namros-community-object-pool}
+      NAMROS_SBS_GENERATION: 1
+      NAMROS_SBS_WRITER_GROUP_ID: ${NAMROS_COMMUNITY_SBS_WRITER_GROUP_ID:-namros-community-writers}
+      NAMROS_SBS_SESSION_ID: namros-gateway-b-session-1
+      NAMROS_SBS_VOLUME_EPOCH: ${NAMROS_COMMUNITY_SBS_VOLUME_EPOCH:-1}
+      NAMROS_COORDINATION_BACKEND: etcd
+      NAMROS_ETCD_ENDPOINTS: http://etcd:2379
+      NAMROS_GATEWAY_INSTANCE_ID: namros-gateway-b
+      NAMROS_GATEWAY_ADVERTISE_ENDPOINT: http://namros-gateway-b:9000
+      NAMROS_ROOT_ACCESS_KEY_ID_FILE: /run/secrets/namros_root_access_key_id
+      NAMROS_ROOT_SECRET_ACCESS_KEY_FILE: /run/secrets/namros_root_secret_access_key
+    secrets:
+      - namros_root_access_key_id
+      - namros_root_secret_access_key
+    depends_on:
+      etcd:
+        condition: service_started
+      tikv:
+        condition: service_started
+      sbs-admin-lb:
+        condition: service_started
+      sbs-data-lb:
+        condition: service_started
+      namros-pool-bootstrap:
+        condition: service_completed_successfully
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9000/readyz >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 36
+      start_period: 10s
+
+  s3-lb:
+    profiles:
+      - community
+    image: ${NAMROS_HAPROXY_IMAGE:-haproxy:3.0-alpine}
+    ports:
+      - 127.0.0.1:${NAMROS_COMMUNITY_PORT:-9001}:9000
+    volumes:
+      - ./haproxy/s3.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      namros-gateway-a:
+        condition: service_started
+      namros-gateway-b:
+        condition: service_started
+
+  community-tools:
+    profiles:
+      - community
+    image: ${NAMROS_TOOLS_IMAGE:-namros-tools}:${NAMROS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.tools
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    environment:
+      NAMROS_ENDPOINT: http://s3-lb:9000
+      NAMROS_REGION: ${NAMROS_REGION:-us-east-1}
+      NAMROS_ROOT_ACCESS_KEY_ID_FILE: /run/secrets/namros_root_access_key_id
+      NAMROS_ROOT_SECRET_ACCESS_KEY_FILE: /run/secrets/namros_root_secret_access_key
+    secrets:
+      - namros_root_access_key_id
+      - namros_root_secret_access_key
+    depends_on:
+      - s3-lb
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+secrets:
+  namros_root_access_key_id:
+    file: ${NAMROS_ROOT_ACCESS_KEY_ID_FILE:-./secrets/root-access-key-id}
+  namros_root_secret_access_key:
+    file: ${NAMROS_ROOT_SECRET_ACCESS_KEY_FILE:-./secrets/root-secret-access-key}
+
+volumes:
+  namros-local-meta:
+  namros-local-segments:
+  namros-community-etcd:
+  namros-community-pd:
+  namros-community-tikv:
+  namros-community-sbs-service-1:
+  namros-community-sbs-service-2:
+  namros-community-sbs-data-1:
+  namros-community-sbs-data-2:
+  namros-community-sbs-data-3:
+  namros-community-sbs-data-4:

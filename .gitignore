@@ -1,0 +1,38 @@
+# ----- Go -----
+# Binaries built in-tree (scripts build to /tmp or BIN_DIR)
+/bin/
+.cache/
+*.exe
+# Optional: uncomment if you use vendoring
+# /vendor/
+
+# ----- IDE / Editor -----
+.idea/
+*.swp
+*.swo
+*~
+.vscode/
+*.code-workspace
+
+# ----- OS -----
+.DS_Store
+Thumbs.db
+
+# ----- Local / Test (if any under repo) -----
+/.namros/
+/tmp/
+/dist/
+/compat-reports/
+/release-reports/
+/chaos-reports/
+/chaos-baselines/
+*.log
+*.test
+
+# ----- Container local runtime -----
+/packaging/docker/.env
+/packaging/docker/runtime/
+/packaging/docker/secrets/
+
+# MkDocs build output
+/site/

@@ -1,0 +1,114 @@
+site_name: NAMROS Community
+site_description: NAMROS Community S3-compatible object storage documentation
+site_url: https://nosway.github.io/namros/
+repo_url: https://github.com/nosway/namros
+docs_dir: docs-src
+site_dir: site
+
+# Build inputs that live beside the sources but must not ship in the site.
+exclude_docs: |
+  requirements.txt
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - content.code.copy
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+extra_css:
+  - assets/namros-docs.css
+
+nav:
+  - Home: index.md
+  - Manuals:
+      - NAMROS: manuals/index.md
+      - NAMROS Integrated CLI Command Reference: manuals/admin-cli-reference.md
+      - NAMROS Administrator Guide: manuals/admin-guide.md
+      - NAMROS Capacity Scaling & Maintenance Guide: manuals/capacity-scaling-maintenance-guide.md
+      - NAMROS Community Container Deployment Guide: manuals/container-deployment-guide.md
+      - etcd HA Installation & Operations Guide: manuals/etcd-ha-cluster-install-operations-guide.md
+      - NAMROS Event Notifications Guide: manuals/event-notification-guide.md
+      - NAMROS IAM Integration Guide: manuals/iam-integration-guide.md
+      - NAMROS Installation Guide: manuals/installation-guide.md
+      - NAMROS Inventory & Batch Operations Guide: manuals/inventory-batch-operations-guide.md
+      - NAMROS KMS Encryption Guide: manuals/kms-encryption-guide.md
+      - NAMROS MCP Operations Guide: manuals/mcp-operations-guide.md
+      - NAMROS Performance/Chaos/Soak Guide: manuals/performance-chaos-soak-guide.md
+      - NAMROS Quota and QoS Guide: manuals/quota-qos-guide.md
+      - NAMROS Replication & Disaster Recovery Guide: manuals/replication-disaster-recovery-guide.md
+      - S3 Client Compatibility Guide: manuals/s3-client-compatibility-guide.md
+      - S3 Object Browser Integration Guide: manuals/s3-object-browser-integration-guide.md
+      - TiKV HA Installation & Operations Guide: manuals/tikv-ha-cluster-install-operations-guide.md
+      - NAMROS Upgrade & Release Operations Guide: manuals/upgrade-release-operations-guide.md
+      - NAMROS User Manual: manuals/user-manual.md
+      - NAMROS Web Console & Monitoring Guide: manuals/web-console-monitoring-guide.md
+  - Architecture:
+      - NAMROS Architecture Manual: manuals/architecture-manual/index.md
+      - Reading Guide: manuals/architecture-manual/chapters/00-reading-guide.md
+      - Product Overview: manuals/architecture-manual/chapters/01-product-overview.md
+      - S3 API And Compatibility: manuals/architecture-manual/chapters/02-s3-api-and-compatibility.md
+      - Gateway Stateless Active-Active: manuals/architecture-manual/chapters/03-gateway-stateless-active-active.md
+      - Metadata Authority: manuals/architecture-manual/chapters/04-metadata-authority.md
+      - Object And Segment Model: manuals/architecture-manual/chapters/05-object-and-segment-model.md
+      - Multipart Write Visibility: manuals/architecture-manual/chapters/06-multipart-write-visibility.md
+      - Replicated And Local Backends: manuals/architecture-manual/chapters/07-replicated-and-local-backends.md
+      - SBS EC Backend Enterprise: manuals/architecture-manual/chapters/08-sbs-ec-backend-enterprise.md
+      - Versioning Lifecycle Object Lock: manuals/architecture-manual/chapters/09-versioning-lifecycle-object-lock.md
+      - Dedupe And Shared Objects Enterprise edition only: manuals/architecture-manual/chapters/10-dedupe-and-shared-objects-enterprise.md
+      - Security Compliance And Editions: manuals/architecture-manual/chapters/11-security-compliance-and-editions.md
+      - Observability And Operations: manuals/architecture-manual/chapters/12-observability-and-operations.md
+      - MCP Operations Provider: manuals/architecture-manual/chapters/13-mcp-operations-provider.md
+      - Release And Edition Boundaries: manuals/architecture-manual/chapters/14-release-and-edition-boundaries.md
+      - Glossary: manuals/architecture-manual/chapters/appendix-glossary.md
+      - Interface Specifications: manuals/architecture-manual/chapters/appendix-interface-specifications.md
+      - Reference Map: manuals/architecture-manual/chapters/appendix-reference-map.md
+      - Revision History: manuals/architecture-manual/chapters/appendix-revision-history.md
+  - 한국어:
+      - NAMROS: manuals/ko/index.md
+      - NAMROS 통합 CLI 명령어 레퍼런스: manuals/ko/admin-cli-reference.md
+      - NAMROS 관리자 가이드: manuals/ko/admin-guide.md
+      - NAMROS 용량 확장 및 유지보수 가이드: manuals/ko/capacity-scaling-maintenance-guide.md
+      - NAMROS Community 컨테이너 배포 가이드: manuals/ko/container-deployment-guide.md
+      - etcd HA 설치 및 운영 가이드: manuals/ko/etcd-ha-cluster-install-operations-guide.md
+      - NAMROS 이벤트 알림 가이드: manuals/ko/event-notification-guide.md
+      - NAMROS IAM 연동 가이드: manuals/ko/iam-integration-guide.md
+      - NAMROS 설치 가이드: manuals/ko/installation-guide.md
+      - NAMROS 인벤토리 및 배치 운영 가이드: manuals/ko/inventory-batch-operations-guide.md
+      - NAMROS KMS 암호화 가이드: manuals/ko/kms-encryption-guide.md
+      - NAMROS MCP 운영 가이드: manuals/ko/mcp-operations-guide.md
+      - NAMROS 성능/Chaos/Soak 가이드: manuals/ko/performance-chaos-soak-guide.md
+      - NAMROS Quota/QoS 가이드: manuals/ko/quota-qos-guide.md
+      - NAMROS 복제 및 재해복구 가이드: manuals/ko/replication-disaster-recovery-guide.md
+      - S3 클라이언트 호환성 가이드: manuals/ko/s3-client-compatibility-guide.md
+      - S3 오브젝트 브라우저 연동 가이드: manuals/ko/s3-object-browser-integration-guide.md
+      - TiKV HA 설치 및 운영 가이드: manuals/ko/tikv-ha-cluster-install-operations-guide.md
+      - NAMROS 업그레이드/릴리스 운영 가이드: manuals/ko/upgrade-release-operations-guide.md
+      - NAMROS 사용자 매뉴얼: manuals/ko/user-manual.md
+      - NAMROS 웹 콘솔 및 모니터링 가이드: manuals/ko/web-console-monitoring-guide.md
+      - NAMROS 아키텍처 매뉴얼: manuals/architecture-manual/ko/index.md

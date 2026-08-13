@@ -1,0 +1,195 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "namros.fullname" . }}-sbs-admin
+  labels:
+    {{- include "namros.labels" . | nindent 4 }}
+    app.kubernetes.io/component: sbs-service
+spec:
+  ports:
+    - name: grpc
+      port: 9443
+      targetPort: grpc
+  selector:
+    {{- include "namros.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: sbs-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "namros.fullname" . }}-sbs-data
+  labels:
+    {{- include "namros.labels" . | nindent 4 }}
+    app.kubernetes.io/component: sbs-data
+spec:
+  ports:
+    - name: grpc
+      port: 9444
+      targetPort: grpc
+  selector:
+    {{- include "namros.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: sbs-data
+{{- $root := . -}}
+{{- range $node := .Values.sbs.service.nodes }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "namros.fullname" $root }}-{{ $node.id }}
+  labels:
+    {{- include "namros.labels" $root | nindent 4 }}
+    app.kubernetes.io/component: sbs-service
+    namros.io/node-id: {{ $node.id | quote }}
+spec:
+  ports:
+    - name: grpc
+      port: 9443
+      targetPort: grpc
+    - name: http
+      port: 9081
+      targetPort: http
+  selector:
+    {{- include "namros.selectorLabels" $root | nindent 4 }}
+    app.kubernetes.io/component: sbs-service
+    namros.io/node-id: {{ $node.id | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "namros.fullname" $root }}-{{ $node.id }}
+  labels:
+    {{- include "namros.labels" $root | nindent 4 }}
+    app.kubernetes.io/component: sbs-service
+    namros.io/node-id: {{ $node.id | quote }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "namros.selectorLabels" $root | nindent 6 }}
+      app.kubernetes.io/component: sbs-service
+      namros.io/node-id: {{ $node.id | quote }}
+  template:
+    metadata:
+      labels:
+        {{- include "namros.selectorLabels" $root | nindent 8 }}
+        app.kubernetes.io/component: sbs-service
+        namros.io/node-id: {{ $node.id | quote }}
+    spec:
+      securityContext:
+        {{- toYaml $root.Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: sbs-service
+          image: "{{ $root.Values.images.sbsService.repository }}:{{ $root.Values.images.sbsService.tag }}"
+          imagePullPolicy: {{ $root.Values.images.sbsService.pullPolicy }}
+          args:
+            - --cluster-id={{ $root.Values.sbs.clusterId }}
+            - --sbs-cluster-id={{ $root.Values.sbs.sbsClusterId }}
+            - --node-id={{ $node.id }}
+            - --metadata-backend=tikv
+            - --tikv-pd-endpoints={{ include "namros.tikvPDEndpoints" $root }}
+            - --grpc-listen=0.0.0.0:9443
+            - --http-listen=0.0.0.0:9081
+            - --payload-root=/var/lib/namrbd/sbs-payload
+          ports:
+            - name: grpc
+              containerPort: 9443
+            - name: http
+              containerPort: 9081
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+          securityContext:
+            {{- toYaml $root.Values.containerSecurityContext | nindent 12 }}
+          resources:
+            {{- toYaml $root.Values.sbs.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: payload
+              mountPath: /var/lib/namrbd/sbs-payload
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: payload
+          emptyDir: {}
+{{- end }}
+{{- range $node := .Values.sbs.data.nodes }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "namros.fullname" $root }}-{{ $node.id }}
+  labels:
+    {{- include "namros.labels" $root | nindent 4 }}
+    app.kubernetes.io/component: sbs-data
+    namros.io/node-id: {{ $node.id | quote }}
+spec:
+  ports:
+    - name: grpc
+      port: 9444
+      targetPort: grpc
+    - name: http
+      port: 9082
+      targetPort: http
+  selector:
+    {{- include "namros.selectorLabels" $root | nindent 4 }}
+    app.kubernetes.io/component: sbs-data
+    namros.io/node-id: {{ $node.id | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "namros.fullname" $root }}-{{ $node.id }}
+  labels:
+    {{- include "namros.labels" $root | nindent 4 }}
+    app.kubernetes.io/component: sbs-data
+    namros.io/node-id: {{ $node.id | quote }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "namros.selectorLabels" $root | nindent 6 }}
+      app.kubernetes.io/component: sbs-data
+      namros.io/node-id: {{ $node.id | quote }}
+  template:
+    metadata:
+      labels:
+        {{- include "namros.selectorLabels" $root | nindent 8 }}
+        app.kubernetes.io/component: sbs-data
+        namros.io/node-id: {{ $node.id | quote }}
+    spec:
+      securityContext:
+        {{- toYaml $root.Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: sbs-data
+          image: "{{ $root.Values.images.sbsData.repository }}:{{ $root.Values.images.sbsData.tag }}"
+          imagePullPolicy: {{ $root.Values.images.sbsData.pullPolicy }}
+          args:
+            - --path=/var/lib/namrbd/sbs-data
+            - --grpc-listen=0.0.0.0:9444
+            - --http-listen=0.0.0.0:9082
+          ports:
+            - name: grpc
+              containerPort: 9444
+            - name: http
+              containerPort: 9082
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+          securityContext:
+            {{- toYaml $root.Values.containerSecurityContext | nindent 12 }}
+          resources:
+            {{- toYaml $root.Values.sbs.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: data
+              mountPath: /var/lib/namrbd/sbs-data
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: data
+          emptyDir: {}
+{{- end }}

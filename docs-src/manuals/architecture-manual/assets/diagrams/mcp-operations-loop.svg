@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="220" viewBox="0 0 980 220" role="img" aria-labelledby="title desc">
+  <title id="title">MCP operations loop</title>
+  <desc id="desc">MCP operations move through observe, plan, approve, execute, verify, and audit steps.</desc>
+  <rect width="980" height="220" fill="#ffffff"/>
+  <defs>
+    <style>
+      .box{fill:#eef4f7;stroke:#0b6b8f;stroke-width:2;rx:8}
+      .audit{fill:#f1f7ef;stroke:#176b52;stroke-width:2;rx:8}
+      .txt{font:700 15px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;fill:#17202a}
+      .sub{font:12px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;fill:#566372}
+      .line{stroke:#566372;stroke-width:2;marker-end:url(#arrow)}
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#566372"/>
+    </marker>
+  </defs>
+  <g transform="translate(32 64)">
+    <rect class="box" width="120" height="76"/>
+    <text class="txt" x="34" y="32">Observe</text>
+    <text class="sub" x="24" y="54">health, metrics</text>
+  </g>
+  <g transform="translate(188 64)">
+    <rect class="box" width="120" height="76"/>
+    <text class="txt" x="43" y="32">Plan</text>
+    <text class="sub" x="20" y="54">risk and scope</text>
+  </g>
+  <g transform="translate(344 64)">
+    <rect class="box" width="120" height="76"/>
+    <text class="txt" x="30" y="32">Approve</text>
+    <text class="sub" x="15" y="54">operator token</text>
+  </g>
+  <g transform="translate(500 64)">
+    <rect class="box" width="120" height="76"/>
+    <text class="txt" x="30" y="32">Execute</text>
+    <text class="sub" x="22" y="54">bounded action</text>
+  </g>
+  <g transform="translate(656 64)">
+    <rect class="box" width="120" height="76"/>
+    <text class="txt" x="34" y="32">Verify</text>
+    <text class="sub" x="18" y="54">read state again</text>
+  </g>
+  <g transform="translate(812 64)">
+    <rect class="audit" width="120" height="76"/>
+    <text class="txt" x="40" y="32">Audit</text>
+    <text class="sub" x="19" y="54">operation record</text>
+  </g>
+  <line class="line" x1="152" y1="102" x2="188" y2="102"/>
+  <line class="line" x1="308" y1="102" x2="344" y2="102"/>
+  <line class="line" x1="464" y1="102" x2="500" y2="102"/>
+  <line class="line" x1="620" y1="102" x2="656" y2="102"/>
+  <line class="line" x1="776" y1="102" x2="812" y2="102"/>
+</svg>
+

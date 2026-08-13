@@ -1,0 +1,359 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "targets": [
+        {
+          "expr": "sum(rate(namros_gateway_s3_requests_total[5m])) by (api)",
+          "legendFormat": "{{api}}",
+          "refId": "A"
+        }
+      ],
+      "title": "S3 Operations",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "sum(rate(namros_gateway_s3_bytes_total[5m])) by (direction)",
+          "legendFormat": "{{direction}}",
+          "refId": "A"
+        }
+      ],
+      "title": "S3 Bandwidth",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "sum(namros_sbs_node_up) by (role,state)",
+          "legendFormat": "{{role}} {{state}}",
+          "refId": "A"
+        }
+      ],
+      "title": "SBS Node State",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "sum(namros_sbs_maintenance_jobs) by (state)",
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ],
+      "title": "SBS Maintenance",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "namros_sbs_capacity_bytes",
+          "legendFormat": "{{kind}}",
+          "refId": "A"
+        }
+      ],
+      "title": "SBS Capacity (NAMRBD Source)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "sum(namros_sbs_reclaim_jobs) by (state)",
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ],
+      "title": "SBS Reclaim (NAMRBD Source)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 7,
+      "targets": [
+        {
+          "expr": "sum(rate(namros_gateway_s3_errors_total[5m])) by (status_class,error_code)",
+          "legendFormat": "{{status_class}} {{error_code}}",
+          "refId": "A"
+        }
+      ],
+      "title": "S3 Errors",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 8,
+      "targets": [
+        {
+          "expr": "sum(rate(namros_gateway_metadata_operations_total[5m])) by (operation,status)",
+          "legendFormat": "{{operation}} {{status}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Metadata Operations",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 9,
+      "targets": [
+        {
+          "expr": "sum(namros_sbs_pool_admission_state) by (pool_id,state)",
+          "legendFormat": "{{pool_id}} {{state}}",
+          "refId": "A"
+        }
+      ],
+      "title": "SBS Pool Admission",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 10,
+      "targets": [
+        {
+          "expr": "sum(namros_sbs_pool_capacity_bytes) by (pool_id,kind)",
+          "legendFormat": "{{pool_id}} {{kind}}",
+          "refId": "A"
+        }
+      ],
+      "title": "SBS Pool Capacity",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "id": 11,
+      "targets": [
+        {
+          "expr": "sum(namros_gateway_worker_backlog_operations) by (worker_kind,shard_id)",
+          "legendFormat": "{{worker_kind}} {{shard_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Worker Backlog",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "id": 12,
+      "targets": [
+        {
+          "expr": "min(namros_gateway_worker_lease_fresh) by (worker_kind,shard_id,owner_id)",
+          "legendFormat": "{{worker_kind}} {{shard_id}} {{owner_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Worker Lease Freshness",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 48
+      },
+      "id": 13,
+      "targets": [
+        {
+          "expr": "sum(rate(namros_gateway_admission_rejections_total[5m])) by (kind,reason)",
+          "legendFormat": "{{kind}} {{reason}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Admission Rejections",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 48
+      },
+      "id": 14,
+      "targets": [
+        {
+          "expr": "sum(up) by (job,cluster)",
+          "legendFormat": "{{job}} {{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Release Topology Targets",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 39,
+  "tags": [
+    "namros",
+    "operations"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "NAMROS Operations Overview",
+  "uid": "namros-operations-overview",
+  "version": 2
+}

@@ -1,0 +1,69 @@
+{{- if .Values.embedded.etcd.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "namros.fullname" . }}-etcd
+  labels:
+    {{- include "namros.labels" . | nindent 4 }}
+    app.kubernetes.io/component: etcd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "namros.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: etcd
+  template:
+    metadata:
+      labels:
+        {{- include "namros.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: etcd
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: etcd
+          image: "{{ .Values.embedded.etcd.image.repository }}:{{ .Values.embedded.etcd.image.tag }}"
+          imagePullPolicy: {{ .Values.embedded.etcd.image.pullPolicy }}
+          command:
+            - /usr/local/bin/etcd
+          args:
+            - --name=etcd0
+            - --data-dir=/etcd-data
+            - --listen-client-urls=http://0.0.0.0:2379
+            - --advertise-client-urls=http://{{ include "namros.fullname" . }}-etcd:2379
+            - --listen-peer-urls=http://0.0.0.0:2380
+            - --initial-advertise-peer-urls=http://{{ include "namros.fullname" . }}-etcd:2380
+            - --initial-cluster=etcd0=http://{{ include "namros.fullname" . }}-etcd:2380
+            - --initial-cluster-state=new
+            - --initial-cluster-token={{ include "namros.fullname" . }}
+          ports:
+            - name: client
+              containerPort: 2379
+            - name: peer
+              containerPort: 2380
+          volumeMounts:
+            - name: data
+              mountPath: /etcd-data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "namros.fullname" . }}-etcd
+  labels:
+    {{- include "namros.labels" . | nindent 4 }}
+    app.kubernetes.io/component: etcd
+spec:
+  ports:
+    - name: client
+      port: 2379
+      targetPort: client
+    - name: peer
+      port: 2380
+      targetPort: peer
+  selector:
+    {{- include "namros.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: etcd
+{{- end }}

@@ -1,0 +1,130 @@
+/* NAMROS documentation components.
+ *
+ * Component styles carried over from the standalone HTML manual set. Page
+ * chrome (top bar, sidebar, language switch, chapter card, base typography,
+ * tables) is intentionally omitted because the theme owns those surfaces.
+ */
+
+:root {
+  --namros-panel: #ffffff;
+  --namros-panel-soft: #eef4f7;
+  --namros-muted: #566372;
+  --namros-line: #d7e0e7;
+  --namros-accent: #0b6b8f;
+  --namros-accent-2: #176b52;
+  --namros-warn: #8a5a12;
+  --namros-danger: #9b3d36;
+}
+
+[data-md-color-scheme="slate"] {
+  --namros-panel: #1f2733;
+  --namros-panel-soft: #232c39;
+  --namros-muted: #9fb0c0;
+  --namros-line: #3a4654;
+  --namros-accent: #7fc4dd;
+  --namros-accent-2: #6fbf9d;
+  --namros-warn: #d7a55a;
+  --namros-danger: #e08f88;
+}
+
+/* Callouts ---------------------------------------------------------------- */
+
+.summary,
+.note,
+.warning {
+  border: 1px solid var(--namros-line);
+  border-radius: 8px;
+  background: var(--namros-panel-soft);
+  padding: 16px 18px;
+  margin: 18px 0;
+}
+
+.note {
+  border-left: 5px solid var(--namros-accent-2);
+}
+
+.warning {
+  border-left: 5px solid var(--namros-warn);
+}
+
+.summary > :first-child,
+.note > :first-child,
+.warning > :first-child {
+  margin-top: 0;
+}
+
+.summary > :last-child,
+.note > :last-child,
+.warning > :last-child {
+  margin-bottom: 0;
+}
+
+/* Edition badges ---------------------------------------------------------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--namros-line);
+  border-radius: 999px;
+  background: var(--namros-panel-soft);
+  padding: 2px 9px;
+  color: var(--namros-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge.enterprise {
+  color: var(--namros-danger);
+}
+
+/* Card grids -------------------------------------------------------------- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.card {
+  border: 1px solid var(--namros-line);
+  border-radius: 8px;
+  background: var(--namros-panel);
+  padding: 16px;
+}
+
+.card > :first-child {
+  margin-top: 0;
+}
+
+.card > :last-child {
+  margin-bottom: 0;
+}
+
+.card-eyebrow {
+  color: var(--namros-muted);
+  font-size: 13px;
+  font-weight: 680;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--namros-line);
+  border-radius: 8px;
+  background: var(--namros-panel);
+  padding: 8px 12px;
+  font-weight: 650;
+}
+
+/* Diagrams ---------------------------------------------------------------- */
+
+/* Markdown image syntax lets mkdocs resolve the published path, at the cost of
+ * a wrapping paragraph the standalone HTML manuals did not have. */
+.md-typeset p > img {
+  max-width: 100%;
+  border: 1px solid var(--namros-line);
+  border-radius: 8px;
+  background: var(--namros-panel);
+  margin: 18px 0;
+}

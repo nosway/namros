@@ -1,0 +1,15 @@
+.cache/
+.git/
+.namros/
+bin/
+compat-reports/
+dist/
+release-reports/
+tmp/
+
+*.log
+*.test
+
+packaging/docker/.env
+packaging/docker/runtime/
+packaging/docker/secrets/

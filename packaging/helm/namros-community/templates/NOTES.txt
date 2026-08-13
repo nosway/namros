@@ -1,0 +1,13 @@
+NAMROS Community has been rendered for release {{ .Release.Name }}.
+
+The default chart profile is a local Community reference topology. For a
+production-shaped deployment, start from values.production.yaml and provide
+external etcd/TiKV endpoints plus an existing root credential Secret.
+
+S3 service:
+  kubectl -n {{ .Release.Namespace }} get svc {{ include "namros.fullname" . }}
+
+Release checks:
+  helm lint packaging/helm/namros-community
+  helm template namros packaging/helm/namros-community -f packaging/helm/namros-community/values.local.yaml
+  helm template namros packaging/helm/namros-community -f packaging/helm/namros-community/values.production.yaml

@@ -1,0 +1,31 @@
+deploymentProfile: production
+
+embedded:
+  etcd:
+    enabled: false
+  tikv:
+    enabled: false
+
+metadata:
+  tikv:
+    pdEndpoints: pd-0.prod:2379,pd-1.prod:2379,pd-2.prod:2379
+
+coordination:
+  etcd:
+    endpoints: https://etcd-0.prod:2379,https://etcd-1.prod:2379,https://etcd-2.prod:2379
+
+rootCredentials:
+  create: false
+  existingSecret: namros-root-credentials
+
+gateway:
+  replicas: 4
+
+sbs:
+  volumeSize: 1Ti
+  replicationFactor: 3
+  volumeIds:
+    - 18b00001
+    - 18b00002
+    - 18b00003
+  attachmentId: att-namros-production-object-pool

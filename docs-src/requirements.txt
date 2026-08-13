@@ -1,0 +1,10 @@
+# Public documentation build dependencies.
+#
+# Install with:
+#   python -m pip install -r docs-src/requirements.txt
+#
+# Then build with `make docs-render-check` or serve locally with
+# `mkdocs serve --config-file mkdocs.yml`.
+#
+# mkdocs-material pulls in mkdocs, pymdown-extensions, and the search plugin.
+mkdocs-material>=9.7,<10

@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" role="img" aria-labelledby="title desc">
+  <title id="title">S3 object to SBS mapping</title>
+  <desc id="desc">A bucket and key resolve to metadata records and segment refs that point to local, SBS physical, or Enterprise EC storage.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#176b52"/>
+    </marker>
+    <style>
+      .box{fill:#ffffff;stroke:#d7e0e7;stroke-width:2;rx:8}
+      .meta{fill:#eef4f7;stroke:#0b6b8f;stroke-width:2;rx:8}
+      .store{fill:#f3fbf7;stroke:#176b52;stroke-width:2;rx:8}
+      .ent{fill:#fff7f4;stroke:#9b3d36;stroke-width:2;rx:8}
+      .txt{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:18px;fill:#17202a}
+      .small{font-size:14px;fill:#566372}
+      .arrow{stroke:#176b52;stroke-width:2;fill:none;marker-end:url(#arrow)}
+      .dash{stroke:#9b3d36;stroke-width:2;fill:none;stroke-dasharray:6 5;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect x="24" y="24" width="1032" height="492" rx="14" fill="#f6f8fb" stroke="#d7e0e7"/>
+  <text x="54" y="64" class="txt" font-weight="700">S3 key is metadata; SegmentRef is storage routing</text>
+
+  <rect class="box" x="58" y="126" width="210" height="98"/>
+  <text x="82" y="160" class="txt" font-weight="700">S3 Request</text>
+  <text x="82" y="184" class="small">bucket: photos</text>
+  <text x="82" y="204" class="small">key: 2026/08/cat.jpg</text>
+
+  <rect class="meta" x="318" y="96" width="210" height="88"/>
+  <text x="342" y="130" class="txt" font-weight="700">Bucket</text>
+  <text x="342" y="154" class="small">name -> bucket id</text>
+  <text x="342" y="174" class="small">policy, versioning</text>
+
+  <rect class="meta" x="318" y="236" width="210" height="88"/>
+  <text x="342" y="270" class="txt" font-weight="700">ObjectHead</text>
+  <text x="342" y="294" class="small">current version id</text>
+  <text x="342" y="314" class="small">LIST/HEAD state</text>
+
+  <rect class="meta" x="584" y="166" width="222" height="110"/>
+  <text x="608" y="200" class="txt" font-weight="700">ObjectVersion</text>
+  <text x="608" y="224" class="small">ETag, size, headers</text>
+  <text x="608" y="244" class="small">storage class snapshot</text>
+  <text x="608" y="264" class="small">SegmentRefs[]</text>
+
+  <path class="arrow" d="M268 174 H318"/>
+  <path class="arrow" d="M423 184 V236"/>
+  <path class="arrow" d="M528 280 C560 280 560 220 584 220"/>
+
+  <rect class="store" x="850" y="64" width="176" height="96"/>
+  <text x="874" y="98" class="txt" font-weight="700">Local Store</text>
+  <text x="874" y="122" class="small">dev/test bytes</text>
+  <text x="874" y="142" class="small">range read/delete</text>
+
+  <rect class="store" x="850" y="220" width="176" height="96"/>
+  <text x="874" y="254" class="txt" font-weight="700">SBS Physical</text>
+  <text x="874" y="278" class="small">replicated chunks</text>
+  <text x="874" y="298" class="small">volume/pool refs</text>
+
+  <rect class="ent" x="850" y="376" width="176" height="96"/>
+  <text x="874" y="410" class="txt" font-weight="700">SBS EC</text>
+  <text x="874" y="434" class="small">Enterprise only</text>
+  <text x="874" y="454" class="small">data/parity shards</text>
+
+  <path class="arrow" d="M806 214 C824 150 828 118 850 112"/>
+  <path class="arrow" d="M806 224 H850"/>
+  <path class="dash" d="M806 236 C824 318 830 406 850 424"/>
+
+  <rect class="box" x="190" y="390" width="640" height="72"/>
+  <text x="212" y="422" class="txt" font-weight="700">Committed object version stores the routing snapshot</text>
+  <text x="212" y="446" class="small">Policy can change later, but existing versions still read using their captured storage class and placement.</text>
+</svg>

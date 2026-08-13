@@ -1,0 +1,19 @@
+deploymentProfile: production
+
+embedded:
+  etcd:
+    enabled: true
+  tikv:
+    enabled: true
+
+rootCredentials:
+  create: true
+  accessKeyId: namrosroot
+  secretAccessKey: namrosrootsecret
+
+gateway:
+  replicas: 2
+
+sbs:
+  volumeSize: 64M
+  replicationFactor: 2
