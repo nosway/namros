@@ -74,16 +74,6 @@ Build Community binaries into `bin/community`:
 make build-community
 ```
 
-Build Enterprise binaries from a private Enterprise overlay checkout:
-
-```sh
-NAMROS_ENTERPRISE_REPO=/path/to/namros-enterprise make build-enterprise
-```
-
-`build-enterprise` refuses to use the public Community tree unless the selected
-source checkout replaces the fixed Community identity with an Enterprise build
-identity.
-
 Run unit tests:
 
 ```sh
