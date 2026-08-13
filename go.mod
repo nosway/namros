@@ -4,7 +4,7 @@ go 1.26.5
 
 require (
 	github.com/gin-gonic/gin v1.11.0
-	github.com/klauspost/reedsolomon v1.14.0
+	github.com/klauspost/reedsolomon v1.14.1
 	go.etcd.io/etcd/client/v3 v3.6.8
 )
 
@@ -17,7 +17,6 @@ require (
 	golang.org/x/crypto v0.50.0
 	google.golang.org/grpc v1.82.1
 )
-
 
 require (
 	github.com/DataDog/zstd v1.4.5 // indirect
