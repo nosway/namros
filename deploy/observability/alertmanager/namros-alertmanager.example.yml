@@ -1,0 +1,27 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: namros-webhook
+  group_by:
+    - alertname
+    - cluster
+    - component
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: namros-webhook
+    webhook_configs:
+      - url: http://namros-notification-adapter:19120/alertmanager/webhook
+        send_resolved: true
+
+inhibit_rules:
+  - source_matchers:
+      - severity = critical
+    target_matchers:
+      - severity = warning
+    equal:
+      - cluster
+      - component

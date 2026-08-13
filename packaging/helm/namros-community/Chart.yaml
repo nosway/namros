@@ -1,0 +1,7 @@
+apiVersion: v2
+name: namros-community
+description: NAMROS Community active-active gateway with TiKV metadata and SBS replicated storage.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.27.0-0"

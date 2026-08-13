@@ -1,0 +1,63 @@
+# Public NAMROS Community source export allowlist.
+#
+# Entries ending in "/" include tracked files below that directory. Other
+# entries include one exact tracked file. The exporter applies
+# community-source-excludes.txt after this allowlist so mixed Community/private
+# Go packages can keep public stubs while private implementation bodies stay
+# out of the export. Documentation ships as Markdown under docs-src/; the
+# rendered manual set is published to GitHub Pages, not committed.
+.dockerignore
+.github/
+.gitignore
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+LICENSE
+Makefile
+NOTICE
+README.md
+SECURITY.md
+cmd/
+deploy/observability/
+docs-src/
+mkdocs.yml
+go.mod
+go.sum
+internal/
+packaging/docker/
+packaging/helm/
+scripts/container/
+tools/check-docs-render.py
+scripts/lab/run-volume-pool-runtime-add-member-smoke.sh
+scripts/lab/run-volume-pool-drain-read-old-ref-smoke.sh
+scripts/lab/run-sbs-session-refcount-open-smoke.sh
+scripts/lab/run-sbs-session-close-guard-smoke.sh
+scripts/lab/run-sbs-session-fence-smoke.sh
+scripts/lab/run-gateway-drain-state-smoke.sh
+scripts/lab/run-lab-bridge-production-guard-smoke.sh
+scripts/lab/run-production-gc-queue-guard-smoke.sh
+scripts/lab/run-lifecycle-worker-runner-smoke.sh
+scripts/lab/run-worker-control-smoke.sh
+scripts/lab/run-worker-budget-smoke.sh
+scripts/lab/run-volume-drain-operation-model-smoke.sh
+scripts/lab/run-volume-drain-copy-publish-smoke.sh
+scripts/lab/run-volume-drain-gc-verify-smoke.sh
+scripts/lab/run-volume-drain-worker-failover-smoke.sh
+scripts/lab/run-tenant-quota-records-smoke.sh
+scripts/lab/run-tenant-usage-reconcile-smoke.sh
+scripts/lab/run-tenant-active-upload-quota-smoke.sh
+scripts/lab/run-gateway-request-limiter-smoke.sh
+scripts/lab/run-gateway-bandwidth-hooks-smoke.sh
+scripts/lab/run-noisy-tenant-profile-smoke.sh
+scripts/lab/run-admission-observability-smoke.sh
+scripts/lab/run-gateway-latency-error-metrics-smoke.sh
+scripts/lab/run-tikv-retry-metrics-smoke.sh
+scripts/release/check-community-source.sh
+scripts/release/check-enterprise-build-source.sh
+scripts/release/check-helm-chart.sh
+scripts/release/check-publication-readiness.sh
+scripts/release/check-production-scale-readiness.sh
+scripts/release/community-source-allowlist.txt
+scripts/release/community-source-excludes.txt
+scripts/release/community-source-overlays/
+scripts/release/export-community-source.sh
+scripts/release/write-release-artifact-metadata.sh

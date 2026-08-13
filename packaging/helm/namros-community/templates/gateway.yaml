@@ -1,0 +1,124 @@
+{{- $data0 := index .Values.sbs.data.nodes 0 }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "namros.fullname" . }}
+  labels:
+    {{- include "namros.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+spec:
+  type: {{ .Values.gateway.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.gateway.service.port }}
+      targetPort: http
+  selector:
+    {{- include "namros.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "namros.fullname" . }}-gateway
+  labels:
+    {{- include "namros.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+spec:
+  replicas: {{ .Values.gateway.replicas }}
+  selector:
+    matchLabels:
+      {{- include "namros.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: gateway
+  template:
+    metadata:
+      labels:
+        {{- include "namros.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: gateway
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: gateway
+          image: "{{ .Values.images.gateway.repository }}:{{ .Values.images.gateway.tag }}"
+          imagePullPolicy: {{ .Values.images.gateway.pullPolicy }}
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: NAMROS_LISTEN
+              value: 0.0.0.0:9000
+            - name: NAMROS_DEPLOYMENT_PROFILE
+              value: {{ .Values.deploymentProfile | quote }}
+            - name: NAMROS_REGION
+              value: {{ .Values.region | quote }}
+            - name: NAMROS_METADATA_BACKEND
+              value: {{ .Values.metadata.backend | quote }}
+            - name: NAMROS_TIKV_PD_ENDPOINTS
+              value: {{ include "namros.tikvPDEndpoints" . | quote }}
+            - name: NAMROS_STORAGE_BACKEND
+              value: sbs-cluster
+            - name: NAMROS_GC_CANDIDATE_QUEUE
+              value: metadata
+            - name: NAMROS_SBS_ADMIN_ENDPOINT
+              value: "{{ include "namros.fullname" . }}-sbs-admin:9443"
+            - name: NAMROS_SBS_DATA_ENDPOINT
+              value: "{{ include "namros.fullname" . }}-{{ $data0.id }}:9444"
+            - name: NAMROS_SBS_VOLUME_ID
+              value: {{ first .Values.sbs.volumeIds | quote }}
+            - name: NAMROS_SBS_VOLUME_POOL_ID
+              value: {{ .Values.sbs.volumePoolId | quote }}
+            - name: NAMROS_SBS_CHUNK_SIZE_BYTES
+              value: {{ .Values.sbs.chunkSizeBytes | quote }}
+            - name: NAMROS_SBS_GATEWAY_ID
+              value: "$(POD_NAME)"
+            - name: NAMROS_SBS_ATTACHMENT_ID
+              value: {{ .Values.sbs.attachmentId | quote }}
+            - name: NAMROS_SBS_GENERATION
+              value: "1"
+            - name: NAMROS_SBS_WRITER_GROUP_ID
+              value: {{ .Values.sbs.writerGroupId | quote }}
+            - name: NAMROS_SBS_SESSION_ID
+              value: "$(POD_NAME)-session-1"
+            - name: NAMROS_SBS_VOLUME_EPOCH
+              value: {{ .Values.sbs.volumeEpoch | quote }}
+            - name: NAMROS_COORDINATION_BACKEND
+              value: {{ .Values.coordination.backend | quote }}
+            - name: NAMROS_ETCD_ENDPOINTS
+              value: {{ include "namros.etcdEndpoints" . | quote }}
+            - name: NAMROS_GATEWAY_INSTANCE_ID
+              value: "$(POD_NAME)"
+            - name: NAMROS_GATEWAY_ADVERTISE_ENDPOINT
+              value: "http://$(POD_IP):9000"
+            {{- include "namros.secretEnv" . | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 9000
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.gateway.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            {{- include "namros.secretMount" . | nindent 12 }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        {{- include "namros.secretVolume" . | nindent 8 }}

@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" role="img" aria-labelledby="title desc">
+  <title id="title">Object Lock protected reference flow</title>
+  <desc id="desc">Object Lock metadata creates protected refs that gate GC and storage delete admission.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#176b52"/>
+    </marker>
+    <style>
+      .box{fill:#ffffff;stroke:#d7e0e7;stroke-width:2;rx:8}
+      .meta{fill:#eef4f7;stroke:#0b6b8f;stroke-width:2;rx:8}
+      .warn{fill:#fff8ea;stroke:#8a5a12;stroke-width:2;rx:8}
+      .ent{fill:#fff7f4;stroke:#9b3d36;stroke-width:2;rx:8}
+      .txt{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:18px;fill:#17202a}
+      .small{font-size:14px;fill:#566372}
+      .arrow{stroke:#176b52;stroke-width:2;fill:none;marker-end:url(#arrow)}
+      .deny{stroke:#9b3d36;stroke-width:3;fill:none}
+    </style>
+  </defs>
+  <rect x="24" y="24" width="1032" height="472" rx="14" fill="#f6f8fb" stroke="#d7e0e7"/>
+  <text x="54" y="64" class="txt" font-weight="700">Object Lock is metadata authority; protected refs guard physical reclaim</text>
+
+  <rect class="box" x="64" y="126" width="190" height="100"/>
+  <text x="88" y="160" class="txt" font-weight="700">PutObject</text>
+  <text x="88" y="184" class="small">retention headers</text>
+  <text x="88" y="204" class="small">legal hold headers</text>
+
+  <rect class="meta" x="316" y="88" width="216" height="112"/>
+  <text x="340" y="122" class="txt" font-weight="700">ObjectVersion</text>
+  <text x="340" y="146" class="small">retention mode/date</text>
+  <text x="340" y="166" class="small">legal hold state</text>
+  <text x="340" y="186" class="small">segment refs</text>
+
+  <rect class="ent" x="316" y="260" width="216" height="112"/>
+  <text x="340" y="294" class="txt" font-weight="700">ProtectedRef</text>
+  <text x="340" y="318" class="small">bucket/key/version</text>
+  <text x="340" y="338" class="small">segment ref</text>
+  <text x="340" y="358" class="small">retain/legal hold</text>
+
+  <path class="arrow" d="M254 176 C280 158 292 144 316 144"/>
+  <path class="arrow" d="M424 200 V260"/>
+
+  <rect class="warn" x="604" y="118" width="208" height="108"/>
+  <text x="628" y="152" class="txt" font-weight="700">Delete Request</text>
+  <text x="628" y="176" class="small">explicit version or</text>
+  <text x="628" y="196" class="small">current delete marker</text>
+
+  <rect class="warn" x="604" y="292" width="208" height="108"/>
+  <text x="628" y="326" class="txt" font-weight="700">Delete Admission</text>
+  <text x="628" y="350" class="small">retention expired?</text>
+  <text x="628" y="370" class="small">legal hold off?</text>
+  <text x="628" y="390" class="small">protected ref readable?</text>
+
+  <path class="arrow" d="M532 316 H604"/>
+  <path class="arrow" d="M708 226 V292"/>
+
+  <rect class="box" x="872" y="150" width="156" height="88"/>
+  <text x="896" y="184" class="txt" font-weight="700">Deny</text>
+  <text x="896" y="208" class="small">fail closed</text>
+  <path class="deny" d="M846 148 L1016 236"/>
+  <path class="deny" d="M1016 148 L846 236"/>
+
+  <rect class="box" x="872" y="324" width="156" height="88"/>
+  <text x="896" y="358" class="txt" font-weight="700">Delete Bytes</text>
+  <text x="896" y="382" class="small">or retryable GC</text>
+
+  <path class="arrow" d="M812 346 H872"/>
+  <path class="arrow" d="M812 172 H872"/>
+  <text x="842" y="314" class="small">allowed</text>
+  <text x="842" y="140" class="small">blocked</text>
+</svg>

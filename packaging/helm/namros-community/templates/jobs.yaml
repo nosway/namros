@@ -1,0 +1,163 @@
+{{- $service0 := index .Values.sbs.service.nodes 0 -}}
+{{- $service1 := index .Values.sbs.service.nodes 1 -}}
+{{- $data0 := index .Values.sbs.data.nodes 0 -}}
+{{- $data1 := index .Values.sbs.data.nodes 1 -}}
+{{- $data2 := index .Values.sbs.data.nodes 2 -}}
+{{- $data3 := index .Values.sbs.data.nodes 3 -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "namros.fullname" . }}-sbs-bootstrap
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+  labels:
+    {{- include "namros.labels" . | nindent 4 }}
+    app.kubernetes.io/component: sbs-bootstrap
+spec:
+  backoffLimit: {{ .Values.jobs.backoffLimit }}
+  ttlSecondsAfterFinished: {{ .Values.jobs.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      labels:
+        {{- include "namros.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: sbs-bootstrap
+    spec:
+      restartPolicy: OnFailure
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: sbs-bootstrap
+          image: "{{ .Values.images.sbsctl.repository }}:{{ .Values.images.sbsctl.tag }}"
+          imagePullPolicy: {{ .Values.images.sbsctl.pullPolicy }}
+          command:
+            - /usr/local/bin/namros-container-community-bootstrap
+          env:
+            - name: NAMROS_COMMUNITY_CLUSTER_ID
+              value: {{ .Values.sbs.clusterId | quote }}
+            - name: NAMROS_COMMUNITY_SBS_CLUSTER_ID
+              value: {{ .Values.sbs.sbsClusterId | quote }}
+            - name: NAMROS_COMMUNITY_SBS_ADMIN_ENDPOINT
+              value: "{{ include "namros.fullname" . }}-sbs-admin:9443"
+            - name: NAMROS_COMMUNITY_SBS_VOLUME_IDS
+              value: {{ join "," .Values.sbs.volumeIds | quote }}
+            - name: NAMROS_COMMUNITY_SBS_VOLUME_SIZE
+              value: {{ .Values.sbs.volumeSize | quote }}
+            - name: NAMROS_COMMUNITY_SBS_BLOCK_SIZE
+              value: {{ .Values.sbs.blockSize | quote }}
+            - name: NAMROS_COMMUNITY_SBS_ALLOCATION_CHUNK_SIZE
+              value: {{ .Values.sbs.allocationChunkSize | quote }}
+            - name: NAMROS_COMMUNITY_SBS_ALLOCATION_PAGE_SIZE
+              value: {{ .Values.sbs.allocationPageSize | quote }}
+            - name: NAMROS_COMMUNITY_SBS_REPLICATION_FACTOR
+              value: {{ .Values.sbs.replicationFactor | quote }}
+            - name: NAMROS_COMMUNITY_SBS_SERVICE_1_READY_URL
+              value: "http://{{ include "namros.fullname" . }}-{{ $service0.id }}:9081/readyz"
+            - name: NAMROS_COMMUNITY_SBS_SERVICE_2_READY_URL
+              value: "http://{{ include "namros.fullname" . }}-{{ $service1.id }}:9081/readyz"
+            - name: NAMROS_COMMUNITY_SBS_DATA_1_READY_URL
+              value: "http://{{ include "namros.fullname" . }}-{{ $data0.id }}:9082/readyz"
+            - name: NAMROS_COMMUNITY_SBS_DATA_2_READY_URL
+              value: "http://{{ include "namros.fullname" . }}-{{ $data1.id }}:9082/readyz"
+            - name: NAMROS_COMMUNITY_SBS_DATA_3_READY_URL
+              value: "http://{{ include "namros.fullname" . }}-{{ $data2.id }}:9082/readyz"
+            - name: NAMROS_COMMUNITY_SBS_DATA_4_READY_URL
+              value: "http://{{ include "namros.fullname" . }}-{{ $data3.id }}:9082/readyz"
+            - name: NAMROS_COMMUNITY_SBS_DATA_1_NODE_ID
+              value: {{ $data0.id | quote }}
+            - name: NAMROS_COMMUNITY_SBS_DATA_2_NODE_ID
+              value: {{ $data1.id | quote }}
+            - name: NAMROS_COMMUNITY_SBS_DATA_3_NODE_ID
+              value: {{ $data2.id | quote }}
+            - name: NAMROS_COMMUNITY_SBS_DATA_4_NODE_ID
+              value: {{ $data3.id | quote }}
+            - name: NAMROS_COMMUNITY_SBS_DATA_1_GRPC_ENDPOINT
+              value: "{{ include "namros.fullname" . }}-{{ $data0.id }}:9444"
+            - name: NAMROS_COMMUNITY_SBS_DATA_2_GRPC_ENDPOINT
+              value: "{{ include "namros.fullname" . }}-{{ $data1.id }}:9444"
+            - name: NAMROS_COMMUNITY_SBS_DATA_3_GRPC_ENDPOINT
+              value: "{{ include "namros.fullname" . }}-{{ $data2.id }}:9444"
+            - name: NAMROS_COMMUNITY_SBS_DATA_4_GRPC_ENDPOINT
+              value: "{{ include "namros.fullname" . }}-{{ $data3.id }}:9444"
+            - name: NAMROS_COMMUNITY_SBS_DATA_1_ADMIN_HTTP_ENDPOINT
+              value: "http://{{ include "namros.fullname" . }}-{{ $data0.id }}:9082"
+            - name: NAMROS_COMMUNITY_SBS_DATA_2_ADMIN_HTTP_ENDPOINT
+              value: "http://{{ include "namros.fullname" . }}-{{ $data1.id }}:9082"
+            - name: NAMROS_COMMUNITY_SBS_DATA_3_ADMIN_HTTP_ENDPOINT
+              value: "http://{{ include "namros.fullname" . }}-{{ $data2.id }}:9082"
+            - name: NAMROS_COMMUNITY_SBS_DATA_4_ADMIN_HTTP_ENDPOINT
+              value: "http://{{ include "namros.fullname" . }}-{{ $data3.id }}:9082"
+            - name: NAMROS_COMMUNITY_SBS_DATA_1_ZONE
+              value: {{ $data0.zone | quote }}
+            - name: NAMROS_COMMUNITY_SBS_DATA_2_ZONE
+              value: {{ $data1.zone | quote }}
+            - name: NAMROS_COMMUNITY_SBS_DATA_3_ZONE
+              value: {{ $data2.zone | quote }}
+            - name: NAMROS_COMMUNITY_SBS_DATA_4_ZONE
+              value: {{ $data3.zone | quote }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "namros.fullname" . }}-pool-bootstrap
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "20"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+  labels:
+    {{- include "namros.labels" . | nindent 4 }}
+    app.kubernetes.io/component: pool-bootstrap
+spec:
+  backoffLimit: {{ .Values.jobs.backoffLimit }}
+  ttlSecondsAfterFinished: {{ .Values.jobs.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      labels:
+        {{- include "namros.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: pool-bootstrap
+    spec:
+      restartPolicy: OnFailure
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: pool-bootstrap
+          image: "{{ .Values.images.tools.repository }}:{{ .Values.images.tools.tag }}"
+          imagePullPolicy: {{ .Values.images.tools.pullPolicy }}
+          command:
+            - /usr/local/bin/namros-container-volume-pool-bootstrap
+          env:
+            - name: NAMROS_METADATA_BACKEND
+              value: tikv
+            - name: NAMROS_TIKV_PD_ENDPOINTS
+              value: {{ include "namros.tikvPDEndpoints" . | quote }}
+            - name: NAMROS_COMMUNITY_SBS_VOLUME_IDS
+              value: {{ join "," .Values.sbs.volumeIds | quote }}
+            - name: NAMROS_COMMUNITY_SBS_VOLUME_POOL_ID
+              value: {{ .Values.sbs.volumePoolId | quote }}
+            - name: NAMROS_COMMUNITY_SBS_VOLUME_POOL_GENERATION
+              value: {{ .Values.sbs.volumePoolGeneration | quote }}
+            - name: NAMROS_COMMUNITY_SBS_ADMIN_ENDPOINT
+              value: "{{ include "namros.fullname" . }}-sbs-admin:9443"
+            - name: NAMROS_COMMUNITY_SBS_DATA_ENDPOINT
+              value: "{{ include "namros.fullname" . }}-{{ $data0.id }}:9444"
+            - name: NAMROS_COMMUNITY_SBS_DATA_ENDPOINTS
+              value: "{{ include "namros.fullname" . }}-{{ $data0.id }}:9444,{{ include "namros.fullname" . }}-{{ $data1.id }}:9444,{{ include "namros.fullname" . }}-{{ $data2.id }}:9444,{{ include "namros.fullname" . }}-{{ $data3.id }}:9444"
+            - name: NAMROS_COMMUNITY_SBS_CHUNK_SIZE_BYTES
+              value: {{ .Values.sbs.chunkSizeBytes | quote }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

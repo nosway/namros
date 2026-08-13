@@ -1,0 +1,46 @@
+# syntax=docker/dockerfile:1.7
+
+ARG GO_VERSION=1.26.5
+ARG ALPINE_VERSION=3.22
+
+FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS build
+RUN apk add --no-cache ca-certificates git
+
+WORKDIR /src/namros
+
+# NAMRBD is provided as a BuildKit named context for transition builds and for
+# development checkouts that use a temporary module replacement.
+COPY --from=namrbd / /src/NAMRBD
+
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod \
+	--mount=type=cache,target=/root/.cache/go-build \
+	go mod download
+
+COPY . .
+RUN --mount=type=cache,target=/root/.cache/go-build \
+	CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -trimpath -o /out/namros-admin ./cmd/namros-admin
+RUN --mount=type=cache,target=/root/.cache/go-build \
+	CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -trimpath -o /out/namros-ops-report ./cmd/namros-ops-report
+RUN --mount=type=cache,target=/root/.cache/go-build \
+	CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -trimpath -o /out/namros-s3bench ./cmd/namros-s3bench
+
+FROM alpine:${ALPINE_VERSION}
+RUN apk add --no-cache bash aws-cli ca-certificates coreutils curl jq \
+	&& addgroup -g 65532 namros \
+	&& adduser -D -G namros -u 65532 namros \
+	&& mkdir -p /workspace /tmp \
+	&& chown -R 65532:65532 /workspace /tmp
+
+COPY --from=build /out/namros-admin /usr/local/bin/namros-admin
+COPY --from=build /out/namros-ops-report /usr/local/bin/namros-ops-report
+COPY --from=build /out/namros-s3bench /usr/local/bin/namros-s3bench
+COPY packaging/docker/bin/namros-container-local-smoke /usr/local/bin/namros-container-local-smoke
+COPY packaging/docker/bin/namros-container-community-smoke /usr/local/bin/namros-container-community-smoke
+COPY packaging/docker/bin/namros-container-volume-pool-bootstrap /usr/local/bin/namros-container-volume-pool-bootstrap
+RUN chmod +x /usr/local/bin/namros-container-local-smoke /usr/local/bin/namros-container-community-smoke /usr/local/bin/namros-container-volume-pool-bootstrap
+
+USER 65532:65532
+WORKDIR /workspace
+ENTRYPOINT ["/bin/sh", "-lc"]
+CMD ["namros-admin --help"]

@@ -1,0 +1,90 @@
+services:
+  etcd:
+    extends:
+      file: compose.yaml
+      service: etcd
+  pd:
+    extends:
+      file: compose.yaml
+      service: pd
+  tikv:
+    extends:
+      file: compose.yaml
+      service: tikv
+    ulimits:
+      nofile:
+        soft: 200000
+        hard: 200000
+  sbs-service-1:
+    extends:
+      file: compose.yaml
+      service: sbs-service-1
+  sbs-service-2:
+    extends:
+      file: compose.yaml
+      service: sbs-service-2
+  sbs-data-1:
+    extends:
+      file: compose.yaml
+      service: sbs-data-1
+  sbs-data-2:
+    extends:
+      file: compose.yaml
+      service: sbs-data-2
+  sbs-data-3:
+    extends:
+      file: compose.yaml
+      service: sbs-data-3
+  sbs-data-4:
+    extends:
+      file: compose.yaml
+      service: sbs-data-4
+  sbs-admin-lb:
+    extends:
+      file: compose.yaml
+      service: sbs-admin-lb
+  sbs-data-lb:
+    extends:
+      file: compose.yaml
+      service: sbs-data-lb
+  sbs-bootstrap:
+    extends:
+      file: compose.yaml
+      service: sbs-bootstrap
+  namros-pool-bootstrap:
+    extends:
+      file: compose.yaml
+      service: namros-pool-bootstrap
+  namros-gateway-a:
+    extends:
+      file: compose.yaml
+      service: namros-gateway-a
+  namros-gateway-b:
+    extends:
+      file: compose.yaml
+      service: namros-gateway-b
+  s3-lb:
+    extends:
+      file: compose.yaml
+      service: s3-lb
+  community-tools:
+    extends:
+      file: compose.yaml
+      service: community-tools
+
+secrets:
+  namros_root_access_key_id:
+    file: ${NAMROS_ROOT_ACCESS_KEY_ID_FILE:-./secrets/root-access-key-id}
+  namros_root_secret_access_key:
+    file: ${NAMROS_ROOT_SECRET_ACCESS_KEY_FILE:-./secrets/root-secret-access-key}
+
+volumes:
+  namros-community-etcd:
+  namros-community-pd:
+  namros-community-tikv:
+  namros-community-sbs-service-1:
+  namros-community-sbs-service-2:
+  namros-community-sbs-data-1:
+  namros-community-sbs-data-2:
+  namros-community-sbs-data-3:
+  namros-community-sbs-data-4:

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="280" viewBox="0 0 980 280" role="img" aria-labelledby="title desc">
+  <title id="title">Edition boundary</title>
+  <desc id="desc">Community source exports public stubs while Enterprise private overlay restores implementation packages.</desc>
+  <rect width="980" height="280" fill="#fff"/>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#566372"/></marker></defs>
+  <style>.c{fill:#eef4f7;stroke:#0b6b8f;stroke-width:2}.e{fill:#fff3e8;stroke:#9b3d36;stroke-width:2}.g{fill:#f1f7ef;stroke:#176b52;stroke-width:2}.t{font:700 15px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;fill:#17202a}.s{font:12px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;fill:#566372}.l{stroke:#566372;stroke-width:2;marker-end:url(#arrow)}</style>
+  <rect class="c" x="44" y="46" width="250" height="188" rx="8"/><text class="t" x="104" y="78">Community Source</text><text class="s" x="78" y="110">fixed Community identity</text><text class="s" x="78" y="134">S3 compatibility</text><text class="s" x="78" y="158">stubs/admission errors</text><text class="s" x="78" y="182">source export/check</text>
+  <rect class="g" x="374" y="84" width="210" height="112" rx="8"/><text class="t" x="420" y="116">Release Gates</text><text class="s" x="408" y="144">checks and exports</text><text class="s" x="408" y="166">no runtime unlock</text>
+  <rect class="e" x="664" y="46" width="250" height="188" rx="8"/><text class="t" x="720" y="78">Enterprise Private</text><text class="s" x="698" y="110">private overlay/source</text><text class="s" x="698" y="134">SBS EC/classroute</text><text class="s" x="698" y="158">dedupe/WORM/KMS</text><text class="s" x="698" y="182">advanced ops gates</text>
+  <line class="l" x1="294" y1="140" x2="374" y2="140"/><line class="l" x1="584" y1="140" x2="664" y2="140"/>
+</svg>

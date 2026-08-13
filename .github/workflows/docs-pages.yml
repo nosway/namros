@@ -1,0 +1,54 @@
+name: Docs
+
+# The published manual set is built from docs-src on every push to main and
+# served from GitHub Pages. No rendered HTML is committed to the repository, so
+# the Markdown sources cannot drift from what readers see.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# A superseded run has nothing worth finishing; the next one republishes.
+concurrency:
+  group: docs-pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install documentation toolchain
+        run: python -m pip install -r docs-src/requirements.txt
+
+      - name: Build and render-check the site
+        run: make docs-render-check
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

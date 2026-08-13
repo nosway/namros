@@ -1,0 +1,36 @@
+# syntax=docker/dockerfile:1.7
+
+ARG GO_VERSION=1.26.5
+ARG ALPINE_VERSION=3.22
+
+FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS build
+RUN apk add --no-cache ca-certificates git
+
+WORKDIR /src/namros
+
+# NAMRBD is provided as a BuildKit named context for transition builds and for
+# development checkouts that use a temporary module replacement.
+COPY --from=namrbd / /src/NAMRBD
+
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod \
+	--mount=type=cache,target=/root/.cache/go-build \
+	go mod download
+
+COPY . .
+RUN --mount=type=cache,target=/root/.cache/go-build \
+	CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -trimpath -o /out/namros-gateway ./cmd/namros-gateway
+
+FROM alpine:${ALPINE_VERSION}
+RUN apk add --no-cache ca-certificates wget \
+	&& addgroup -g 65532 namros \
+	&& adduser -D -G namros -u 65532 namros \
+	&& mkdir -p /var/lib/namros/meta /var/lib/namros/segments /tmp \
+	&& chown -R 65532:65532 /var/lib/namros /tmp
+
+COPY --from=build /out/namros-gateway /usr/local/bin/namros-gateway
+
+USER 65532:65532
+EXPOSE 9000
+HEALTHCHECK --interval=5s --timeout=3s --retries=24 --start-period=5s CMD wget -q -O - http://127.0.0.1:9000/readyz >/dev/null || exit 1
+ENTRYPOINT ["/usr/local/bin/namros-gateway"]

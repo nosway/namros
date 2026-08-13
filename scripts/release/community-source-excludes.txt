@@ -1,0 +1,4 @@
+# Public Community source export exclude manifest.
+#
+# The exported tree has already been filtered from the private source tree, so
+# no private-only paths need to be excluded from a public repository checkout.

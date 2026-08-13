@@ -1,0 +1,109 @@
+groups:
+  - name: namros.gateway
+    rules:
+      - alert: NamrosGatewayDown
+        expr: up{job="namros-gateway"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: gateway
+        annotations:
+          summary: NAMROS gateway is down
+          runbook: namros-gateway-coordination-runbook
+
+      - alert: NamrosS3FiveXXElevated
+        expr: sum(rate(namros_gateway_s3_requests_total{status_class="5xx"}[5m])) > 0
+        for: 5m
+        labels:
+          severity: warning
+          component: gateway
+        annotations:
+          summary: NAMROS S3 5xx responses are elevated
+          runbook: namros-compatibility-test-runbook
+
+      - alert: NamrosGatewayLeaseExpired
+        expr: min(namros_gateway_coordination_lease_fresh) by (gateway_id) == 0
+        for: 1m
+        labels:
+          severity: warning
+          component: coordination
+        annotations:
+          summary: NAMROS gateway coordination lease is stale
+          runbook: namros-gateway-coordination-runbook
+
+      - alert: NamrosMetadataUnavailable
+        expr: sum(rate(namros_gateway_metadata_operations_total{status!="ok"}[5m])) > 0
+        for: 2m
+        labels:
+          severity: critical
+          component: metadata
+        annotations:
+          summary: NAMROS metadata operations are failing
+          runbook: namros-metadata-backup-restore-runbook
+
+  - name: namros.sbs
+    rules:
+      - alert: NamrosSBSNodeAbnormal
+        expr: sum(namros_sbs_node_up{state!="healthy"}) > 0
+        for: 5m
+        labels:
+          severity: warning
+          component: sbs
+        annotations:
+          summary: NAMROS SBS node state is abnormal or unknown
+          runbook: namros-18node-lab-experiment-plan
+
+      - alert: NamrosMaintenanceStuck
+        expr: sum(namros_sbs_maintenance_jobs{state="stuck"}) > 0
+        for: 10m
+        labels:
+          severity: critical
+          component: maintenance
+        annotations:
+          summary: NAMROS maintenance job appears stuck
+          runbook: namros-metadata-backup-restore-runbook
+
+      - alert: NamrosSBSPoolBlocked
+        expr: sum(namros_sbs_pool_admission_state{state=~"disabled|read_only|unknown"}) by (pool_id,state) > 0
+        for: 5m
+        labels:
+          severity: critical
+          component: sbs
+        annotations:
+          summary: NAMROS SBS volume pool has no writable admission
+          runbook: namros-sbs-volume-pool-policy
+
+  - name: namros.capacity
+    rules:
+      - alert: NamrosSBSCapacityHigh
+        expr: namros_sbs_capacity_used_percent > 85
+        for: 15m
+        labels:
+          severity: warning
+          component: sbs
+        annotations:
+          summary: NAMROS SBS capacity usage is high
+          runbook: namros-18node-lab-experiment-plan
+          note: Capacity values are read from NAMRBD SBS observability.
+
+  - name: namros.workers
+    rules:
+      - alert: NamrosWorkerBacklogHigh
+        expr: sum(namros_gateway_worker_backlog_operations) by (worker_kind,shard_id) > 0
+        for: 15m
+        labels:
+          severity: warning
+          component: maintenance
+        annotations:
+          summary: NAMROS worker retry backlog is accumulating
+          runbook: namros-metadata-backup-restore-runbook
+
+      - alert: NamrosQuotaAdmissionHigh
+        expr: sum(rate(namros_gateway_admission_rejections_total{kind=~"bucket_quota|tenant_quota|request_limit|data_budget"}[5m])) by (kind,reason) > 0.1
+        for: 10m
+        labels:
+          severity: info
+          component: quota
+        annotations:
+          summary: NAMROS admission rejections are elevated
+          runbook: namros-s3-api-spec-scope

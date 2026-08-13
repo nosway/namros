@@ -1,0 +1,121 @@
+{{- if .Values.embedded.tikv.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "namros.fullname" . }}-pd
+  labels:
+    {{- include "namros.labels" . | nindent 4 }}
+    app.kubernetes.io/component: pd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "namros.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: pd
+  template:
+    metadata:
+      labels:
+        {{- include "namros.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: pd
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: pd
+          image: "{{ .Values.embedded.tikv.pdImage.repository }}:{{ .Values.embedded.tikv.pdImage.tag }}"
+          imagePullPolicy: {{ .Values.embedded.tikv.pdImage.pullPolicy }}
+          args:
+            - --name=pd
+            - --data-dir=/pd
+            - --client-urls=http://0.0.0.0:2379
+            - --advertise-client-urls=http://{{ include "namros.fullname" . }}-pd:2379
+            - --peer-urls=http://0.0.0.0:2380
+            - --advertise-peer-urls=http://{{ include "namros.fullname" . }}-pd:2380
+            - --initial-cluster=pd=http://{{ include "namros.fullname" . }}-pd:2380
+          ports:
+            - name: client
+              containerPort: 2379
+            - name: peer
+              containerPort: 2380
+          volumeMounts:
+            - name: data
+              mountPath: /pd
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "namros.fullname" . }}-pd
+  labels:
+    {{- include "namros.labels" . | nindent 4 }}
+    app.kubernetes.io/component: pd
+spec:
+  ports:
+    - name: client
+      port: 2379
+      targetPort: client
+    - name: peer
+      port: 2380
+      targetPort: peer
+  selector:
+    {{- include "namros.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: pd
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "namros.fullname" . }}-tikv
+  labels:
+    {{- include "namros.labels" . | nindent 4 }}
+    app.kubernetes.io/component: tikv
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "namros.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: tikv
+  template:
+    metadata:
+      labels:
+        {{- include "namros.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: tikv
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: tikv
+          image: "{{ .Values.embedded.tikv.tikvImage.repository }}:{{ .Values.embedded.tikv.tikvImage.tag }}"
+          imagePullPolicy: {{ .Values.embedded.tikv.tikvImage.pullPolicy }}
+          args:
+            - --addr=0.0.0.0:20160
+            - --advertise-addr={{ include "namros.fullname" . }}-tikv:20160
+            - --data-dir=/tikv
+            - --pd={{ include "namros.fullname" . }}-pd:2379
+          ports:
+            - name: client
+              containerPort: 20160
+          volumeMounts:
+            - name: data
+              mountPath: /tikv
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "namros.fullname" . }}-tikv
+  labels:
+    {{- include "namros.labels" . | nindent 4 }}
+    app.kubernetes.io/component: tikv
+spec:
+  ports:
+    - name: client
+      port: 20160
+      targetPort: client
+  selector:
+    {{- include "namros.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: tikv
+{{- end }}

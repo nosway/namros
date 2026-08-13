@@ -1,0 +1,30 @@
+#!/usr/bin/env sh
+set -eu
+
+access_key_file="${NAMROS_ROOT_ACCESS_KEY_ID_FILE:-/run/secrets/namros_root_access_key_id}"
+secret_key_file="${NAMROS_ROOT_SECRET_ACCESS_KEY_FILE:-/run/secrets/namros_root_secret_access_key}"
+
+if [ ! -r "$access_key_file" ]; then
+	printf 'missing readable access key file: %s\n' "$access_key_file" >&2
+	exit 1
+fi
+if [ ! -r "$secret_key_file" ]; then
+	printf 'missing readable secret key file: %s\n' "$secret_key_file" >&2
+	exit 1
+fi
+
+export NAMROS_ENDPOINT="${NAMROS_ENDPOINT:-http://gateway:9000}"
+export NAMROS_REGION="${NAMROS_REGION:-us-east-1}"
+export NAMROS_ACCESS_KEY_ID="$(tr -d '\r\n' <"$access_key_file")"
+export NAMROS_SECRET_ACCESS_KEY="$(tr -d '\r\n' <"$secret_key_file")"
+
+exec namros-s3bench \
+	-endpoint "$NAMROS_ENDPOINT" \
+	-region "$NAMROS_REGION" \
+	-access-key-id "$NAMROS_ACCESS_KEY_ID" \
+	-secret-access-key "$NAMROS_SECRET_ACCESS_KEY" \
+	-bucket-prefix namros-container-smoke \
+	-small-count 2 \
+	-large-count 1 \
+	-list-repetitions 1 \
+	-timeout 30s

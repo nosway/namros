@@ -1,0 +1,122 @@
+nameOverride: ""
+fullnameOverride: ""
+
+deploymentProfile: production
+region: us-east-1
+
+imagePullSecrets: []
+
+rootCredentials:
+  create: true
+  existingSecret: ""
+  accessKeyId: namrosroot
+  secretAccessKey: namrosrootsecret
+  accessKeyKey: root-access-key-id
+  secretAccessKeyKey: root-secret-access-key
+
+images:
+  gateway:
+    repository: namros-gateway
+    tag: local
+    pullPolicy: IfNotPresent
+  tools:
+    repository: namros-tools
+    tag: local
+    pullPolicy: IfNotPresent
+  sbsService:
+    repository: namros-sbs-service
+    tag: local
+    pullPolicy: IfNotPresent
+  sbsData:
+    repository: namros-sbs-data
+    tag: local
+    pullPolicy: IfNotPresent
+  sbsctl:
+    repository: namros-sbsctl
+    tag: local
+    pullPolicy: IfNotPresent
+
+embedded:
+  etcd:
+    enabled: true
+    image:
+      repository: gcr.io/etcd-development/etcd
+      tag: v3.6.8
+      pullPolicy: IfNotPresent
+  tikv:
+    enabled: true
+    pdImage:
+      repository: pingcap/pd
+      tag: v8.5.7
+      pullPolicy: IfNotPresent
+    tikvImage:
+      repository: pingcap/tikv
+      tag: v8.5.7
+      pullPolicy: IfNotPresent
+
+metadata:
+  backend: tikv
+  tikv:
+    pdEndpoints: ""
+
+coordination:
+  backend: etcd
+  etcd:
+    endpoints: ""
+
+gateway:
+  replicas: 2
+  service:
+    type: ClusterIP
+    port: 9000
+  resources: {}
+
+sbs:
+  clusterId: namros-community
+  sbsClusterId: namros-community-sbs
+  volumeIds:
+    - 18a00001
+    - 18a00002
+  volumePoolId: object-pool
+  volumePoolGeneration: 0
+  volumeSize: 64M
+  blockSize: 4K
+  allocationChunkSize: 1M
+  allocationPageSize: 4M
+  replicationFactor: 2
+  chunkSizeBytes: 1048576
+  attachmentId: att-namros-community-object-pool
+  writerGroupId: namros-community-writers
+  volumeEpoch: 1
+  service:
+    nodes:
+      - id: sbs-service-1
+      - id: sbs-service-2
+  data:
+    nodes:
+      - id: sbs-data-1
+        zone: zone-a
+      - id: sbs-data-2
+        zone: zone-a
+      - id: sbs-data-3
+        zone: zone-b
+      - id: sbs-data-4
+        zone: zone-b
+  resources: {}
+
+jobs:
+  backoffLimit: 12
+  ttlSecondsAfterFinished: 3600
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL

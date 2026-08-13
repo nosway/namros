@@ -1,0 +1,58 @@
+# syntax=docker/dockerfile:1.7
+
+ARG GO_VERSION=1.26.5
+ARG ALPINE_VERSION=3.22
+
+FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS build
+RUN apk add --no-cache ca-certificates git
+
+WORKDIR /src/NAMRBD
+
+# Transition path: NAMROS packaging builds SBS binaries from the NAMRBD source
+# checkout provided as a BuildKit named context.  Long term, these images should
+# be published by NAMRBD and consumed here through Compose image variables.
+COPY --from=namrbd / /src/NAMRBD
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+	--mount=type=cache,target=/root/.cache/go-build \
+	go mod download
+RUN --mount=type=cache,target=/root/.cache/go-build \
+	CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -trimpath -o /out/sbs-service ./cmd/sbs-service
+RUN --mount=type=cache,target=/root/.cache/go-build \
+	CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -trimpath -o /out/sbs-data ./cmd/sbs-data
+RUN --mount=type=cache,target=/root/.cache/go-build \
+	CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -trimpath -o /out/sbsctl ./cmd/sbsctl
+
+FROM alpine:${ALPINE_VERSION} AS sbs-runtime-base
+RUN apk add --no-cache ca-certificates wget \
+	&& addgroup -g 65532 namros \
+	&& adduser -D -G namros -u 65532 namros \
+	&& mkdir -p /var/lib/namrbd /tmp \
+	&& chown -R 65532:65532 /var/lib/namrbd /tmp
+USER 65532:65532
+
+FROM sbs-runtime-base AS sbs-service
+COPY --from=build /out/sbs-service /usr/local/bin/sbs-service
+EXPOSE 9443 9081
+HEALTHCHECK --interval=5s --timeout=3s --retries=36 --start-period=10s CMD wget -q -O - http://127.0.0.1:9081/readyz >/dev/null || exit 1
+ENTRYPOINT ["/usr/local/bin/sbs-service"]
+
+FROM sbs-runtime-base AS sbs-data
+COPY --from=build /out/sbs-data /usr/local/bin/sbs-data
+EXPOSE 9444 9082
+HEALTHCHECK --interval=5s --timeout=3s --retries=24 --start-period=5s CMD wget -q -O - http://127.0.0.1:9082/readyz >/dev/null || exit 1
+ENTRYPOINT ["/usr/local/bin/sbs-data"]
+
+FROM alpine:${ALPINE_VERSION} AS sbsctl
+RUN apk add --no-cache ca-certificates curl jq wget \
+	&& addgroup -g 65532 namros \
+	&& adduser -D -G namros -u 65532 namros \
+	&& mkdir -p /workspace /tmp \
+	&& chown -R 65532:65532 /workspace /tmp
+COPY --from=build /out/sbsctl /usr/local/bin/sbsctl
+COPY packaging/docker/bin/namros-container-community-bootstrap /usr/local/bin/namros-container-community-bootstrap
+RUN chmod +x /usr/local/bin/namros-container-community-bootstrap
+USER 65532:65532
+WORKDIR /workspace
+ENTRYPOINT ["/bin/sh", "-lc"]
+CMD ["sbsctl --help"]

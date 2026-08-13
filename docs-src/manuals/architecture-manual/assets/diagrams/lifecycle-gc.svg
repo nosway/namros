@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="260" viewBox="0 0 980 260" role="img" aria-labelledby="title desc">
+  <title id="title">Lifecycle and GC flow</title>
+  <desc id="desc">Lifecycle planner produces eligible actions; workers check protected refs and GC retries orphan deletes.</desc>
+  <rect width="980" height="260" fill="#fff"/>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#566372"/></marker></defs>
+  <style>.b{fill:#eef4f7;stroke:#0b6b8f;stroke-width:2}.g{fill:#f1f7ef;stroke:#176b52;stroke-width:2}.w{fill:#fff3e8;stroke:#8a5a12;stroke-width:2}.t{font:700 14px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;fill:#17202a}.s{font:12px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;fill:#566372}.l{stroke:#566372;stroke-width:2;marker-end:url(#arrow)}</style>
+  <rect class="b" x="40" y="88" width="150" height="72" rx="8"/><text class="t" x="76" y="118">Planner</text><text class="s" x="70" y="140">dry-run actions</text>
+  <rect class="g" x="250" y="88" width="150" height="72" rx="8"/><text class="t" x="294" y="118">Worker</text><text class="s" x="278" y="140">apply eligible</text>
+  <rect class="w" x="460" y="48" width="170" height="72" rx="8"/><text class="t" x="506" y="78">Protected</text><text class="s" x="496" y="100">skip/fail closed</text>
+  <rect class="b" x="460" y="158" width="170" height="72" rx="8"/><text class="t" x="512" y="188">Delete</text><text class="s" x="494" y="210">physical segment</text>
+  <rect class="g" x="720" y="158" width="170" height="72" rx="8"/><text class="t" x="762" y="188">GC Retry</text><text class="s" x="754" y="210">orphan records</text>
+  <line class="l" x1="190" y1="124" x2="250" y2="124"/><line class="l" x1="400" y1="112" x2="460" y2="86"/><line class="l" x1="400" y1="138" x2="460" y2="194"/><line class="l" x1="630" y1="194" x2="720" y2="194"/>
+</svg>
+

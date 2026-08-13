@@ -1,0 +1,7 @@
+# Prometheus remote_write example for NAMROS long-retention storage.
+remote_write:
+  - url: http://victoriametrics:8428/api/v1/write
+    queue_config:
+      capacity: 20000
+      max_samples_per_send: 10000
+      max_shards: 8

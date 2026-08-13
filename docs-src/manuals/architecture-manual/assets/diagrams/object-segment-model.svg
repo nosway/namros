@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="300" viewBox="0 0 980 300" role="img" aria-labelledby="title desc">
+  <title id="title">Object segment model</title>
+  <desc id="desc">Object versions reference manifests, which reference private, shared, or EC segments.</desc>
+  <rect width="980" height="300" fill="#fff"/>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#566372"/></marker></defs>
+  <style>.b{fill:#eef4f7;stroke:#0b6b8f;stroke-width:2}.e{fill:#fff3e8;stroke:#9b3d36;stroke-width:2}.g{fill:#f1f7ef;stroke:#176b52;stroke-width:2}.t{font:700 15px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;fill:#17202a}.s{font:12px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;fill:#566372}.l{stroke:#566372;stroke-width:2;marker-end:url(#arrow)}</style>
+  <rect class="b" x="40" y="108" width="160" height="76" rx="8"/><text class="t" x="82" y="140">Object</text><text class="s" x="76" y="162">bucket/key</text>
+  <rect class="b" x="270" y="108" width="170" height="76" rx="8"/><text class="t" x="306" y="140">Version</text><text class="s" x="300" y="162">visible state</text>
+  <rect class="g" x="510" y="108" width="170" height="76" rx="8"/><text class="t" x="556" y="140">Manifest</text><text class="s" x="540" y="162">ordered refs</text>
+  <rect class="b" x="760" y="42" width="160" height="58" rx="8"/><text class="t" x="795" y="76">Private refs</text>
+  <rect class="e" x="760" y="122" width="160" height="58" rx="8"/><text class="t" x="796" y="156">EC refs</text>
+  <rect class="g" x="760" y="202" width="160" height="58" rx="8"/><text class="t" x="794" y="236">Shared refs</text>
+  <line class="l" x1="200" y1="146" x2="270" y2="146"/><line class="l" x1="440" y1="146" x2="510" y2="146"/>
+  <line class="l" x1="680" y1="130" x2="760" y2="72"/><line class="l" x1="680" y1="146" x2="760" y2="150"/><line class="l" x1="680" y1="162" x2="760" y2="232"/>
+</svg>
+

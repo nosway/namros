@@ -1,0 +1,33 @@
+# Filter for generated local NAMRBD BuildKit contexts.
+#
+# scripts/container/ensure-local-files.sh copies this file into the slim context
+# as .dockerignore before Docker/Podman receives it.
+.git/
+.cache/
+.codex/
+.agents/
+.idea/
+.vscode/
+
+bin/
+tmp/
+dist/
+compat-reports/
+release-reports/
+tools/pptx_vendor/
+
+kernel/module/*.o
+kernel/module/*.ko
+kernel/module/*.mod
+kernel/module/*.mod.c
+kernel/module/.*.cmd
+kernel/module/.*.d
+kernel/module/Module.symvers
+kernel/module/modules.order
+kernel/module/.tmp_*
+
+*.log
+*.test
+*.exe
+.DS_Store
+Thumbs.db

@@ -1,0 +1,180 @@
+#!/usr/bin/env sh
+set -eu
+
+log() {
+	printf '[community-smoke] %s\n' "$*" >&2
+}
+
+die() {
+	printf '[community-smoke] ERROR: %s\n' "$*" >&2
+	exit 1
+}
+
+require_cmd() {
+	command -v "$1" >/dev/null 2>&1 || die "$1 is required"
+}
+
+read_secret_file() {
+	path="$1"
+	name="$2"
+	if [ ! -r "$path" ]; then
+		die "missing readable $name file: $path"
+	fi
+	tr -d '\r\n' <"$path"
+}
+
+wait_ready() {
+	endpoint="$1"
+	name="$2"
+	timeout_seconds="${NAMROS_COMMUNITY_SMOKE_READY_TIMEOUT:-120}"
+	deadline=$(( $(date +%s) + timeout_seconds ))
+	while [ "$(date +%s)" -lt "$deadline" ]; do
+		if curl -fsS "$endpoint/readyz" >/dev/null 2>&1; then
+			log "$name ready: $endpoint"
+			return 0
+		fi
+		sleep 2
+	done
+	die "$name did not become ready within ${timeout_seconds}s: $endpoint"
+}
+
+aws_s3api() {
+	endpoint="$1"
+	shift
+	env \
+		AWS_ACCESS_KEY_ID="$access_key_id" \
+		AWS_SECRET_ACCESS_KEY="$secret_access_key" \
+		AWS_DEFAULT_REGION="$region" \
+		AWS_CONFIG_FILE="$aws_config" \
+		AWS_EC2_METADATA_DISABLED=true \
+		aws \
+		--cli-connect-timeout "$aws_connect_timeout" \
+		--cli-read-timeout "$aws_read_timeout" \
+		--endpoint-url "$endpoint" \
+		--region "$region" \
+		s3api "$@"
+}
+
+assert_file_equals() {
+	want="$1"
+	got="$2"
+	label="$3"
+	if ! cmp -s "$want" "$got"; then
+		die "$label content mismatch"
+	fi
+}
+
+cleanup_bucket() {
+	endpoint="$1"
+	bucket="$2"
+	objects_json="$tmpdir/cleanup-objects.json"
+
+	if ! aws_s3api "$endpoint" head-bucket --bucket "$bucket" >/dev/null 2>&1; then
+		return 0
+	fi
+	if aws_s3api "$endpoint" list-objects-v2 --bucket "$bucket" --output json >"$objects_json" 2>/dev/null; then
+		jq -r '.Contents[]?.Key' "$objects_json" | while IFS= read -r key; do
+			[ -n "$key" ] || continue
+			aws_s3api "$endpoint" delete-object --bucket "$bucket" --key "$key" >/dev/null || true
+		done
+	fi
+	aws_s3api "$endpoint" delete-bucket --bucket "$bucket" >/dev/null || true
+}
+
+run_cross_gateway_smoke() {
+	wait_ready "$gateway_a_endpoint" gateway-a
+	wait_ready "$gateway_b_endpoint" gateway-b
+
+	log "cross-gateway create bucket via gateway-a: $bucket"
+	aws_s3api "$gateway_a_endpoint" create-bucket --bucket "$bucket" >/dev/null
+
+	printf 'hello from gateway a\n' >"$tmpdir/from-a.txt"
+	printf 'hello from gateway b\n' >"$tmpdir/from-b.txt"
+
+	log "PUT via gateway-a, GET/LIST via gateway-b"
+	aws_s3api "$gateway_a_endpoint" put-object --bucket "$bucket" --key from-a.txt --body "$tmpdir/from-a.txt" >/dev/null
+	aws_s3api "$gateway_b_endpoint" head-object --bucket "$bucket" --key from-a.txt >/dev/null
+	aws_s3api "$gateway_b_endpoint" get-object --bucket "$bucket" --key from-a.txt "$tmpdir/from-a.downloaded.txt" >/dev/null
+	assert_file_equals "$tmpdir/from-a.txt" "$tmpdir/from-a.downloaded.txt" "gateway-a to gateway-b"
+	aws_s3api "$gateway_b_endpoint" list-objects-v2 --bucket "$bucket" --prefix from-a --output json >"$tmpdir/list-from-a.json"
+	jq -e --arg key from-a.txt 'any(.Contents[]?; .Key == $key)' "$tmpdir/list-from-a.json" >/dev/null
+
+	log "PUT via gateway-b, GET/LIST via gateway-a"
+	aws_s3api "$gateway_b_endpoint" put-object --bucket "$bucket" --key from-b.txt --body "$tmpdir/from-b.txt" >/dev/null
+	aws_s3api "$gateway_a_endpoint" head-object --bucket "$bucket" --key from-b.txt >/dev/null
+	aws_s3api "$gateway_a_endpoint" get-object --bucket "$bucket" --key from-b.txt "$tmpdir/from-b.downloaded.txt" >/dev/null
+	assert_file_equals "$tmpdir/from-b.txt" "$tmpdir/from-b.downloaded.txt" "gateway-b to gateway-a"
+	aws_s3api "$gateway_a_endpoint" list-objects-v2 --bucket "$bucket" --prefix from-b --output json >"$tmpdir/list-from-b.json"
+	jq -e --arg key from-b.txt 'any(.Contents[]?; .Key == $key)' "$tmpdir/list-from-b.json" >/dev/null
+}
+
+run_lb_smoke() {
+	wait_ready "$lb_endpoint" s3-lb
+	log "run compatibility smoke through load balancer: $lb_endpoint"
+	NAMROS_ENDPOINT="$lb_endpoint" \
+		NAMROS_REGION="$region" \
+		NAMROS_ROOT_ACCESS_KEY_ID_FILE="$access_key_file" \
+		NAMROS_ROOT_SECRET_ACCESS_KEY_FILE="$secret_key_file" \
+		namros-container-local-smoke
+}
+
+access_key_file="${NAMROS_ROOT_ACCESS_KEY_ID_FILE:-/run/secrets/namros_root_access_key_id}"
+secret_key_file="${NAMROS_ROOT_SECRET_ACCESS_KEY_FILE:-/run/secrets/namros_root_secret_access_key}"
+access_key_id="$(read_secret_file "$access_key_file" "access key")"
+secret_access_key="$(read_secret_file "$secret_key_file" "secret key")"
+
+mode="${NAMROS_COMMUNITY_SMOKE_MODE:-full}"
+region="${NAMROS_REGION:-us-east-1}"
+gateway_a_endpoint="${NAMROS_COMMUNITY_GATEWAY_A_ENDPOINT:-http://namros-gateway-a:9000}"
+gateway_b_endpoint="${NAMROS_COMMUNITY_GATEWAY_B_ENDPOINT:-http://namros-gateway-b:9000}"
+lb_endpoint="${NAMROS_COMMUNITY_LB_ENDPOINT:-${NAMROS_ENDPOINT:-http://s3-lb:9000}}"
+bucket_prefix="${NAMROS_COMMUNITY_SMOKE_BUCKET_PREFIX:-namros-community-smoke}"
+bucket="${NAMROS_COMMUNITY_SMOKE_BUCKET:-$bucket_prefix-$(date -u +%Y%m%d%H%M%S)-$$}"
+aws_connect_timeout="${NAMROS_COMMUNITY_SMOKE_AWS_CONNECT_TIMEOUT:-30}"
+aws_read_timeout="${NAMROS_COMMUNITY_SMOKE_AWS_READ_TIMEOUT:-30}"
+tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/namros-community-smoke.XXXXXX")"
+aws_config="$tmpdir/aws-config"
+
+require_cmd aws
+require_cmd curl
+require_cmd jq
+require_cmd cmp
+require_cmd namros-container-local-smoke
+
+cat >"$aws_config" <<EOF
+[default]
+region = $region
+s3 =
+    addressing_style = path
+    signature_version = s3v4
+EOF
+
+cleanup() {
+	status=$?
+	if [ "${NAMROS_KEEP_BUCKET:-0}" = "1" ]; then
+		log "leaving bucket in place: $bucket"
+	else
+		cleanup_bucket "$lb_endpoint" "$bucket"
+	fi
+	rm -rf "$tmpdir"
+	exit "$status"
+}
+trap cleanup EXIT
+
+case "$mode" in
+full)
+	run_cross_gateway_smoke
+	run_lb_smoke
+	;;
+cross-gateway)
+	run_cross_gateway_smoke
+	;;
+lb)
+	run_lb_smoke
+	;;
+*)
+	die "unsupported NAMROS_COMMUNITY_SMOKE_MODE: $mode"
+	;;
+esac
+
+log "community smoke passed: mode=$mode bucket=$bucket"

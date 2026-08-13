@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="300" viewBox="0 0 980 300" role="img" aria-labelledby="title desc">
+  <title id="title">Metadata authority</title>
+  <desc id="desc">NAMROS metadata owns namespace and operation state while storage owns bytes.</desc>
+  <rect width="980" height="300" fill="#fff"/>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#566372"/></marker></defs>
+  <style>.b{fill:#eef4f7;stroke:#0b6b8f;stroke-width:2}.e{fill:#fff3e8;stroke:#9b3d36;stroke-width:2}.g{fill:#f1f7ef;stroke:#176b52;stroke-width:2}.t{font:700 15px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;fill:#17202a}.s{font:12px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;fill:#566372}.l{stroke:#566372;stroke-width:2;marker-end:url(#arrow)}</style>
+  <rect class="b" x="40" y="50" width="180" height="210" rx="8"/><text class="t" x="82" y="82">Gateway</text><text class="s" x="68" y="108">request parsing</text><text class="s" x="68" y="130">auth</text><text class="s" x="68" y="152">cache</text>
+  <rect class="g" x="310" y="36" width="270" height="230" rx="8"/><text class="t" x="390" y="68">Metadata Authority</text><text class="s" x="340" y="102">buckets and versions</text><text class="s" x="340" y="126">multipart uploads</text><text class="s" x="340" y="150">lifecycle and GC records</text><text class="s" x="340" y="174">dedupe/compliance state</text><text class="s" x="340" y="198">audit and operation records</text>
+  <rect class="b" x="680" y="72" width="210" height="84" rx="8"/><text class="t" x="742" y="104">Storage</text><text class="s" x="724" y="128">segment bytes</text>
+  <rect class="p" x="680" y="184" width="210" height="70" rx="8"/><text class="t" x="738" y="216">TiKV</text><text class="s" x="714" y="238">Community backend</text>
+  <line class="l" x1="220" y1="146" x2="310" y2="146"/><line class="l" x1="580" y1="116" x2="680" y2="116"/><line class="l" x1="580" y1="204" x2="680" y2="218"/>
+</svg>

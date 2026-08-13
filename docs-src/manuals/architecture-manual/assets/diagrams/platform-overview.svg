@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="300" viewBox="0 0 980 300" role="img" aria-labelledby="title desc">
+  <title id="title">NAMROS platform overview</title>
+  <desc id="desc">S3 clients reach stateless gateways, which use authoritative metadata and storage backends.</desc>
+  <rect width="980" height="300" fill="#ffffff"/>
+  <defs>
+    <style>
+      .box{fill:#eef4f7;stroke:#0b6b8f;stroke-width:2;rx:8}
+      .ent{fill:#fff3e8;stroke:#9b3d36;stroke-width:2;rx:8}
+      .txt{font:600 16px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;fill:#17202a}
+      .sub{font:13px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;fill:#566372}
+      .line{stroke:#566372;stroke-width:2;marker-end:url(#arrow)}
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#566372"/>
+    </marker>
+  </defs>
+  <rect class="box" x="40" y="72" width="170" height="92"/>
+  <text class="txt" x="70" y="108">S3 Clients</text>
+  <text class="sub" x="64" y="134">AWS CLI, mc, rclone</text>
+  <rect class="box" x="285" y="50" width="210" height="136"/>
+  <text class="txt" x="323" y="94">Gateway Fleet</text>
+  <text class="sub" x="315" y="122">stateless request path</text>
+  <text class="sub" x="318" y="146">read-through cache only</text>
+  <rect class="box" x="570" y="36" width="170" height="88"/>
+  <text class="txt" x="600" y="72">Metadata</text>
+  <text class="sub" x="603" y="98">Pebble or TiKV</text>
+  <rect class="box" x="570" y="166" width="170" height="88"/>
+  <text class="txt" x="613" y="202">Storage</text>
+  <text class="sub" x="600" y="228">local segments</text>
+  <rect class="ent" x="800" y="90" width="140" height="124"/>
+  <text class="txt" x="826" y="130">Enterprise</text>
+  <text class="sub" x="827" y="156">SBS EC</text>
+  <text class="sub" x="827" y="178">dedupe</text>
+  <text class="sub" x="827" y="200">compliance</text>
+  <line class="line" x1="210" y1="118" x2="285" y2="118"/>
+  <line class="line" x1="495" y1="94" x2="570" y2="82"/>
+  <line class="line" x1="495" y1="146" x2="570" y2="208"/>
+  <line class="line" x1="740" y1="210" x2="800" y2="172"/>
+</svg>
+

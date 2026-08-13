@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="620" viewBox="0 0 1080 620" role="img" aria-labelledby="title desc">
+  <title id="title">NAMROS metadata schema map</title>
+  <desc id="desc">Bucket, object head, object version, multipart, protected reference, shared object, and operation record relationships.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#176b52"/>
+    </marker>
+    <style>
+      .box{fill:#ffffff;stroke:#d7e0e7;stroke-width:2;rx:8}
+      .head{fill:#eef4f7;stroke:#0b6b8f;stroke-width:2;rx:8}
+      .ent{fill:#fff7f4;stroke:#9b3d36;stroke-width:2;rx:8}
+      .txt{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:18px;fill:#17202a}
+      .small{font-size:14px;fill:#566372}
+      .label{font-size:13px;fill:#176b52;font-weight:700}
+      .arrow{stroke:#176b52;stroke-width:2;fill:none;marker-end:url(#arrow)}
+      .dash{stroke:#9b3d36;stroke-width:2;fill:none;stroke-dasharray:6 5;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect x="24" y="24" width="1032" height="572" rx="14" fill="#f6f8fb" stroke="#d7e0e7"/>
+  <text x="54" y="64" class="txt" font-weight="700">Metadata is the S3 namespace authority</text>
+  <text x="54" y="88" class="small">Storage refs point to bytes, but object visibility is published by metadata transactions.</text>
+
+  <rect class="head" x="58" y="132" width="190" height="92"/>
+  <text x="82" y="166" class="txt" font-weight="700">Tenant</text>
+  <text x="82" y="190" class="small">isolation scope</text>
+  <text x="82" y="210" class="small">access keys</text>
+
+  <rect class="head" x="310" y="132" width="190" height="92"/>
+  <text x="334" y="166" class="txt" font-weight="700">Bucket</text>
+  <text x="334" y="190" class="small">region, policy</text>
+  <text x="334" y="210" class="small">versioning, lifecycle</text>
+
+  <rect class="head" x="562" y="132" width="190" height="92"/>
+  <text x="586" y="166" class="txt" font-weight="700">ObjectHead</text>
+  <text x="586" y="190" class="small">current version</text>
+  <text x="586" y="210" class="small">LIST/HEAD target</text>
+
+  <rect class="head" x="814" y="132" width="190" height="92"/>
+  <text x="838" y="166" class="txt" font-weight="700">ObjectVersion</text>
+  <text x="838" y="190" class="small">immutable manifest</text>
+  <text x="838" y="210" class="small">segment refs</text>
+
+  <path class="arrow" d="M248 178 H310"/>
+  <text x="258" y="166" class="label">owns</text>
+  <path class="arrow" d="M500 178 H562"/>
+  <text x="512" y="166" class="label">indexes</text>
+  <path class="arrow" d="M752 178 H814"/>
+  <text x="768" y="166" class="label">points to</text>
+
+  <rect class="box" x="110" y="300" width="210" height="110"/>
+  <text x="132" y="334" class="txt" font-weight="700">MultipartUpload</text>
+  <text x="132" y="358" class="small">pending upload</text>
+  <text x="132" y="378" class="small">part records</text>
+  <text x="132" y="398" class="small">completed version id</text>
+
+  <rect class="box" x="390" y="300" width="210" height="110"/>
+  <text x="412" y="334" class="txt" font-weight="700">SegmentRef</text>
+  <text x="412" y="358" class="small">storage class</text>
+  <text x="412" y="378" class="small">placement snapshot</text>
+  <text x="412" y="398" class="small">digest, encryption</text>
+
+  <rect class="ent" x="670" y="300" width="210" height="110"/>
+  <text x="692" y="334" class="txt" font-weight="700">ProtectedRef</text>
+  <text x="692" y="358" class="small">Object Lock guard</text>
+  <text x="692" y="378" class="small">retention/legal hold</text>
+  <text x="692" y="398" class="small">delete admission</text>
+
+  <path class="arrow" d="M846 224 C782 274 674 294 600 324"/>
+  <text x="656" y="278" class="label">manifest</text>
+  <path class="arrow" d="M500 410 C548 456 648 456 706 410"/>
+  <text x="555" y="452" class="label">guarded by</text>
+  <path class="arrow" d="M320 356 H390"/>
+  <text x="330" y="342" class="label">complete builds</text>
+
+  <rect class="ent" x="238" y="476" width="250" height="82"/>
+  <text x="260" y="510" class="txt" font-weight="700">SharedObject</text>
+  <text x="260" y="534" class="small">Enterprise dedupe root</text>
+  <text x="260" y="552" class="small">byte-verified shared bytes</text>
+
+  <rect class="box" x="590" y="476" width="250" height="82"/>
+  <text x="612" y="510" class="txt" font-weight="700">OperationRecord</text>
+  <text x="612" y="534" class="small">GC, lifecycle, export</text>
+  <text x="612" y="552" class="small">dedupe/evidence where entitled</text>
+
+  <path class="dash" d="M440 476 C468 430 470 410 490 410"/>
+  <text x="262" y="464" class="label" fill="#9b3d36">Enterprise attach</text>
+  <path class="arrow" d="M775 410 V476"/>
+  <text x="790" y="448" class="label">attempts</text>
+</svg>
