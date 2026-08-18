@@ -287,13 +287,19 @@ deploy() {
 		--namespace "$NAMROS_K8S_NAMESPACE" \
 		-f "$values_out" \
 		--set gateway.replicas=0 \
-		--wait \
 		--timeout "$NAMROS_K8S_DEPLOY_TIMEOUT"
 	log "activate configured gateway replicas"
 	helm upgrade "$NAMROS_K8S_RELEASE" "$chart_dir" \
 		--namespace "$NAMROS_K8S_NAMESPACE" \
 		-f "$values_out" \
-		--wait \
+		--timeout "$NAMROS_K8S_DEPLOY_TIMEOUT"
+	# SBS standby instances intentionally fail their leader-only readiness
+	# probe, so Helm cannot wait for every Deployment. Hook Jobs already wait
+	# for bootstrap dependencies; finish by waiting for the user-facing gateway.
+	kubectl -n "$NAMROS_K8S_NAMESPACE" wait \
+		--for=condition=Available \
+		deployment \
+		-l "app.kubernetes.io/instance=$NAMROS_K8S_RELEASE,app.kubernetes.io/component=gateway" \
 		--timeout "$NAMROS_K8S_DEPLOY_TIMEOUT"
 }
 

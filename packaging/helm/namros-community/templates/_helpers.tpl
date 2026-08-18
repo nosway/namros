@@ -49,7 +49,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "namros.sbsServiceReadyURLs" -}}
 {{- $root := . -}}
-{{- range $i, $node := .Values.sbs.service.nodes -}}{{- if $i }},{{ end -}}http://{{ include "namros.fullname" $root }}-{{ $node.id }}:9081/readyz{{- end -}}
+{{- range $i, $node := .Values.sbs.service.nodes -}}{{- if $i }},{{ end -}}http://{{ include "namros.fullname" $root }}-{{ $node.id }}:9081/healthz{{- end -}}
 {{- end -}}
 
 {{- define "namros.sbsDataReadyURLs" -}}

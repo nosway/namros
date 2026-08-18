@@ -41,6 +41,10 @@ metadata:
     app.kubernetes.io/component: sbs-service
     namros.io/node-id: {{ $node.id | quote }}
 spec:
+  # Bootstrap checks every SBS process, including the intentional standby.
+  # Keep this per-node endpoint published while /readyz continues to expose
+  # only the mutation-ready leader through the aggregate admin Service.
+  publishNotReadyAddresses: true
   ports:
     - name: grpc
       port: 9443
