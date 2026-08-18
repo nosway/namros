@@ -1,4 +1,4 @@
-# NAMROS
+# ![NAMROS logo](internal/gateway/console_static/namros-logo.svg) NAMROS
 
 NAMROS is Network Attached Multipath Resilient Object Storage: a Community
 Edition S3-compatible object storage gateway with a metadata-first design,
