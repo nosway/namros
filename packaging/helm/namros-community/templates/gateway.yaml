@@ -38,6 +38,7 @@ spec:
         {{- include "namros.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: gateway
     spec:
+      automountServiceAccountToken: false
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -80,7 +81,7 @@ spec:
             - name: NAMROS_SBS_VOLUME_POOL_ID
               value: {{ .Values.sbs.volumePoolId | quote }}
             - name: NAMROS_SBS_CHUNK_SIZE_BYTES
-              value: {{ .Values.sbs.chunkSizeBytes | quote }}
+              value: {{ printf "%.0f" .Values.sbs.chunkSizeBytes | quote }}
             - name: NAMROS_SBS_GATEWAY_ID
               value: "$(POD_NAME)"
             - name: NAMROS_SBS_ATTACHMENT_ID

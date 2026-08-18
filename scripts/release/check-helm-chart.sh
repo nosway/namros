@@ -90,6 +90,7 @@ require_pattern packaging/helm/namros-community/templates/gateway.yaml '/readyz'
 require_pattern packaging/helm/namros-community/templates/gateway.yaml 'NAMROS_SBS_DATA_ENDPOINT' 'gateway SBS data endpoint env'
 require_pattern packaging/helm/namros-community/templates/gateway.yaml '\$data0\.id' 'gateway SBS data endpoint pins first data node service'
 require_pattern packaging/helm/namros-community/templates/gateway.yaml 'nodePort:' 'gateway NodePort support'
+require_pattern packaging/helm/namros-community/templates/gateway.yaml 'automountServiceAccountToken: false' 'gateway disables unused service account token mount'
 require_pattern packaging/helm/namros-community/templates/jobs.yaml 'NAMROS_COMMUNITY_SBS_DATA_ENDPOINTS' 'pool bootstrap SBS per-volume data endpoints env'
 require_pattern packaging/helm/namros-community/templates/jobs.yaml 'NAMROS_COMMUNITY_SBS_DATA_NODE_IDS' 'SBS bootstrap dynamic data node ids env'
 require_pattern packaging/helm/namros-community/templates/jobs.yaml 'namros\.sbsDataGRPCEndpoints' 'SBS bootstrap dynamic data endpoints helper'
@@ -141,6 +142,9 @@ if command -v helm >/dev/null 2>&1; then
 		--set monitoring.podMonitor.enabled=true >/dev/null
 	log "render production-kind generated values"
 	helm template namros "$chart_dir" -f "$k8s_check_dir/values.generated.yaml" >/dev/null
+	if helm template namros "$chart_dir" -f "$k8s_check_dir/values.generated.yaml" | grep -q '1\.048576e+06'; then
+		fail 'production-kind renders SBS chunk size in scientific notation'
+	fi
 else
 	if is_true "${NAMROS_HELM_REQUIRE_HELM:-false}"; then
 		fail "helm CLI is required when NAMROS_HELM_REQUIRE_HELM=true"

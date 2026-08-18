@@ -1,7 +1,7 @@
 NAMROS Community Source Export
 schema_version: 1
-generated_at: 2026-08-18T02:17:20Z
-git_commit: 6b04d37
+generated_at: 2026-08-18T03:28:27Z
+git_commit: b901c98
 git_dirty: false
 edition_identity: community
 allowlist_manifest: scripts/release/community-source-allowlist.txt

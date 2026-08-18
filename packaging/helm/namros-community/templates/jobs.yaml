@@ -115,7 +115,7 @@ spec:
             - name: NAMROS_COMMUNITY_SBS_DATA_ENDPOINTS
               value: {{ include "namros.sbsDataGRPCEndpoints" . | quote }}
             - name: NAMROS_COMMUNITY_SBS_CHUNK_SIZE_BYTES
-              value: {{ .Values.sbs.chunkSizeBytes | quote }}
+              value: {{ printf "%.0f" .Values.sbs.chunkSizeBytes | quote }}
           securityContext:
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
           volumeMounts:
