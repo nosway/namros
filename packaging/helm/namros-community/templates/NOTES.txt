@@ -11,3 +11,4 @@ Release checks:
   helm lint packaging/helm/namros-community
   helm template namros packaging/helm/namros-community -f packaging/helm/namros-community/values.local.yaml
   helm template namros packaging/helm/namros-community -f packaging/helm/namros-community/values.production.yaml
+  scripts/k8s/deploy-production.sh render packaging/k8s/production-kind.env

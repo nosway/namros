@@ -86,6 +86,106 @@ sbsctl_run() {
 	/usr/local/bin/sbsctl "$@"
 }
 
+trim_value() {
+	printf '%s' "$1" | tr -d ' \t\r\n'
+}
+
+csv_count() {
+	list="$1"
+	count=0
+	old_ifs="$IFS"
+	IFS=,
+	for raw_value in $list; do
+		IFS="$old_ifs"
+		value="$(trim_value "$raw_value")"
+		if [ -n "$value" ]; then
+			count=$((count + 1))
+		fi
+		IFS=,
+	done
+	IFS="$old_ifs"
+	printf '%s\n' "$count"
+}
+
+csv_value_at() {
+	list="$1"
+	wanted_index="$2"
+	fallback="$3"
+	index=0
+	selected=""
+	old_ifs="$IFS"
+	IFS=,
+	for raw_value in $list; do
+		IFS="$old_ifs"
+		value="$(trim_value "$raw_value")"
+		if [ -n "$value" ]; then
+			if [ "$index" -eq "$wanted_index" ]; then
+				selected="$value"
+				break
+			fi
+			index=$((index + 1))
+		fi
+		IFS=,
+	done
+	IFS="$old_ifs"
+	if [ -z "$selected" ]; then
+		selected="$fallback"
+	fi
+	printf '%s' "$selected"
+}
+
+wait_any_http_list() {
+	urls="$1"
+	name="$2"
+	timeout_seconds="${3:-120}"
+	deadline=$(( $(date +%s) + timeout_seconds ))
+	if [ "$(csv_count "$urls")" -eq 0 ]; then
+		log "no $name readiness URLs configured"
+		return 1
+	fi
+	while [ "$(date +%s)" -lt "$deadline" ]; do
+		old_ifs="$IFS"
+		IFS=,
+		for raw_url in $urls; do
+			IFS="$old_ifs"
+			url="$(trim_value "$raw_url")"
+			if [ -n "$url" ] && curl -fsS "$url" >/dev/null 2>&1; then
+				log "$name ready: $url"
+				IFS="$old_ifs"
+				return 0
+			fi
+			IFS=,
+		done
+		IFS="$old_ifs"
+		sleep 2
+	done
+	log "$name did not become ready within ${timeout_seconds}s: $urls"
+	return 1
+}
+
+wait_all_http_list() {
+	urls="$1"
+	name="$2"
+	timeout_seconds="${3:-120}"
+	index=0
+	if [ "$(csv_count "$urls")" -eq 0 ]; then
+		log "no $name readiness URLs configured"
+		return 1
+	fi
+	old_ifs="$IFS"
+	IFS=,
+	for raw_url in $urls; do
+		IFS="$old_ifs"
+		url="$(trim_value "$raw_url")"
+		if [ -n "$url" ]; then
+			index=$((index + 1))
+			wait_http "$url" "$name-$index" "$timeout_seconds"
+		fi
+		IFS=,
+	done
+	IFS="$old_ifs"
+}
+
 cluster_id="${NAMROS_COMMUNITY_CLUSTER_ID:-namros-community}"
 sbs_cluster_id="${NAMROS_COMMUNITY_SBS_CLUSTER_ID:-namros-community-sbs}"
 admin_endpoint="${NAMROS_COMMUNITY_SBS_ADMIN_ENDPOINT:-sbs-admin-lb:9443}"
@@ -120,12 +220,37 @@ sbs_data_1_zone="${NAMROS_COMMUNITY_SBS_DATA_1_ZONE:-zone-a}"
 sbs_data_2_zone="${NAMROS_COMMUNITY_SBS_DATA_2_ZONE:-zone-a}"
 sbs_data_3_zone="${NAMROS_COMMUNITY_SBS_DATA_3_ZONE:-zone-b}"
 sbs_data_4_zone="${NAMROS_COMMUNITY_SBS_DATA_4_ZONE:-zone-b}"
+sbs_service_ready_urls="${NAMROS_COMMUNITY_SBS_SERVICE_READY_URLS:-}"
+sbs_data_ready_urls="${NAMROS_COMMUNITY_SBS_DATA_READY_URLS:-}"
+sbs_data_node_ids="${NAMROS_COMMUNITY_SBS_DATA_NODE_IDS:-}"
+sbs_data_grpc_endpoints="${NAMROS_COMMUNITY_SBS_DATA_GRPC_ENDPOINTS:-}"
+sbs_data_admin_http_endpoints="${NAMROS_COMMUNITY_SBS_DATA_ADMIN_HTTP_ENDPOINTS:-}"
+sbs_data_zones="${NAMROS_COMMUNITY_SBS_DATA_ZONES:-}"
 volume_size_bytes="$(binary_size_bytes "$volume_size" volume_size)"
 block_size_bytes="$(binary_size_bytes "$block_size" block_size)"
 allocation_chunk_size_bytes="$(binary_size_bytes "$allocation_chunk_size" allocation_chunk_size)"
 allocation_page_size_bytes="$(binary_size_bytes "$allocation_page_size" allocation_page_size)"
 
-wait_either_http "$sbs_service_1_ready_url" sbs-service-1 "$sbs_service_2_ready_url" sbs-service-2
+if [ -z "$sbs_service_ready_urls" ]; then
+	sbs_service_ready_urls="$sbs_service_1_ready_url,$sbs_service_2_ready_url"
+fi
+if [ -z "$sbs_data_ready_urls" ]; then
+	sbs_data_ready_urls="$sbs_data_1_ready_url,$sbs_data_2_ready_url,$sbs_data_3_ready_url,$sbs_data_4_ready_url"
+fi
+if [ -z "$sbs_data_node_ids" ]; then
+	sbs_data_node_ids="$sbs_data_1_node_id,$sbs_data_2_node_id,$sbs_data_3_node_id,$sbs_data_4_node_id"
+fi
+if [ -z "$sbs_data_grpc_endpoints" ]; then
+	sbs_data_grpc_endpoints="$sbs_data_1_grpc_endpoint,$sbs_data_2_grpc_endpoint,$sbs_data_3_grpc_endpoint,$sbs_data_4_grpc_endpoint"
+fi
+if [ -z "$sbs_data_admin_http_endpoints" ]; then
+	sbs_data_admin_http_endpoints="$sbs_data_1_admin_http_endpoint,$sbs_data_2_admin_http_endpoint,$sbs_data_3_admin_http_endpoint,$sbs_data_4_admin_http_endpoint"
+fi
+if [ -z "$sbs_data_zones" ]; then
+	sbs_data_zones="$sbs_data_1_zone,$sbs_data_2_zone,$sbs_data_3_zone,$sbs_data_4_zone"
+fi
+
+wait_any_http_list "$sbs_service_ready_urls" sbs-service
 case "$sbs_admin_lb_settle_seconds" in
 	''|*[!0-9]*)
 		log "invalid NAMROS_COMMUNITY_SBS_ADMIN_LB_SETTLE_SECONDS=$sbs_admin_lb_settle_seconds"
@@ -138,10 +263,7 @@ case "$sbs_admin_lb_settle_seconds" in
 		sleep "$sbs_admin_lb_settle_seconds"
 		;;
 esac
-wait_http "$sbs_data_1_ready_url" sbs-data-1
-wait_http "$sbs_data_2_ready_url" sbs-data-2
-wait_http "$sbs_data_3_ready_url" sbs-data-3
-wait_http "$sbs_data_4_ready_url" sbs-data-4
+wait_all_http_list "$sbs_data_ready_urls" sbs-data
 
 if sbsctl_run cluster status \
 	--admin-endpoint "$admin_endpoint" \
@@ -201,10 +323,30 @@ join_node() {
 		--timeout "$timeout" >/dev/null
 }
 
-join_node "$sbs_data_1_node_id" "$sbs_data_1_grpc_endpoint" "$sbs_data_1_admin_http_endpoint" "$sbs_data_1_zone"
-join_node "$sbs_data_2_node_id" "$sbs_data_2_grpc_endpoint" "$sbs_data_2_admin_http_endpoint" "$sbs_data_2_zone"
-join_node "$sbs_data_3_node_id" "$sbs_data_3_grpc_endpoint" "$sbs_data_3_admin_http_endpoint" "$sbs_data_3_zone"
-join_node "$sbs_data_4_node_id" "$sbs_data_4_grpc_endpoint" "$sbs_data_4_admin_http_endpoint" "$sbs_data_4_zone"
+join_data_nodes() {
+	index=0
+	if [ "$(csv_count "$sbs_data_node_ids")" -eq 0 ]; then
+		log "no SBS data nodes configured"
+		exit 2
+	fi
+	old_ifs="$IFS"
+	IFS=,
+	for raw_node_id in $sbs_data_node_ids; do
+		IFS="$old_ifs"
+		node_id="$(trim_value "$raw_node_id")"
+		if [ -n "$node_id" ]; then
+			grpc_endpoint="$(csv_value_at "$sbs_data_grpc_endpoints" "$index" "$node_id:9444")"
+			admin_http="$(csv_value_at "$sbs_data_admin_http_endpoints" "$index" "http://$node_id:9082")"
+			zone="$(csv_value_at "$sbs_data_zones" "$index" zone-a)"
+			join_node "$node_id" "$grpc_endpoint" "$admin_http" "$zone"
+			index=$((index + 1))
+		fi
+		IFS=,
+	done
+	IFS="$old_ifs"
+}
+
+join_data_nodes
 
 create_volume() {
 	volume_id="$1"
@@ -246,10 +388,20 @@ materialize_volume_on_node() {
 
 materialize_volume() {
 	volume_id="$1"
-	materialize_volume_on_node "$volume_id" "$sbs_data_1_node_id" "$sbs_data_1_admin_http_endpoint"
-	materialize_volume_on_node "$volume_id" "$sbs_data_2_node_id" "$sbs_data_2_admin_http_endpoint"
-	materialize_volume_on_node "$volume_id" "$sbs_data_3_node_id" "$sbs_data_3_admin_http_endpoint"
-	materialize_volume_on_node "$volume_id" "$sbs_data_4_node_id" "$sbs_data_4_admin_http_endpoint"
+	index=0
+	old_ifs="$IFS"
+	IFS=,
+	for raw_node_id in $sbs_data_node_ids; do
+		IFS="$old_ifs"
+		node_id="$(trim_value "$raw_node_id")"
+		if [ -n "$node_id" ]; then
+			admin_http="$(csv_value_at "$sbs_data_admin_http_endpoints" "$index" "http://$node_id:9082")"
+			materialize_volume_on_node "$volume_id" "$node_id" "$admin_http"
+			index=$((index + 1))
+		fi
+		IFS=,
+	done
+	IFS="$old_ifs"
 }
 
 if [ -z "$volume_ids" ]; then
@@ -260,7 +412,7 @@ old_ifs="$IFS"
 IFS=,
 for raw_volume_id in $volume_ids; do
 	IFS="$old_ifs"
-	trimmed_volume_id="$(printf '%s' "$raw_volume_id" | tr -d ' \t\r\n')"
+	trimmed_volume_id="$(trim_value "$raw_volume_id")"
 	if [ -n "$trimmed_volume_id" ]; then
 		create_volume "$trimmed_volume_id"
 		materialize_volume "$trimmed_volume_id"

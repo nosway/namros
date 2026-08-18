@@ -1,0 +1,144 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version, for example v0.1.0
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Install syft
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
+            | sh -s -- -b "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Resolve release metadata
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          version="${INPUT_VERSION:-${GITHUB_REF_NAME}}"
+          commit="$(git rev-parse --short HEAD)"
+          build_date="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          image_namespace="ghcr.io/${owner}"
+          echo "NAMROS_VERSION=$version" >> "$GITHUB_ENV"
+          echo "NAMROS_COMMIT=$commit" >> "$GITHUB_ENV"
+          echo "NAMROS_BUILD_DATE=$build_date" >> "$GITHUB_ENV"
+          echo "NAMROS_GATEWAY_IMAGE=${image_namespace}/namros-gateway" >> "$GITHUB_ENV"
+          echo "NAMROS_TOOLS_IMAGE=${image_namespace}/namros-tools" >> "$GITHUB_ENV"
+
+      - name: Build Community binaries
+        run: |
+          GOOS=linux GOARCH=amd64 make build-community
+          mkdir -p dist
+          tar -czf "dist/namros-${NAMROS_VERSION}-linux-amd64.tar.gz" -C bin/community .
+
+      - name: Package Helm chart
+        run: |
+          NAMROS_HELM_REQUIRE_HELM=true make helm-chart-check
+          helm package packaging/helm/namros-community \
+            --version "${NAMROS_VERSION#v}" \
+            --app-version "$NAMROS_VERSION" \
+            --destination dist
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Publish gateway image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: packaging/docker/Dockerfile.gateway
+          build-contexts: |
+            namrbd=https://github.com/nosway/namrbd.git#v0.1.0
+          push: true
+          build-args: |
+            NAMROS_VERSION=${{ env.NAMROS_VERSION }}
+            NAMROS_COMMIT=${{ env.NAMROS_COMMIT }}
+            NAMROS_BUILD_DATE=${{ env.NAMROS_BUILD_DATE }}
+          tags: |
+            ${{ env.NAMROS_GATEWAY_IMAGE }}:${{ env.NAMROS_VERSION }}
+            ${{ env.NAMROS_GATEWAY_IMAGE }}:latest
+
+      - name: Publish tools image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: packaging/docker/Dockerfile.tools
+          build-contexts: |
+            namrbd=https://github.com/nosway/namrbd.git#v0.1.0
+          push: true
+          build-args: |
+            NAMROS_VERSION=${{ env.NAMROS_VERSION }}
+            NAMROS_COMMIT=${{ env.NAMROS_COMMIT }}
+            NAMROS_BUILD_DATE=${{ env.NAMROS_BUILD_DATE }}
+          tags: |
+            ${{ env.NAMROS_TOOLS_IMAGE }}:${{ env.NAMROS_VERSION }}
+            ${{ env.NAMROS_TOOLS_IMAGE }}:latest
+
+      - name: Write checksums, SBOM, and provenance
+        run: |
+          artifacts="$(find dist -maxdepth 1 -type f \( -name '*.tar.gz' -o -name '*.tgz' \) | sort | tr '\n' ' ')"
+          NAMROS_RELEASE_VERSION="$NAMROS_VERSION" \
+            NAMROS_RELEASE_EDITION=community \
+            NAMROS_RELEASE_ARTIFACTS="$artifacts" \
+            NAMROS_RELEASE_REQUIRE_ARTIFACTS=1 \
+            NAMROS_RELEASE_GENERATE_SBOM=1 \
+            NAMROS_RELEASE_IMAGE_REFS="${NAMROS_GATEWAY_IMAGE}:${NAMROS_VERSION} ${NAMROS_TOOLS_IMAGE}:${NAMROS_VERSION}" \
+            scripts/release/write-release-artifact-metadata.sh
+          cp dist/release-metadata/checksums.sha256 dist/checksums.sha256
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: namros-${{ env.NAMROS_VERSION }}-release-artifacts
+          path: |
+            dist/*.tar.gz
+            dist/*.tgz
+            dist/checksums.sha256
+            dist/release-metadata/**
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.NAMROS_VERSION }}
+          files: |
+            dist/*.tar.gz
+            dist/*.tgz
+            dist/checksums.sha256
+            dist/release-metadata/**

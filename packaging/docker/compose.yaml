@@ -6,6 +6,10 @@ services:
     build:
       context: ../..
       dockerfile: packaging/docker/Dockerfile.gateway
+      args:
+        NAMROS_VERSION: ${NAMROS_VERSION:-dev}
+        NAMROS_COMMIT: ${NAMROS_COMMIT:-unknown}
+        NAMROS_BUILD_DATE: ${NAMROS_BUILD_DATE:-unknown}
       additional_contexts:
         namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
     environment:
@@ -46,6 +50,10 @@ services:
     build:
       context: ../..
       dockerfile: packaging/docker/Dockerfile.tools
+      args:
+        NAMROS_VERSION: ${NAMROS_VERSION:-dev}
+        NAMROS_COMMIT: ${NAMROS_COMMIT:-unknown}
+        NAMROS_BUILD_DATE: ${NAMROS_BUILD_DATE:-unknown}
       additional_contexts:
         namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
     environment:
@@ -390,6 +398,10 @@ services:
     build:
       context: ../..
       dockerfile: packaging/docker/Dockerfile.tools
+      args:
+        NAMROS_VERSION: ${NAMROS_VERSION:-dev}
+        NAMROS_COMMIT: ${NAMROS_COMMIT:-unknown}
+        NAMROS_BUILD_DATE: ${NAMROS_BUILD_DATE:-unknown}
       additional_contexts:
         namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
     environment:
@@ -425,6 +437,10 @@ services:
     build:
       context: ../..
       dockerfile: packaging/docker/Dockerfile.gateway
+      args:
+        NAMROS_VERSION: ${NAMROS_VERSION:-dev}
+        NAMROS_COMMIT: ${NAMROS_COMMIT:-unknown}
+        NAMROS_BUILD_DATE: ${NAMROS_BUILD_DATE:-unknown}
       additional_contexts:
         namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
     environment:
@@ -488,6 +504,10 @@ services:
     build:
       context: ../..
       dockerfile: packaging/docker/Dockerfile.gateway
+      args:
+        NAMROS_VERSION: ${NAMROS_VERSION:-dev}
+        NAMROS_COMMIT: ${NAMROS_COMMIT:-unknown}
+        NAMROS_BUILD_DATE: ${NAMROS_BUILD_DATE:-unknown}
       additional_contexts:
         namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
     environment:
@@ -565,6 +585,10 @@ services:
     build:
       context: ../..
       dockerfile: packaging/docker/Dockerfile.tools
+      args:
+        NAMROS_VERSION: ${NAMROS_VERSION:-dev}
+        NAMROS_COMMIT: ${NAMROS_COMMIT:-unknown}
+        NAMROS_BUILD_DATE: ${NAMROS_BUILD_DATE:-unknown}
       additional_contexts:
         namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
     environment:

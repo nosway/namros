@@ -25,10 +25,12 @@ TiKV 메타데이터, etcd 게이트웨이 coordination, active-active 게이트
 | 프로파일 | 구성요소 | 목적 | 데이터 |
 | --- | --- | --- | --- |
 | `local` | 게이트웨이 1개, Pebble, 로컬 세그먼트 저장소 | 빠른 S3 평가와 개발 | named volume |
+| `sbs-quickstart` | 게이트웨이 1개, PD/TiKV 테스트 컨테이너, SBS service 1개, SBS data 2개 | 공개 gateway + SBS backend 첫 검증 | named volume |
+| `production-kind` | 게이트웨이 2개, embedded etcd, embedded PD/TiKV, SBS service 2개, SBS data 5개 | production-shaped Kubernetes/kind 평가 | Kubernetes object와 emptyDir volume |
 | `community` | HAProxy, 게이트웨이 2개, etcd, PD/TiKV 테스트 컨테이너, SBS load balancer, SBS service 2개, SBS data 4개 | active-active와 Community 복제 검증 | named volume |
 | `observability` | Community 프로파일과 선택 Prometheus/Grafana | 메트릭과 대시보드 평가 | 프로파일별 volume |
 
-단일 `packaging/docker/compose.yaml`에서 명시적인 Compose profile을 사용합니다. 첫 실행에는 local 프로파일을 권장합니다. Community 프로파일은 테스트 topology이며 프로덕션 etcd/TiKV 배포가 아닙니다. 포함된 etcd, PD, TiKV는 각각 단일 failure domain입니다. Production-scale release claim에는 `make production-scale-check` 실행과 skip된 외부 smoke gate 검토도 필요합니다.
+local 프로파일은 `packaging/docker/compose.yaml`에 있습니다. 더 가벼운 SBS backend quickstart는 `packaging/docker/compose.sbs-quickstart.yml`에 있고, active-active Community topology는 `packaging/docker/compose.community.yml`에 있습니다. Kubernetes와 kind 배포 설정은 `packaging/k8s/production-kind.env`에서 읽어 Helm values로 생성합니다. S3 API 동작만 확인할 때는 여전히 local 프로파일을 첫 실행으로 권장합니다. gateway가 SBS 복제 오브젝트 스토리지를 사용하는지 확인하려면 SBS quickstart가 첫 Docker 경로입니다. Community 및 production-kind 프로파일은 테스트 topology이며 프로덕션 etcd/TiKV 배포가 아닙니다. 포함된 etcd, PD, TiKV는 각각 단일 failure domain입니다. Production-scale release claim에는 `make production-scale-check` 실행과 skip된 외부 smoke gate 검토도 필요합니다.
 
 ## 이미지, 태그와 플랫폼
 
@@ -68,6 +70,92 @@ make container-local-down
 <div class="note" markdown="1">
 
 `container-local-reset`은 파괴적인 작업입니다. 일반 종료는 메타데이터와 오브젝트 데이터를 보존합니다.
+
+</div>
+
+## SBS 백엔드 빠른 시작
+
+첫 SBS 경로는 게이트웨이 1개, PD/TiKV 테스트 메타데이터, SBS service 1개,
+SBS data node 2개를 사용합니다. 이 경로는 SBS 복제 volume 2개를 만들고
+metadata volume pool을 등록한 뒤 `NAMROS_STORAGE_BACKEND=sbs-cluster`로
+gateway를 시작합니다. 시나리오를 작게 유지하고 etcd gateway coordination을
+요구하지 않기 위해 gateway는 `dev` deployment profile을 사용합니다. Compose는
+S3 endpoint를 `127.0.0.1:9002`에만 게시합니다.
+
+```sh
+# Gateway + SBS backend 진입점: packaging/docker/compose.sbs-quickstart.yml
+make container-sbs-quickstart-up
+make container-sbs-quickstart-smoke
+make container-sbs-quickstart-down
+```
+
+| 타깃 | 효과 |
+| --- | --- |
+| `container-sbs-quickstart-up` | PD, TiKV, SBS service/data node를 빌드하거나 시작하고 SBS volume/pool을 bootstrap한 뒤 gateway 시작 |
+| `container-sbs-quickstart-smoke` | SBS-backed gateway에 대해 toolbox S3 smoke 실행 |
+| `container-sbs-quickstart-down` | 컨테이너를 중지하고 named volume 보존 |
+| `container-sbs-quickstart-reset` | 컨테이너를 중지하고 SBS quickstart volume을 영구 삭제 |
+
+기본 volume pool은 `quickstart-pool`, primary volume은 `18c00001`, 구성된
+member volume은 `18c00001,18c00002`입니다.
+`sh scripts/container/ensure-local-files.sh`를 실행한 뒤
+`packaging/docker/.env`의 `NAMROS_SBS_QUICKSTART_*` 값을 덮어쓸 수 있습니다.
+
+<div class="note" markdown="1">
+
+`container-sbs-quickstart-reset`은 파괴적인 작업입니다. 이 profile은 기능
+quickstart이며 production HA topology가 아닙니다.
+
+</div>
+
+## Kubernetes 및 kind production shape
+
+Kubernetes 경로는 `packaging/helm/namros-community` Helm chart를 사용하고,
+배포 형태는 `packaging/k8s/production-kind.env`에서 읽습니다. 기본 파일은
+다음 구성을 설정합니다.
+
+| 구성요소 | 기본 수량 |
+| --- | ---: |
+| Gateway | 2 |
+| SBS service | 2 |
+| SBS data | 5 |
+| TiKV | 1 |
+| PD | 1 |
+| etcd | 1 |
+
+```sh
+# .cache/k8s-production/values.generated.yaml 생성
+make k8s-production-values
+
+# 생성된 values로 Helm manifest 렌더
+make k8s-production-render
+
+# 현재 Kubernetes context에 배포
+make k8s-production-deploy
+
+# kind cluster 생성, local image build/load, 배포
+make kind-production-deploy
+```
+
+kind에서는 `packaging/k8s/kind-production.yaml`이 gateway NodePort를
+`127.0.0.1:9000`에 매핑합니다. Helm release만 중지하려면
+`make k8s-production-delete`, kind cluster 자체를 삭제하려면
+`make kind-production-delete`를 사용합니다.
+
+외부 Kubernetes cluster에 배포하려면 `packaging/k8s/production-kind.env`를
+복사한 뒤 `NAMROS_K8S_EMBEDDED_TIKV=false`,
+`NAMROS_K8S_EMBEDDED_ETCD=false`로 바꾸고
+`NAMROS_K8S_EXTERNAL_TIKV_PD_ENDPOINTS`,
+`NAMROS_K8S_EXTERNAL_ETCD_ENDPOINTS`, 게시된 image 이름, 기존 root credential
+Secret을 지정합니다. kind 기본값은 실행과 초기화를 쉽게 하기 위해 개발용
+credential과 `emptyDir` storage를 생성합니다.
+
+<div class="note" markdown="1">
+
+`kind-production-deploy`는 production-shaped 배포이며 production HA 주장으로
+해석하면 안 됩니다. 실제 production 배포에는 hardened external etcd/TiKV
+cluster, persistent SBS data volume, 게시 image digest, TLS/front-proxy policy,
+운영 backup/restore 증빙이 필요합니다.
 
 </div>
 
@@ -143,6 +231,10 @@ Readiness 응답은 component 상태와 안정적인 reason code를 제공하되
 
 | 타깃 | 데이터 동작 |
 | --- | --- |
+| `container-sbs-quickstart-down` | SBS quickstart stack을 중지하고 volume 보존 |
+| `container-sbs-quickstart-reset` | SBS quickstart 메타데이터와 SBS data를 영구 삭제 |
+| `k8s-production-delete` | 설정된 namespace에서 Helm release 제거 |
+| `kind-production-delete` | 설정된 kind cluster 삭제 |
 | `container-community-down` | stack을 중지하고 volume 보존 |
 | `container-community-reset` | etcd, TiKV, SBS 테스트 상태를 영구 삭제 |
 | `container-build` | NAMROS 소스에서 local gateway/tools 이미지를 빌드합니다. Community 타깃은 설정된 NAMRBD context에서 전환 SBS 이미지도 빌드합니다. |
@@ -154,6 +246,8 @@ Reset 명령은 삭제할 정확한 project와 named volume을 출력합니다. 
 - 공개 multi-stage image가 개발 전용 로컬 NAMRBD module replace 없이 빌드됩니다.
 - Linux amd64/arm64 이미지가 non-root와 read-only root filesystem으로 실행됩니다.
 - local 프로파일이 시작되고 down/up 사이에 데이터를 보존하며 smoke를 통과하고 파괴적 타깃으로만 초기화됩니다.
+- SBS quickstart가 `sbs-cluster` storage로 gateway를 시작하고 smoke를 통과하며 파괴적 타깃으로만 초기화됩니다.
+- Kubernetes production-shaped config가 `packaging/k8s/production-kind.env`에서 렌더되며 gateway 2개, SBS service 2개, SBS data 5개, TiKV 1개를 포함합니다.
 - Community 프로파일이 예상 replica를 모두 시작하고 일반/장애 전환 smoke를 통과합니다.
 - HAProxy는 ready gateway로만 전달하고 etcd에는 두 gateway identity가 명시적으로 기록됩니다.
 - 필수 metadata, storage 또는 다중 gateway coordination dependency 장애 시 readiness가 실패합니다.

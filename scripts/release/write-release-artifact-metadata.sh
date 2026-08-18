@@ -169,7 +169,7 @@ write_go_modules() {
 write_namrbd_contexts() {
 	namrbd_contexts_file="$OUT_DIR/namrbd-contexts.txt"
 	: >"$namrbd_contexts_file"
-	for file in "$ROOT_DIR/packaging/docker/.env.example" "$ROOT_DIR/packaging/docker/compose.yaml" "$ROOT_DIR/packaging/docker/compose.community.yml"; do
+	for file in "$ROOT_DIR/packaging/docker/.env.example" "$ROOT_DIR/packaging/docker/compose.yaml" "$ROOT_DIR/packaging/docker/compose.community.yml" "$ROOT_DIR/packaging/docker/compose.sbs-quickstart.yml"; do
 		if [ -f "$file" ]; then
 			grep -Eo 'https://github\.com/nosway/namrbd\.git#[A-Za-z0-9._/-]+' "$file" >>"$namrbd_contexts_file" || true
 		fi

@@ -16,6 +16,7 @@ RG_CHECK_EXCLUDES=(
 )
 
 cd "$ROOT_DIR"
+require_readme="${NAMROS_PUBLICATION_READINESS_REQUIRE_README:-true}"
 
 fail=0
 
@@ -40,6 +41,17 @@ require_file() {
 	if [ ! -f "$path" ]; then
 		error "missing required file: $path"
 	fi
+}
+
+is_false() {
+	case "${1:-}" in
+	0|false|FALSE|False|no|NO|No|n|N)
+		return 0
+		;;
+	*)
+		return 1
+		;;
+	esac
 }
 
 check_absent() {
@@ -215,20 +227,117 @@ log "verify required public repository files"
 for path in \
 	LICENSE \
 	NOTICE \
-	README.md \
+	CHANGELOG.md \
 	CONTRIBUTING.md \
 	CODE_OF_CONDUCT.md \
 	SECURITY.md \
 	.github/workflows/community.yml \
+	.github/workflows/docs-pages.yml \
+	.github/workflows/release.yml \
 	.github/dependabot.yml \
 	.github/pull_request_template.md \
 	.github/ISSUE_TEMPLATE/bug_report.md \
 	.github/ISSUE_TEMPLATE/feature_request.md \
 	packaging/helm/namros-community/Chart.yaml \
 	packaging/helm/namros-community/values.yaml \
+	packaging/helm/namros-community/values.local.yaml \
+	packaging/helm/namros-community/values.production.yaml \
+	packaging/helm/namros-community/templates/servicemonitor.yaml \
+	packaging/helm/namros-community/templates/podmonitor.yaml \
+	packaging/helm/namros-community/templates/tests/gateway-smoke.yaml \
+	docs-src/assets/namros-icon.svg \
+	packaging/docker/compose.sbs-quickstart.yml \
+	packaging/docker/bin/namros-container-sbs-quickstart-bootstrap \
+	packaging/k8s/production-kind.env \
+	packaging/k8s/kind-production.yaml \
+	scripts/compat/run-public-s3-compat-smoke.sh \
+	scripts/docs/check-html-docs.sh \
+	scripts/k8s/deploy-production.sh \
 	scripts/release/check-helm-chart.sh \
 	scripts/release/write-release-artifact-metadata.sh; do
 	require_file "$path"
+done
+
+if is_false "$require_readme"; then
+	log "skip README.md requirement by configuration"
+else
+	require_file README.md
+fi
+
+log "verify Docs workflow keeps push CI independent from GitHub Pages setup"
+if ! "$RG" -n -F 'make docs-render-check' .github/workflows/docs-pages.yml >/dev/null; then
+	error "Docs workflow must render-check docs-src"
+fi
+if ! "$RG" -n -F 'deploy_pages:' .github/workflows/docs-pages.yml >/dev/null; then
+	error "Docs workflow must require explicit Pages deployment input"
+fi
+if ! "$RG" -n -F "github.event_name == 'workflow_dispatch' && inputs.deploy_pages" .github/workflows/docs-pages.yml >/dev/null; then
+	error "Docs workflow must deploy Pages only from explicit workflow_dispatch"
+fi
+if ! "$RG" -n -F 'actions/configure-pages' .github/workflows/docs-pages.yml >/dev/null; then
+	error "Docs workflow must keep a manual configure-pages path"
+fi
+if ! "$RG" -n -F 'actions/deploy-pages' .github/workflows/docs-pages.yml >/dev/null; then
+	error "Docs workflow must keep a manual Pages deploy path"
+fi
+
+log "verify Community CI runs public compatibility and real Helm checks"
+if ! "$RG" -n -F 'make compat-public-s3' .github/workflows/community.yml >/dev/null; then
+	error "Community CI must run strict public S3 compatibility smoke"
+fi
+for pattern in \
+	'awscli' \
+	'dl.min.io/client/mc' \
+	'rclone' \
+	'NAMROS_COMPAT_AUTOSTART_GATEWAY' \
+	'NAMROS_COMPAT_MC_LARGE_OBJECT_MIB' \
+	'NAMROS_COMPAT_RCLONE_UPLOAD_CUTOFF'; do
+	if ! "$RG" -n "$pattern" .github/workflows/community.yml >/dev/null; then
+		error "Community CI S3 compatibility job is missing required pattern: $pattern"
+	fi
+done
+if ! "$RG" -n -F 'NAMROS_HELM_REQUIRE_HELM=true make helm-chart-check' .github/workflows/community.yml >/dev/null; then
+	error "Community CI must run helm-chart-check with Helm CLI required"
+fi
+
+log "verify release workflow publishes tagged artifacts"
+for pattern in \
+	'push:' \
+	'v\*\.\*\.\*' \
+	'make build-community' \
+	'NAMROS_VERSION' \
+	'NAMROS_COMMIT' \
+	'NAMROS_BUILD_DATE' \
+	'helm package' \
+	'docker/build-push-action' \
+	'write-release-artifact-metadata\.sh' \
+	'NAMROS_RELEASE_GENERATE_SBOM=1' \
+	'checksums\.sha256' \
+	'softprops/action-gh-release'; do
+	if ! "$RG" -n "$pattern" .github/workflows/release.yml >/dev/null; then
+		error "release workflow is missing required contract pattern: $pattern"
+	fi
+done
+
+log "verify binaries are stamped with release version metadata"
+for file in Makefile scripts/release/community-source-overlays/Makefile; do
+	if ! "$RG" -n '^VERSION_PACKAGE \?= github\.com/nosway/namros/internal/version$' "$file" >/dev/null; then
+		error "$file must define the internal/version linker package"
+	fi
+	if ! "$RG" -n 'GO_LDFLAGS_VERSION .*\.Version=' "$file" >/dev/null; then
+		error "$file must stamp internal/version.Version with linker flags"
+	fi
+	if ! "$RG" -n -- '-ldflags' "$file" >/dev/null; then
+		error "$file build rules must pass Go linker flags"
+	fi
+done
+for file in packaging/docker/Dockerfile.gateway packaging/docker/Dockerfile.tools; do
+	if ! "$RG" -n 'internal/version\.Version' "$file" >/dev/null; then
+		error "$file must stamp internal/version.Version"
+	fi
+	if ! "$RG" -n -- '-ldflags' "$file" >/dev/null; then
+		error "$file build rules must pass Go linker flags"
+	fi
 done
 
 log "verify public Go module paths"
@@ -242,7 +351,7 @@ check_local_namrbd_replace
 if [ "${#public_files_without_go_mod[@]}" -gt 0 ]; then
 	check_absent_in_files "local NAMRBD replace leaked outside go.mod/release tooling" '\.\./NAMRBD|replace[[:space:]]+.*namrbd[[:space:]]*=>' "${public_files_without_go_mod[@]}"
 	check_absent_in_files "runtime edition switch leaked into public files" 'NAMROS_EDITION|StringVar\(&cfg\.Edition|Var\(&cfg\.Edition|"-edition"' "${public_files_without_go_mod[@]}"
-	check_absent_in_files "private lab host, script, or planning reference leaked into public files" '\b(dev001|u[0-9][0-9])\b|scripts/compat|qa-suite|namros-community-publication-plan|namros-implementation-plan|namros-production-scale-design-and-implementation|namros-container-deployment-implementation-plan|namros-enterprise-source-overlay' "${public_files_without_go_mod[@]}"
+	check_absent_in_files "private lab host, QA suite, or planning reference leaked into public files" '\b(dev001|u[0-9][0-9])\b|qa-suite|namros-community-publication-plan|namros-implementation-plan|namros-production-scale-design-and-implementation|namros-container-deployment-implementation-plan|namros-enterprise-source-overlay' "${public_files_without_go_mod[@]}"
 fi
 if [ "${#public_files[@]}" -gt 0 ]; then
 	check_absent_in_files "old GitHub account placeholder leaked" 'github\.com/twkim' "${public_files[@]}"
@@ -266,6 +375,15 @@ for path in "${public_files[@]}"; do
 	esac
 done
 
+log "verify public docs reference public Makefile targets"
+public_makefile="Makefile"
+if [ -f "$OVERLAYS_DIR/Makefile" ]; then
+	public_makefile="$OVERLAYS_DIR/Makefile"
+fi
+if ! NAMROS_DOCS_PUBLIC_MAKEFILE="$public_makefile" bash scripts/docs/check-html-docs.sh; then
+	fail=1
+fi
+
 log "verify release artifact metadata tooling"
 if ! bash -n scripts/release/check-helm-chart.sh; then
 	error "Helm chart check script has a syntax error"
@@ -276,6 +394,26 @@ fi
 if ! "$RG" -n 'packaging/helm/namros-community' scripts/release/check-helm-chart.sh >/dev/null; then
 	error "Helm chart check must validate packaging/helm/namros-community"
 fi
+for pattern in \
+	'^home:' \
+	'^icon:' \
+	'^sources:' \
+	'^maintainers:' \
+	'^keywords:' \
+	'artifacthub\.io/category'; do
+	if ! "$RG" -n "$pattern" packaging/helm/namros-community/Chart.yaml >/dev/null; then
+		error "Helm chart metadata is missing required pattern: $pattern"
+	fi
+done
+for pattern in \
+	'kind: ServiceMonitor' \
+	'kind: PodMonitor' \
+	'helm\.sh/hook": test' \
+	'NAMROS_HELM_REQUIRE_HELM'; do
+	if ! "$RG" -n "$pattern" scripts/release/check-helm-chart.sh packaging/helm/namros-community/templates >/dev/null; then
+		error "Helm chart checks/templates are missing required pattern: $pattern"
+	fi
+done
 for pattern in \
 	'namros\.release_artifact_metadata\.v1' \
 	'checksums\.sha256' \

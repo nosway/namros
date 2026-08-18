@@ -1,0 +1,310 @@
+services:
+  sbs-quickstart-pd:
+    profiles:
+      - sbs-quickstart
+    image: ${NAMROS_PD_IMAGE:-pingcap/pd:v8.5.7}
+    command:
+      - --name=sbs-quickstart-pd
+      - --data-dir=/pd
+      - --client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://sbs-quickstart-pd:2379
+      - --peer-urls=http://0.0.0.0:2380
+      - --advertise-peer-urls=http://sbs-quickstart-pd:2380
+      - --initial-cluster=sbs-quickstart-pd=http://sbs-quickstart-pd:2380
+    volumes:
+      - namros-sbs-quickstart-pd:/pd
+
+  sbs-quickstart-tikv:
+    profiles:
+      - sbs-quickstart
+    image: ${NAMROS_TIKV_IMAGE:-pingcap/tikv:v8.5.7}
+    command:
+      - --addr=0.0.0.0:20160
+      - --advertise-addr=sbs-quickstart-tikv:20160
+      - --data-dir=/tikv
+      - --pd=sbs-quickstart-pd:2379
+    depends_on:
+      - sbs-quickstart-pd
+    ulimits:
+      nofile:
+        soft: 200000
+        hard: 200000
+    volumes:
+      - namros-sbs-quickstart-tikv:/tikv
+
+  sbs-quickstart-service:
+    profiles:
+      - sbs-quickstart
+    image: ${NAMROS_SBS_SERVICE_IMAGE:-namros-sbs-service}:${NAMROS_SBS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.sbs
+      target: sbs-service
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    command:
+      - --cluster-id=${NAMROS_SBS_QUICKSTART_CLUSTER_ID:-namros-sbs-quickstart}
+      - --sbs-cluster-id=${NAMROS_SBS_QUICKSTART_SBS_CLUSTER_ID:-namros-sbs-quickstart-cluster}
+      - --node-id=sbs-quickstart-service
+      - --metadata-backend=tikv
+      - --tikv-pd-endpoints=sbs-quickstart-pd:2379
+      - --grpc-listen=0.0.0.0:9443
+      - --http-listen=0.0.0.0:9081
+      - --payload-root=/var/lib/namrbd/sbs-payload
+    depends_on:
+      - sbs-quickstart-tikv
+    volumes:
+      - namros-sbs-quickstart-service:/var/lib/namrbd/sbs-payload
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9081/readyz >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 36
+      start_period: 10s
+
+  sbs-quickstart-data-1:
+    profiles:
+      - sbs-quickstart
+    image: ${NAMROS_SBS_DATA_IMAGE:-namros-sbs-data}:${NAMROS_SBS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.sbs
+      target: sbs-data
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    command:
+      - --path=/var/lib/namrbd/sbs-data
+      - --grpc-listen=0.0.0.0:9444
+      - --http-listen=0.0.0.0:9082
+    volumes:
+      - namros-sbs-quickstart-data-1:/var/lib/namrbd/sbs-data
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9082/readyz >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 5s
+
+  sbs-quickstart-data-2:
+    profiles:
+      - sbs-quickstart
+    image: ${NAMROS_SBS_DATA_IMAGE:-namros-sbs-data}:${NAMROS_SBS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.sbs
+      target: sbs-data
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    command:
+      - --path=/var/lib/namrbd/sbs-data
+      - --grpc-listen=0.0.0.0:9444
+      - --http-listen=0.0.0.0:9082
+    volumes:
+      - namros-sbs-quickstart-data-2:/var/lib/namrbd/sbs-data
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9082/readyz >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 5s
+
+  sbs-quickstart-bootstrap:
+    profiles:
+      - sbs-quickstart
+    image: ${NAMROS_SBSCTL_IMAGE:-namros-sbsctl}:${NAMROS_SBS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.sbs
+      target: sbsctl
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    environment:
+      NAMROS_SBS_QUICKSTART_CLUSTER_ID: ${NAMROS_SBS_QUICKSTART_CLUSTER_ID:-namros-sbs-quickstart}
+      NAMROS_SBS_QUICKSTART_SBS_CLUSTER_ID: ${NAMROS_SBS_QUICKSTART_SBS_CLUSTER_ID:-namros-sbs-quickstart-cluster}
+      NAMROS_SBS_QUICKSTART_ADMIN_ENDPOINT: sbs-quickstart-service:9443
+      NAMROS_SBS_QUICKSTART_VOLUME_IDS: ${NAMROS_SBS_QUICKSTART_VOLUME_IDS:-18c00001,18c00002}
+      NAMROS_SBS_QUICKSTART_VOLUME_SIZE: ${NAMROS_SBS_QUICKSTART_VOLUME_SIZE:-64M}
+      NAMROS_SBS_QUICKSTART_BLOCK_SIZE: ${NAMROS_SBS_QUICKSTART_BLOCK_SIZE:-4K}
+      NAMROS_SBS_QUICKSTART_ALLOCATION_CHUNK_SIZE: ${NAMROS_SBS_QUICKSTART_ALLOCATION_CHUNK_SIZE:-1M}
+      NAMROS_SBS_QUICKSTART_ALLOCATION_PAGE_SIZE: ${NAMROS_SBS_QUICKSTART_ALLOCATION_PAGE_SIZE:-4M}
+      NAMROS_SBS_QUICKSTART_REPLICATION_FACTOR: ${NAMROS_SBS_QUICKSTART_REPLICATION_FACTOR:-2}
+    depends_on:
+      sbs-quickstart-service:
+        condition: service_healthy
+      sbs-quickstart-data-1:
+        condition: service_healthy
+      sbs-quickstart-data-2:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    command: namros-container-sbs-quickstart-bootstrap
+
+  sbs-quickstart-pool-bootstrap:
+    profiles:
+      - sbs-quickstart
+    image: ${NAMROS_TOOLS_IMAGE:-namros-tools}:${NAMROS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.tools
+      args:
+        NAMROS_VERSION: ${NAMROS_VERSION:-dev}
+        NAMROS_COMMIT: ${NAMROS_COMMIT:-unknown}
+        NAMROS_BUILD_DATE: ${NAMROS_BUILD_DATE:-unknown}
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    environment:
+      NAMROS_METADATA_BACKEND: tikv
+      NAMROS_TIKV_PD_ENDPOINTS: sbs-quickstart-pd:2379
+      NAMROS_COMMUNITY_SBS_VOLUME_IDS: ${NAMROS_SBS_QUICKSTART_VOLUME_IDS:-18c00001,18c00002}
+      NAMROS_COMMUNITY_SBS_VOLUME_POOL_ID: ${NAMROS_SBS_QUICKSTART_VOLUME_POOL_ID:-quickstart-pool}
+      NAMROS_COMMUNITY_SBS_VOLUME_POOL_GENERATION: ${NAMROS_SBS_QUICKSTART_VOLUME_POOL_GENERATION:-0}
+      NAMROS_COMMUNITY_SBS_ADMIN_ENDPOINT: sbs-quickstart-service:9443
+      NAMROS_COMMUNITY_SBS_DATA_ENDPOINT: sbs-quickstart-data-1:9444
+      NAMROS_COMMUNITY_SBS_DATA_ENDPOINTS: sbs-quickstart-data-1:9444,sbs-quickstart-data-2:9444
+      NAMROS_COMMUNITY_SBS_CHUNK_SIZE_BYTES: ${NAMROS_SBS_QUICKSTART_CHUNK_SIZE_BYTES:-1048576}
+    depends_on:
+      sbs-quickstart-bootstrap:
+        condition: service_completed_successfully
+      sbs-quickstart-tikv:
+        condition: service_started
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    command: namros-container-volume-pool-bootstrap
+
+  sbs-quickstart-gateway:
+    profiles:
+      - sbs-quickstart
+    image: ${NAMROS_GATEWAY_IMAGE:-namros-gateway}:${NAMROS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.gateway
+      args:
+        NAMROS_VERSION: ${NAMROS_VERSION:-dev}
+        NAMROS_COMMIT: ${NAMROS_COMMIT:-unknown}
+        NAMROS_BUILD_DATE: ${NAMROS_BUILD_DATE:-unknown}
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    environment:
+      NAMROS_LISTEN: 0.0.0.0:9000
+      NAMROS_DEPLOYMENT_PROFILE: dev
+      NAMROS_REGION: ${NAMROS_REGION:-us-east-1}
+      NAMROS_METADATA_BACKEND: tikv
+      NAMROS_TIKV_PD_ENDPOINTS: sbs-quickstart-pd:2379
+      NAMROS_STORAGE_BACKEND: sbs-cluster
+      NAMROS_GC_CANDIDATE_QUEUE: metadata
+      NAMROS_SBS_ADMIN_ENDPOINT: sbs-quickstart-service:9443
+      NAMROS_SBS_DATA_ENDPOINT: sbs-quickstart-data-1:9444
+      NAMROS_SBS_VOLUME_ID: ${NAMROS_SBS_QUICKSTART_VOLUME_ID:-18c00001}
+      NAMROS_SBS_VOLUME_POOL_ID: ${NAMROS_SBS_QUICKSTART_VOLUME_POOL_ID:-quickstart-pool}
+      NAMROS_SBS_CHUNK_SIZE_BYTES: ${NAMROS_SBS_QUICKSTART_CHUNK_SIZE_BYTES:-1048576}
+      NAMROS_SBS_GATEWAY_ID: sbs-quickstart-gateway
+      NAMROS_SBS_ATTACHMENT_ID: ${NAMROS_SBS_QUICKSTART_ATTACHMENT_ID:-att-namros-sbs-quickstart}
+      NAMROS_SBS_GENERATION: "1"
+      NAMROS_SBS_WRITER_GROUP_ID: ${NAMROS_SBS_QUICKSTART_WRITER_GROUP_ID:-namros-sbs-quickstart-writers}
+      NAMROS_SBS_SESSION_ID: sbs-quickstart-gateway-session-1
+      NAMROS_SBS_VOLUME_EPOCH: ${NAMROS_SBS_QUICKSTART_VOLUME_EPOCH:-1}
+      NAMROS_ROOT_ACCESS_KEY_ID_FILE: /run/secrets/namros_root_access_key_id
+      NAMROS_ROOT_SECRET_ACCESS_KEY_FILE: /run/secrets/namros_root_secret_access_key
+    secrets:
+      - namros_root_access_key_id
+      - namros_root_secret_access_key
+    ports:
+      - 127.0.0.1:${NAMROS_SBS_QUICKSTART_PORT:-9002}:9000
+    depends_on:
+      sbs-quickstart-tikv:
+        condition: service_started
+      sbs-quickstart-pool-bootstrap:
+        condition: service_completed_successfully
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9000/readyz >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 36
+      start_period: 10s
+
+  sbs-quickstart-tools:
+    profiles:
+      - sbs-quickstart
+    image: ${NAMROS_TOOLS_IMAGE:-namros-tools}:${NAMROS_IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: packaging/docker/Dockerfile.tools
+      args:
+        NAMROS_VERSION: ${NAMROS_VERSION:-dev}
+        NAMROS_COMMIT: ${NAMROS_COMMIT:-unknown}
+        NAMROS_BUILD_DATE: ${NAMROS_BUILD_DATE:-unknown}
+      additional_contexts:
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
+    environment:
+      NAMROS_ENDPOINT: http://sbs-quickstart-gateway:9000
+      NAMROS_REGION: ${NAMROS_REGION:-us-east-1}
+      NAMROS_ROOT_ACCESS_KEY_ID_FILE: /run/secrets/namros_root_access_key_id
+      NAMROS_ROOT_SECRET_ACCESS_KEY_FILE: /run/secrets/namros_root_secret_access_key
+    secrets:
+      - namros_root_access_key_id
+      - namros_root_secret_access_key
+    depends_on:
+      sbs-quickstart-gateway:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+secrets:
+  namros_root_access_key_id:
+    file: ${NAMROS_ROOT_ACCESS_KEY_ID_FILE:-./secrets/root-access-key-id}
+  namros_root_secret_access_key:
+    file: ${NAMROS_ROOT_SECRET_ACCESS_KEY_FILE:-./secrets/root-secret-access-key}
+
+volumes:
+  namros-sbs-quickstart-pd:
+  namros-sbs-quickstart-tikv:
+  namros-sbs-quickstart-service:
+  namros-sbs-quickstart-data-1:
+  namros-sbs-quickstart-data-2:

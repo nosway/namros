@@ -139,6 +139,26 @@ aws --endpoint-url "$NAMROS_ENDPOINT" s3api get-object --bucket quickstart --key
 
 확정된 Docker/Compose 프로파일, 이미지 정책, 비밀값 처리, readiness 계약과 구현 상태는 [Community 컨테이너 배포 가이드](container-deployment-guide.md)를 참고합니다. Helm은 후속 단계에서 별도 문서로 제공합니다.
 
+공개 gateway + SBS backend 빠른 시작은 다음 명령으로 실행합니다.
+
+```sh
+make container-sbs-quickstart-smoke
+```
+
+이 명령은 `packaging/docker/compose.sbs-quickstart.yml`을 통해 gateway 1개,
+SBS service 1개, SBS data node 2개, PD/TiKV 테스트 메타데이터를 시작합니다.
+S3 endpoint는 `http://127.0.0.1:9002`입니다.
+
+production-shaped Kubernetes/kind 시나리오는 다음 명령으로 확인합니다.
+
+```sh
+make k8s-production-render
+make kind-production-deploy
+```
+
+기본 설정 파일은 `packaging/k8s/production-kind.env`이며 gateway 2개,
+SBS service 2개, SBS data node 5개, embedded TiKV 1개를 렌더합니다.
+
 ## Community 게이트웨이 플래그
 
 | 플래그 | 일반 값 | 의미 |
@@ -156,13 +176,19 @@ aws --endpoint-url "$NAMROS_ENDPOINT" s3api get-object --bucket quickstart --key
 1. Community 테스트와 edition-boundary 검사를 실행합니다: `make test-community`.
 2. 로컬 게이트웨이를 시작합니다: `make run-dev`.
 3. 다른 셸에서 컨테이너 스모크를 실행합니다: `make container-local-smoke`.
-4. 컨테이너를 쓰지 않는 user-space client 범위는 `make compat-user-space`로 검증합니다.
-5. Production-scale readiness를 주장하기 전 `make production-scale-check`를 실행하고 skip된 외부 smoke gate를 검토합니다.
-6. FUSE 범위는 FUSE 마운트 권한이 있는 Linux 호스트에서 검증합니다.
+4. 공개 gateway를 SBS backend로 검증하려면 `make container-sbs-quickstart-smoke`를 실행합니다.
+5. Production-shaped Kubernetes config를 렌더합니다: `make k8s-production-render`.
+6. kind 평가에는 `make kind-production-deploy`를 실행합니다.
+7. 공개 AWS CLI/mc/rclone 검증은 `make compat-public-s3`로 엄격하게 실행합니다.
+8. 개발자 장비에서 컨테이너를 쓰지 않는 user-space client 범위는 `make compat-user-space`로 설치된 도구만 검증합니다.
+9. Production-scale readiness를 주장하기 전 `make production-scale-check`를 실행하고 skip된 외부 smoke gate를 검토합니다.
+10. FUSE 범위는 FUSE 마운트 권한이 있는 Linux 호스트에서 검증합니다.
 
 ```sh
 make test-community
 make container-local-smoke
+make container-sbs-quickstart-smoke
+make k8s-production-render
 ```
 
 기대 결과는 각 스모크 테스트가 통과 메시지를 출력하는 것입니다. 실패 출력에는 보존 옵션이 활성화된 경우 클라이언트 이름, 버킷 이름, 엔드포인트, 임시 디렉터리가 포함되어야 합니다.

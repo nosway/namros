@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := help
 
-.PHONY: test test-community test-enterprise lint build-all build-community build-enterprise build-gateway build-admin build-mcp build-sbs-exporter build-notification-adapter build-ops-report build-s3bench check-enterprise-build-source run-dev container-packaging-check container-build container-local-up container-local-smoke container-local-down container-local-reset container-community-up container-community-smoke container-community-failover-smoke container-community-down container-community-reset production-scale-check release-artifact-metadata helm-chart-check community-source-check community-source-export community-release-check enterprise-release-check publication-readiness docs-source-check docs-build docs-render-check
+.PHONY: test test-community test-enterprise lint build-all build-community build-enterprise build-gateway build-admin build-mcp build-sbs-exporter build-notification-adapter build-ops-report build-s3bench check-enterprise-build-source run-dev run-compat compat-user-space compat-public-s3 compat-sbs-physical-user-space compat-sbs-cluster-ec compat-awscli compat-mc compat-rclone compat-report container-packaging-check container-build container-local-up container-local-smoke container-local-down container-local-reset container-sbs-quickstart-up container-sbs-quickstart-smoke container-sbs-quickstart-down container-sbs-quickstart-reset container-community-up container-community-smoke container-community-failover-smoke container-community-down container-community-reset release-readiness production-scale-check release-artifact-metadata helm-chart-check community-source-check community-source-export community-release-check enterprise-release-check publication-readiness smoke-etcd-registry smoke-active-active smoke-metadata-backup-restore docs-source-check docs-build docs-render-check html-docs-check
+.PHONY: k8s-production-values k8s-production-render k8s-production-deploy k8s-production-delete k8s-production-status kind-production-up kind-production-build-images kind-production-load-images kind-production-deploy kind-production-delete
 .PHONY: help build check-edition-boundary check-community-export export-community test-community-export check-publication-readiness smoke-sbs-session-refcount-open smoke-sbs-session-close-guard smoke-sbs-session-fence
 
 GO ?= go
@@ -8,6 +9,15 @@ GOFLAGS_BASE ?= -buildvcs=false
 GOFLAGS ?= $(GOFLAGS_BASE)
 GOFLAGS_COMMUNITY ?= $(GOFLAGS_BASE)
 GOFLAGS_ENTERPRISE ?= $(GOFLAGS_BASE) -tags=enterprise,namros_ec
+VERSION_PACKAGE ?= github.com/nosway/namros/internal/version
+NAMROS_VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || printf dev)
+NAMROS_COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || printf unknown)
+NAMROS_BUILD_DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+GO_LDFLAGS_VERSION := -X $(VERSION_PACKAGE).Version=$(NAMROS_VERSION) -X $(VERSION_PACKAGE).Commit=$(NAMROS_COMMIT) -X $(VERSION_PACKAGE).Date=$(NAMROS_BUILD_DATE)
+GO_LDFLAGS ?= $(GO_LDFLAGS_VERSION)
+GO_BUILD_FLAGS = $(GOFLAGS) -ldflags "$(GO_LDFLAGS)"
+GO_BUILD_FLAGS_COMMUNITY = $(GOFLAGS_COMMUNITY) -ldflags "$(GO_LDFLAGS)"
+GO_BUILD_FLAGS_ENTERPRISE = $(GOFLAGS_ENTERPRISE) -ldflags "$(GO_LDFLAGS)"
 GOLANGCI_LINT ?= golangci-lint
 MKDOCS ?= mkdocs
 MKDOCS_CONFIG ?= mkdocs.yml
@@ -33,12 +43,17 @@ ENTERPRISE_TEST_PACKAGES ?= ./...
 COMMUNITY_GO_ENV = GOCACHE="$(GOCACHE)" GOMODCACHE="$(GOMODCACHE)"
 ENTERPRISE_GO_ENV = GOCACHE="$(ENTERPRISE_GOCACHE)" GOMODCACHE="$(ENTERPRISE_GOMODCACHE)"
 COMMUNITY_RELEASE_TARGETS ?= check-publication-readiness test-community docs-render-check check-community-export export-community
+COMMUNITY_COMPAT_REPORT_TARGETS ?= compat-user-space smoke-etcd-registry smoke-active-active smoke-metadata-backup-restore s3fs-linux
+NAMROS_COMPAT_AUTOSTART_GATEWAY ?= 1
 DOCKER ?= docker
 DOCKER_COMPOSE ?= $(DOCKER) compose
 CONTAINER_COMPOSE_FILE ?= packaging/docker/compose.yaml
 CONTAINER_COMMUNITY_COMPOSE_FILE ?= packaging/docker/compose.community.yml
+CONTAINER_SBS_QUICKSTART_COMPOSE_FILE ?= packaging/docker/compose.sbs-quickstart.yml
 CONTAINER_ENV_FILE ?= packaging/docker/.env
 CONTAINER_PROFILE ?= local
+K8S_PRODUCTION_CONFIG ?= packaging/k8s/production-kind.env
+K8S_PRODUCTION_SCRIPT ?= scripts/k8s/deploy-production.sh
 NAMROS_USE_NAMRBD_SBS_IMAGES_FILE := $(shell if [ -f "$(CONTAINER_ENV_FILE)" ]; then sed -n 's/^NAMROS_USE_NAMRBD_SBS_IMAGES=//p' "$(CONTAINER_ENV_FILE)" | tail -n 1; fi)
 NAMROS_USE_NAMRBD_SBS_IMAGES ?= $(if $(NAMROS_USE_NAMRBD_SBS_IMAGES_FILE),$(NAMROS_USE_NAMRBD_SBS_IMAGES_FILE),0)
 CONTAINER_SBS_BUILD_FLAG ?= $(if $(filter 1 true yes,$(NAMROS_USE_NAMRBD_SBS_IMAGES)),--no-build,--build)
@@ -62,12 +77,23 @@ help:
 	@printf "  make smoke-sbs-session-refcount-open Run the local SBS session refcount open smoke\n"
 	@printf "  make smoke-sbs-session-close-guard Run the local SBS session close guard smoke\n"
 	@printf "  make smoke-sbs-session-fence Run the local SBS stale session fence smoke\n"
+	@printf "  make compat-user-space Run AWS CLI, MinIO client, and rclone compatibility smoke\n"
+	@printf "  make compat-public-s3 Run the strict public aws-cli/mc/rclone S3 compatibility smoke\n"
+	@printf "  make compat-report Create a Community compatibility matrix report\n"
+	@printf "  make smoke-etcd-registry Run the etcd gateway registry smoke\n"
+	@printf "  make smoke-active-active Run the active-active gateway smoke\n"
+	@printf "  make smoke-metadata-backup-restore Run the metadata backup/restore smoke\n"
+	@printf "  make release-readiness Create release-readiness JSON/Markdown artifacts\n"
 	@printf "  make community-release-check Run the configured Community release target set\n"
 	@printf "  make enterprise-release-check Run the configured Enterprise release target set\n"
 	@printf "  make container-packaging-check Validate public container packaging metadata\n"
 	@printf "  make container-local-smoke Run the local container S3 smoke\n"
+	@printf "  make container-sbs-quickstart-smoke Run the gateway plus SBS backend quickstart smoke\n"
 	@printf "  make container-community-smoke Run the Community cross-gateway and load-balancer smoke\n"
+	@printf "  make k8s-production-render Render the production-shaped Kubernetes config from %s\n" "$(K8S_PRODUCTION_CONFIG)"
+	@printf "  make kind-production-deploy Create a kind cluster and deploy the production-shaped topology\n"
 	@printf "  make docs-render-check Build and verify the public documentation site\n"
+	@printf "  make html-docs-check Alias for docs-render-check\n"
 
 build: build-all
 
@@ -95,16 +121,16 @@ $(BIN_DIR) $(COMMUNITY_BIN_DIR) $(ENTERPRISE_BIN_DIR):
 
 $(NAMROS_CMDS:%=$(BIN_DIR)/%): $(BIN_DIR)/%: | $(BIN_DIR)
 	mkdir -p "$(GOCACHE)" "$(GOMODCACHE)"
-	$(COMMUNITY_GO_ENV) $(GO) build $(GOFLAGS) -o "$@" ./cmd/$*
+	$(COMMUNITY_GO_ENV) $(GO) build $(GO_BUILD_FLAGS) -o "$@" ./cmd/$*
 
 $(COMMUNITY_CMDS:%=$(COMMUNITY_BIN_DIR)/%): $(COMMUNITY_BIN_DIR)/%: | $(COMMUNITY_BIN_DIR)
 	mkdir -p "$(GOCACHE)" "$(GOMODCACHE)"
-	$(COMMUNITY_GO_ENV) $(GO) build $(GOFLAGS_COMMUNITY) -o "$@" ./cmd/$*
+	$(COMMUNITY_GO_ENV) $(GO) build $(GO_BUILD_FLAGS_COMMUNITY) -o "$@" ./cmd/$*
 
 $(ENTERPRISE_CMDS:%=$(ENTERPRISE_BIN_DIR)/%): $(ENTERPRISE_BIN_DIR)/%: | $(ENTERPRISE_BIN_DIR)
 	scripts/release/check-enterprise-build-source.sh "$(NAMROS_ENTERPRISE_REPO)"
 	mkdir -p "$(ENTERPRISE_GOCACHE)" "$(ENTERPRISE_GOMODCACHE)"
-	cd "$(NAMROS_ENTERPRISE_REPO)" && $(ENTERPRISE_GO_ENV) $(GO) build $(GOFLAGS_ENTERPRISE) -o "$@" ./cmd/$*
+	cd "$(NAMROS_ENTERPRISE_REPO)" && $(ENTERPRISE_GO_ENV) $(GO) build $(GO_BUILD_FLAGS_ENTERPRISE) -o "$@" ./cmd/$*
 
 build-all: $(NAMROS_CMDS:%=$(BIN_DIR)/%)
 
@@ -138,6 +164,40 @@ run-dev:
 		-storage-backend local \
 		-storage-path .namros/segments
 
+run-compat:
+	$(GO) run ./cmd/namros-gateway \
+		-listen 0.0.0.0:9000 \
+		-region us-east-1 \
+		-metadata-backend pebble \
+		-metadata-path .namros/meta \
+		-storage-backend local \
+		-storage-path .namros/segments
+
+compat-user-space:
+	NAMROS_COMPAT_AUTOSTART_GATEWAY=$(NAMROS_COMPAT_AUTOSTART_GATEWAY) scripts/compat/run-user-space-smoke.sh
+
+compat-public-s3:
+	NAMROS_COMPAT_AUTOSTART_GATEWAY=$(NAMROS_COMPAT_AUTOSTART_GATEWAY) scripts/compat/run-public-s3-compat-smoke.sh
+
+compat-sbs-physical-user-space:
+	scripts/compat/run-sbs-physical-user-space-smoke.sh
+
+compat-sbs-cluster-ec:
+	@printf 'compat-sbs-cluster-ec is an Enterprise/private-distribution target; the public Community source tree does not ship the EC smoke harness.\n' >&2
+	@exit 1
+
+compat-awscli:
+	scripts/compat/awscli-smoke.sh
+
+compat-mc:
+	scripts/compat/mc-smoke.sh
+
+compat-rclone:
+	scripts/compat/rclone-smoke.sh
+
+compat-report:
+	NAMROS_COMPAT_REPORT_TARGETS="$(COMMUNITY_COMPAT_REPORT_TARGETS)" scripts/compat/run-matrix-report.sh
+
 container-packaging-check:
 	sh scripts/container/check-packaging.sh
 
@@ -164,6 +224,27 @@ container-local-reset:
 		printf '[container] removing Compose project and volumes: %s\n' "$$project"
 	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_COMPOSE_FILE)" --profile local down --volumes --remove-orphans
 
+container-sbs-quickstart-up:
+	sh scripts/container/ensure-local-files.sh
+	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart up -d $(CONTAINER_SBS_BUILD_FLAG) sbs-quickstart-pd sbs-quickstart-tikv sbs-quickstart-service sbs-quickstart-data-1 sbs-quickstart-data-2
+	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart run $(CONTAINER_SBS_BUILD_FLAG) --rm sbs-quickstart-bootstrap
+	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart run --build --rm sbs-quickstart-pool-bootstrap
+	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart up -d --build sbs-quickstart-gateway
+
+container-sbs-quickstart-smoke:
+	$(MAKE) container-sbs-quickstart-up
+	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart run --rm sbs-quickstart-tools namros-container-local-smoke
+
+container-sbs-quickstart-down:
+	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart down
+
+container-sbs-quickstart-reset:
+	@sh scripts/container/ensure-local-files.sh
+	@project="$$(sed -n 's/^COMPOSE_PROJECT_NAME=//p' "$(CONTAINER_ENV_FILE)" | tail -n 1)"; \
+		if [ -z "$$project" ]; then project=namros-community; fi; \
+		printf '[container] removing SBS quickstart Compose project and volumes: %s\n' "$$project"
+	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart down --volumes --remove-orphans
+
 container-community-up:
 	sh scripts/container/ensure-local-files.sh
 	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_COMMUNITY_COMPOSE_FILE)" --profile community up -d $(CONTAINER_SBS_BUILD_FLAG) etcd pd tikv sbs-service-1 sbs-service-2 sbs-data-1 sbs-data-2 sbs-data-3 sbs-data-4 sbs-admin-lb sbs-data-lb
@@ -188,6 +269,36 @@ container-community-reset:
 		if [ -z "$$project" ]; then project=namros-community; fi; \
 		printf '[container] removing Compose project and volumes: %s\n' "$$project"
 	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_COMMUNITY_COMPOSE_FILE)" --profile community down --volumes --remove-orphans
+
+k8s-production-values:
+	$(K8S_PRODUCTION_SCRIPT) write-values "$(K8S_PRODUCTION_CONFIG)"
+
+k8s-production-render:
+	$(K8S_PRODUCTION_SCRIPT) render "$(K8S_PRODUCTION_CONFIG)"
+
+k8s-production-deploy:
+	$(K8S_PRODUCTION_SCRIPT) deploy "$(K8S_PRODUCTION_CONFIG)"
+
+k8s-production-delete:
+	$(K8S_PRODUCTION_SCRIPT) delete "$(K8S_PRODUCTION_CONFIG)"
+
+k8s-production-status:
+	$(K8S_PRODUCTION_SCRIPT) status "$(K8S_PRODUCTION_CONFIG)"
+
+kind-production-up:
+	$(K8S_PRODUCTION_SCRIPT) kind-up "$(K8S_PRODUCTION_CONFIG)"
+
+kind-production-build-images:
+	$(K8S_PRODUCTION_SCRIPT) build-images "$(K8S_PRODUCTION_CONFIG)"
+
+kind-production-load-images:
+	$(K8S_PRODUCTION_SCRIPT) kind-load-images "$(K8S_PRODUCTION_CONFIG)"
+
+kind-production-deploy:
+	$(K8S_PRODUCTION_SCRIPT) kind-deploy "$(K8S_PRODUCTION_CONFIG)"
+
+kind-production-delete:
+	$(K8S_PRODUCTION_SCRIPT) kind-down "$(K8S_PRODUCTION_CONFIG)"
 
 production-scale-check:
 	scripts/release/check-production-scale-readiness.sh
@@ -233,12 +344,24 @@ publication-readiness:
 
 check-publication-readiness: publication-readiness
 
+release-readiness:
+	scripts/ops/run-release-readiness-report.sh
+
 enterprise-release-check:
 	@if [ "$(NAMROS_ENTERPRISE_REPO)" = "$(CURDIR)" ]; then \
 		scripts/release/check-enterprise-build-source.sh "$(NAMROS_ENTERPRISE_REPO)"; \
 	else \
 		$(MAKE) -C "$(NAMROS_ENTERPRISE_REPO)" enterprise-release-check; \
 	fi
+
+smoke-etcd-registry:
+	scripts/coordination/run-etcd-registry-smoke.sh
+
+smoke-active-active:
+	scripts/chaos/run-active-active-smoke.sh
+
+smoke-metadata-backup-restore:
+	scripts/metadata/run-backup-restore-smoke.sh
 
 docs-source-check:
 	test -f "$(MKDOCS_CONFIG)"
@@ -268,6 +391,7 @@ docs-source-check:
 		$(GREP) -rnE '\]\([^)]*\.html' "$(DOCS_SOURCE_DIR)" --include='*.md' | $(GREP) -vE '\]\(https?://' >&2; \
 		exit 1; \
 	fi
+	bash scripts/docs/check-html-docs.sh
 
 docs-build: docs-source-check
 	$(MKDOCS) build --strict --config-file "$(MKDOCS_CONFIG)"
@@ -276,3 +400,5 @@ docs-render-check: docs-build
 	@# `mkdocs build --strict` validates links and nav but not rendered output.
 	@# Assert that no Markdown source markers survive into the published pages.
 	@python3 tools/check-docs-render.py "$(MKDOCS_SITE_DIR)"
+
+html-docs-check: docs-render-check

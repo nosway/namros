@@ -1,0 +1,195 @@
+#!/usr/bin/env sh
+set -eu
+
+log() {
+	printf '[sbs-quickstart-bootstrap] %s\n' "$*" >&2
+}
+
+wait_http() {
+	url="$1"
+	name="$2"
+	timeout_seconds="${NAMROS_SBS_QUICKSTART_READY_TIMEOUT:-120}"
+	deadline=$(( $(date +%s) + timeout_seconds ))
+	while [ "$(date +%s)" -lt "$deadline" ]; do
+		if curl -fsS "$url" >/dev/null 2>&1; then
+			log "$name ready: $url"
+			return 0
+		fi
+		sleep 2
+	done
+	log "$name did not become ready within ${timeout_seconds}s: $url"
+	return 1
+}
+
+binary_size_bytes() {
+	raw="$(printf '%s' "$1" | tr -d ' \t\r\n' | tr '[:lower:]' '[:upper:]')"
+	name="$2"
+	number="$(printf '%s' "$raw" | sed 's/^\([0-9][0-9]*\).*/\1/')"
+	case "$number" in
+	''|*[!0-9]*)
+		log "invalid $name=$1"
+		exit 2
+		;;
+	esac
+	suffix="${raw#$number}"
+	case "$suffix" in
+	''|B)
+		multiplier=1
+		;;
+	K|KB|KI|KIB)
+		multiplier=1024
+		;;
+	M|MB|MI|MIB)
+		multiplier=1048576
+		;;
+	G|GB|GI|GIB)
+		multiplier=1073741824
+		;;
+	*)
+		log "invalid $name suffix: $1"
+		exit 2
+		;;
+	esac
+	printf '%s\n' "$(( number * multiplier ))"
+}
+
+sbsctl_run() {
+	/usr/local/bin/sbsctl "$@"
+}
+
+trim_value() {
+	printf '%s' "$1" | tr -d ' \t\r\n'
+}
+
+cluster_id="${NAMROS_SBS_QUICKSTART_CLUSTER_ID:-namros-sbs-quickstart}"
+sbs_cluster_id="${NAMROS_SBS_QUICKSTART_SBS_CLUSTER_ID:-namros-sbs-quickstart-cluster}"
+admin_endpoint="${NAMROS_SBS_QUICKSTART_ADMIN_ENDPOINT:-sbs-quickstart-service:9443}"
+service_ready_url="${NAMROS_SBS_QUICKSTART_SERVICE_READY_URL:-http://sbs-quickstart-service:9081/readyz}"
+data_1_ready_url="${NAMROS_SBS_QUICKSTART_DATA_1_READY_URL:-http://sbs-quickstart-data-1:9082/readyz}"
+data_2_ready_url="${NAMROS_SBS_QUICKSTART_DATA_2_READY_URL:-http://sbs-quickstart-data-2:9082/readyz}"
+data_1_node_id="${NAMROS_SBS_QUICKSTART_DATA_1_NODE_ID:-sbs-quickstart-data-1}"
+data_2_node_id="${NAMROS_SBS_QUICKSTART_DATA_2_NODE_ID:-sbs-quickstart-data-2}"
+data_1_grpc_endpoint="${NAMROS_SBS_QUICKSTART_DATA_1_GRPC_ENDPOINT:-sbs-quickstart-data-1:9444}"
+data_2_grpc_endpoint="${NAMROS_SBS_QUICKSTART_DATA_2_GRPC_ENDPOINT:-sbs-quickstart-data-2:9444}"
+data_1_admin_http="${NAMROS_SBS_QUICKSTART_DATA_1_ADMIN_HTTP_ENDPOINT:-http://sbs-quickstart-data-1:9082}"
+data_2_admin_http="${NAMROS_SBS_QUICKSTART_DATA_2_ADMIN_HTTP_ENDPOINT:-http://sbs-quickstart-data-2:9082}"
+volume_ids="${NAMROS_SBS_QUICKSTART_VOLUME_IDS:-18c00001,18c00002}"
+volume_size="${NAMROS_SBS_QUICKSTART_VOLUME_SIZE:-64M}"
+block_size="${NAMROS_SBS_QUICKSTART_BLOCK_SIZE:-4K}"
+allocation_chunk_size="${NAMROS_SBS_QUICKSTART_ALLOCATION_CHUNK_SIZE:-1M}"
+allocation_page_size="${NAMROS_SBS_QUICKSTART_ALLOCATION_PAGE_SIZE:-4M}"
+replication_factor="${NAMROS_SBS_QUICKSTART_REPLICATION_FACTOR:-2}"
+timeout="${NAMROS_SBS_QUICKSTART_TIMEOUT:-20s}"
+volume_size_bytes="$(binary_size_bytes "$volume_size" volume_size)"
+block_size_bytes="$(binary_size_bytes "$block_size" block_size)"
+allocation_chunk_size_bytes="$(binary_size_bytes "$allocation_chunk_size" allocation_chunk_size)"
+allocation_page_size_bytes="$(binary_size_bytes "$allocation_page_size" allocation_page_size)"
+
+wait_http "$service_ready_url" sbs-quickstart-service
+wait_http "$data_1_ready_url" sbs-quickstart-data-1
+wait_http "$data_2_ready_url" sbs-quickstart-data-2
+
+if sbsctl_run cluster status \
+	--admin-endpoint "$admin_endpoint" \
+	--cluster-id "$cluster_id" \
+	--sbs-cluster-id "$sbs_cluster_id" \
+	--timeout "$timeout" >/dev/null 2>&1; then
+	log "cluster already initialized: $cluster_id/$sbs_cluster_id"
+else
+	log "initialize cluster: $cluster_id/$sbs_cluster_id"
+	sbsctl_run cluster init \
+		--admin-endpoint "$admin_endpoint" \
+		--cluster-id "$cluster_id" \
+		--sbs-cluster-id "$sbs_cluster_id" \
+		--actor container-quickstart \
+		--reason namros-sbs-quickstart \
+		--timeout "$timeout" >/dev/null
+fi
+
+join_node() {
+	node_id="$1"
+	grpc_endpoint="$2"
+	admin_http="$3"
+	zone="$4"
+
+	if sbsctl_run node status \
+		--admin-endpoint "$admin_endpoint" \
+		--cluster-id "$cluster_id" \
+		--sbs-cluster-id "$sbs_cluster_id" \
+		--node-id "$node_id" \
+		--timeout "$timeout" >/dev/null 2>&1; then
+		log "node already joined: $node_id"
+		return 0
+	fi
+
+	log "join node: $node_id grpc=$grpc_endpoint"
+	sbsctl_run node join \
+		--admin-endpoint "$admin_endpoint" \
+		--cluster-id "$cluster_id" \
+		--sbs-cluster-id "$sbs_cluster_id" \
+		--node-id "$node_id" \
+		--grpc-endpoint "$grpc_endpoint" \
+		--admin-http-endpoint "$admin_http" \
+		--zone "$zone" \
+		--auto-create-zone \
+		--actor container-quickstart \
+		--reason namros-sbs-quickstart \
+		--timeout "$timeout" >/dev/null
+}
+
+create_volume() {
+	volume_id="$1"
+	if sbsctl_run volume status \
+		--admin-endpoint "$admin_endpoint" \
+		--cluster-id "$cluster_id" \
+		--sbs-cluster-id "$sbs_cluster_id" \
+		--volume-id "$volume_id" \
+		--timeout "$timeout" >/dev/null 2>&1; then
+		log "volume already exists: $volume_id"
+		return 0
+	fi
+
+	log "create replicated volume: $volume_id"
+	sbsctl_run volume create \
+		--admin-endpoint "$admin_endpoint" \
+		--cluster-id "$cluster_id" \
+		--sbs-cluster-id "$sbs_cluster_id" \
+		--volume-id "$volume_id" \
+		--size "$volume_size" \
+		--block-size "$block_size" \
+		--allocation-chunk-size "$allocation_chunk_size" \
+		--allocation-page-size "$allocation_page_size" \
+		--replication-factor "$replication_factor" \
+		--redundancy-backend replicated \
+		--actor container-quickstart \
+		--reason namros-sbs-quickstart \
+		--timeout "$timeout" >/dev/null
+}
+
+materialize_volume_on_node() {
+	volume_id="$1"
+	node_id="$2"
+	admin_http="$3"
+	url="${admin_http%/}/debug/materialize-volume?volume_id=$volume_id&size_bytes=$volume_size_bytes&block_size=$block_size_bytes&prefix=sbs-$volume_id&allocation_chunk_size_bytes=$allocation_chunk_size_bytes&allocation_page_bytes=$allocation_page_size_bytes"
+	log "materialize volume on $node_id: $volume_id"
+	curl -fsS -X POST "$url" >/dev/null
+}
+
+join_node "$data_1_node_id" "$data_1_grpc_endpoint" "$data_1_admin_http" zone-a
+join_node "$data_2_node_id" "$data_2_grpc_endpoint" "$data_2_admin_http" zone-b
+
+old_ifs="$IFS"
+IFS=,
+for raw_volume_id in $volume_ids; do
+	IFS="$old_ifs"
+	volume_id="$(trim_value "$raw_volume_id")"
+	if [ -n "$volume_id" ]; then
+		create_volume "$volume_id"
+		materialize_volume_on_node "$volume_id" "$data_1_node_id" "$data_1_admin_http"
+		materialize_volume_on_node "$volume_id" "$data_2_node_id" "$data_2_admin_http"
+	fi
+	IFS=,
+done
+IFS="$old_ifs"
+
+log "bootstrap complete"

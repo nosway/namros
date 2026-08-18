@@ -1,28 +1,58 @@
 name: Docs
 
-# The published manual set is built from docs-src on every push to main and
-# served from GitHub Pages. No rendered HTML is committed to the repository, so
-# the Markdown sources cannot drift from what readers see.
+# The manual set is render-checked from docs-src on every push to main. GitHub
+# Pages deployment is an explicit workflow_dispatch action so a fresh public
+# repository can pass CI before Pages has been enabled by an administrator.
+# No rendered HTML is committed to the repository, so the Markdown sources
+# cannot drift from what readers see.
 
 on:
   push:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      deploy_pages:
+        description: "Deploy the rendered documentation to GitHub Pages"
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
-# A superseded run has nothing worth finishing; the next one republishes.
+# A superseded run has nothing worth finishing; the next one repeats the same
+# render-check or explicit deploy path.
 concurrency:
   group: docs-pages
   cancel-in-progress: true
 
 jobs:
-  publish:
+  render-check:
     runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install documentation toolchain
+        run: python -m pip install -r docs-src/requirements.txt
+
+      - name: Build and render-check the site
+        run: make docs-render-check
+
+  deploy-pages:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_pages }}
+    needs: render-check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}

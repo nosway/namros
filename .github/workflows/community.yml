@@ -60,6 +60,57 @@ jobs:
       - name: Build and render-check the site
         run: make docs-render-check
 
+  helm:
+    name: Helm chart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Lint and render chart
+        run: NAMROS_HELM_REQUIRE_HELM=true make helm-chart-check
+
+  s3-compatibility:
+    name: Public S3 compatibility
+    runs-on: ubuntu-latest
+    env:
+      NAMROS_COMPAT_AUTOSTART_GATEWAY: "1"
+      NAMROS_COMPAT_GATEWAY_START_TIMEOUT_SECONDS: "60"
+      NAMROS_COMPAT_MC_LARGE_OBJECT_MIB: "70"
+      NAMROS_COMPAT_RCLONE_LARGE_OBJECT_MIB: "2"
+      NAMROS_COMPAT_RCLONE_UPLOAD_CUTOFF: "1Mi"
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install S3 clients
+        run: |
+          python -m pip install awscli
+          sudo apt-get update
+          sudo apt-get install -y curl jq rclone
+          sudo curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc
+          sudo chmod +x /usr/local/bin/mc
+          aws --version
+          mc --version
+          rclone version
+
+      - name: Run public S3 compatibility smoke
+        run: make compat-public-s3
+
   publication:
     name: Publication readiness
     runs-on: ubuntu-latest

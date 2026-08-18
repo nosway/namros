@@ -47,6 +47,34 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 {{- end -}}
 
+{{- define "namros.sbsServiceReadyURLs" -}}
+{{- $root := . -}}
+{{- range $i, $node := .Values.sbs.service.nodes -}}{{- if $i }},{{ end -}}http://{{ include "namros.fullname" $root }}-{{ $node.id }}:9081/readyz{{- end -}}
+{{- end -}}
+
+{{- define "namros.sbsDataReadyURLs" -}}
+{{- $root := . -}}
+{{- range $i, $node := .Values.sbs.data.nodes -}}{{- if $i }},{{ end -}}http://{{ include "namros.fullname" $root }}-{{ $node.id }}:9082/readyz{{- end -}}
+{{- end -}}
+
+{{- define "namros.sbsDataNodeIDs" -}}
+{{- range $i, $node := .Values.sbs.data.nodes -}}{{- if $i }},{{ end -}}{{ $node.id }}{{- end -}}
+{{- end -}}
+
+{{- define "namros.sbsDataGRPCEndpoints" -}}
+{{- $root := . -}}
+{{- range $i, $node := .Values.sbs.data.nodes -}}{{- if $i }},{{ end -}}{{ include "namros.fullname" $root }}-{{ $node.id }}:9444{{- end -}}
+{{- end -}}
+
+{{- define "namros.sbsDataAdminHTTPEndpoints" -}}
+{{- $root := . -}}
+{{- range $i, $node := .Values.sbs.data.nodes -}}{{- if $i }},{{ end -}}http://{{ include "namros.fullname" $root }}-{{ $node.id }}:9082{{- end -}}
+{{- end -}}
+
+{{- define "namros.sbsDataZones" -}}
+{{- range $i, $node := .Values.sbs.data.nodes -}}{{- if $i }},{{ end -}}{{ default "zone-a" $node.zone }}{{- end -}}
+{{- end -}}
+
 {{- define "namros.secretVolume" -}}
 - name: namros-root-credentials
   secret:

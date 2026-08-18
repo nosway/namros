@@ -43,8 +43,11 @@ embedded:
       repository: gcr.io/etcd-development/etcd
       tag: v3.6.8
       pullPolicy: IfNotPresent
+    replicas: 1
   tikv:
     enabled: true
+    pdReplicas: 1
+    tikvReplicas: 1
     pdImage:
       repository: pingcap/pd
       tag: v8.5.7
@@ -69,7 +72,26 @@ gateway:
   service:
     type: ClusterIP
     port: 9000
+    nodePort: null
   resources: {}
+
+monitoring:
+  serviceMonitor:
+    enabled: false
+    labels: {}
+    interval: 30s
+    scrapeTimeout: 10s
+    path: /metrics
+  podMonitor:
+    enabled: false
+    labels: {}
+    interval: 30s
+    scrapeTimeout: 10s
+    path: /metrics
+
+tests:
+  enabled: true
+  timeoutSeconds: 30
 
 sbs:
   clusterId: namros-community
@@ -102,6 +124,8 @@ sbs:
         zone: zone-b
       - id: sbs-data-4
         zone: zone-b
+      - id: sbs-data-5
+        zone: zone-c
   resources: {}
 
 jobs:

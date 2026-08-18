@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="NAMROS">
+  <rect width="128" height="128" rx="24" fill="#101827"/>
+  <path d="M28 84V44h14l44 52V44h14v40H86L42 32v52H28z" fill="#f8fafc"/>
+  <path d="M34 92h60" stroke="#38bdf8" stroke-width="8" stroke-linecap="round"/>
+</svg>

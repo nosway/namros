@@ -1,0 +1,42 @@
+{{- if .Values.tests.enabled }}
+{{- $gatewayURL := printf "http://%s:%v/readyz" (include "namros.fullname" .) .Values.gateway.service.port -}}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "namros.fullname" . }}-gateway-smoke
+  labels:
+    {{- include "namros.labels" . | nindent 4 }}
+    app.kubernetes.io/component: test
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  securityContext:
+    {{- toYaml .Values.podSecurityContext | nindent 4 }}
+  containers:
+    - name: gateway-ready
+      image: "{{ .Values.images.tools.repository }}:{{ .Values.images.tools.tag }}"
+      imagePullPolicy: {{ .Values.images.tools.pullPolicy }}
+      command:
+        - /bin/sh
+        - -lc
+      args:
+        - |
+          deadline=$((SECONDS + {{ .Values.tests.timeoutSeconds }}))
+          while [ "$SECONDS" -lt "$deadline" ]; do
+            if curl -fsS "{{ $gatewayURL }}" >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          curl -fsS "{{ $gatewayURL }}"
+      securityContext:
+        {{- toYaml .Values.containerSecurityContext | nindent 8 }}
+      volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+  volumes:
+    - name: tmp
+      emptyDir: {}
+{{- end }}

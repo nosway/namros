@@ -15,20 +15,28 @@
 | 클라이언트 | 검증 범위 | 예시 |
 | --- | --- | --- |
 | AWS CLI | put/get/head/range/list, 메타데이터, 복사, 버전 관리, CORS, 사전 서명, MPU 목록/중단 | `aws s3api list-buckets` |
-| MinIO client | copy/cat/stat/list, 서버 측 이동, 멀티파트 크기 복사 | `mc ls namros` |
-| rclone | 복사/목록/읽기, 이동/삭제, 멀티파트 크기 복사 | `rclone lsd namros:` |
+| MinIO client | copy/cat/stat/list, 서버 측 이동, 멀티파트 크기 복사, 버전 객체 쓰기 | `mc ls namros` |
+| rclone | 복사/목록/읽기, 이동/삭제, 멀티파트 크기 복사, 버전 객체 쓰기 | `rclone lsd namros:` |
 | s3fs-fuse | 마운트, 파일 읽기/쓰기/목록/이름 변경, xattr 민감 흐름 | Linux FUSE 호스트 절차 |
 
 ## 공통 환경
 
 ```sh
 export NAMROS_ENDPOINT=http://127.0.0.1:9000
-export AWS_ACCESS_KEY_ID=namros
-export AWS_SECRET_ACCESS_KEY=namros-secret
-export AWS_DEFAULT_REGION=us-east-1
+export NAMROS_ACCESS_KEY_ID=namrosroot
+export NAMROS_SECRET_ACCESS_KEY=namrosrootsecret
+export NAMROS_REGION=us-east-1
 ```
 
 특정 virtual-hosted-style 테스트를 수행하는 경우가 아니라면 path-style 주소 방식을 사용합니다. virtual-hosted-style에서는 DNS 또는 `/etc/hosts`가 버킷 호스트 이름을 게이트웨이에 매핑해야 합니다.
+
+## 공개 재현 스크립트
+
+```sh
+make compat-public-s3
+```
+
+이 타깃은 AWS CLI, `jq`, `curl`, MinIO client, rclone을 모두 요구합니다. `NAMROS_ENDPOINT`가 준비되어 있지 않으면 로컬 in-memory 게이트웨이를 시작한 뒤 세 클라이언트 모두로 버킷, 객체, 멀티파트 크기 객체, 버전 객체 쓰기 범위를 실행합니다. `make compat-user-space`는 개발자 장비에서 설치된 클라이언트만 실행하고 나머지는 건너뛰는 용도로 남겨 둡니다.
 
 ## AWS CLI 스모크
 

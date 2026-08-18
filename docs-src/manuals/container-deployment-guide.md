@@ -25,10 +25,12 @@ TiKV metadata, etcd gateway coordination, active-active gateways, and SBS replic
 | Profile | Components | Purpose | Data |
 | --- | --- | --- | --- |
 | `local` | one gateway, Pebble, local segment store | fast S3 evaluation and development | named volumes |
+| `sbs-quickstart` | one gateway, PD and TiKV test containers, one SBS service, two SBS data nodes | first public gateway plus SBS backend evaluation | named volumes |
+| `production-kind` | two gateways, embedded etcd, embedded PD/TiKV, two SBS services, five SBS data nodes | production-shaped Kubernetes/kind evaluation | Kubernetes objects and emptyDir volumes |
 | `community` | HAProxy, two gateways, etcd, PD and TiKV test containers, SBS load balancers, two SBS services, four SBS data nodes | active-active and replicated Community validation | named volumes |
 | `observability` | Community profile plus optional Prometheus and Grafana | metrics and dashboard evaluation | profile-specific volumes |
 
-A single `packaging/docker/compose.yaml` uses explicit Compose profiles. The local profile is the recommended first run. The Community profile is a test topology, not a production-ready etcd or TiKV deployment: its etcd, PD, and TiKV services each have a single failure domain. Production-scale release claims also require `make production-scale-check` and review of any skipped external smoke gates.
+The local profile lives in `packaging/docker/compose.yaml`. The lighter SBS backend quickstart lives in `packaging/docker/compose.sbs-quickstart.yml`, and the active-active Community topology lives in `packaging/docker/compose.community.yml`. Kubernetes and kind deployment configuration is generated from `packaging/k8s/production-kind.env` into Helm values. The local profile is still the recommended first run when only S3 API behavior matters. The SBS quickstart is the recommended first Docker run for proving the gateway is using SBS replicated object storage. The Community and production-kind profiles are test topologies, not production-ready etcd or TiKV deployments: embedded etcd, PD, and TiKV each have a single failure domain. Production-scale release claims also require `make production-scale-check` and review of any skipped external smoke gates.
 
 ## Images, Tags, And Platforms
 
@@ -68,6 +70,90 @@ The example environment file contains development-only credential placeholders a
 <div class="note" markdown="1">
 
 `container-local-reset` is destructive. Normal shutdown preserves metadata and object data.
+
+</div>
+
+## SBS Backend Quick Start
+
+This first SBS path uses one gateway, PD/TiKV test metadata, one SBS service,
+and two SBS data nodes. It creates two replicated SBS volumes, registers a
+metadata volume pool, then starts the gateway with `NAMROS_STORAGE_BACKEND=sbs-cluster`.
+The gateway uses the `dev` deployment profile so the scenario stays small and
+does not require etcd gateway coordination. Compose publishes the S3 endpoint
+only on `127.0.0.1:9002`.
+
+```sh
+# Gateway + SBS backend entrypoint: packaging/docker/compose.sbs-quickstart.yml
+make container-sbs-quickstart-up
+make container-sbs-quickstart-smoke
+make container-sbs-quickstart-down
+```
+
+| Target | Effect |
+| --- | --- |
+| `container-sbs-quickstart-up` | build or start PD, TiKV, SBS service/data nodes, bootstrap SBS volumes and pool, then start the gateway |
+| `container-sbs-quickstart-smoke` | run the toolbox S3 smoke against the SBS-backed gateway |
+| `container-sbs-quickstart-down` | stop containers and preserve named volumes |
+| `container-sbs-quickstart-reset` | stop containers and permanently remove SBS quickstart volumes |
+
+The default volume pool is `quickstart-pool`, the primary volume is `18c00001`,
+and the configured member volumes are `18c00001,18c00002`. Override the
+`NAMROS_SBS_QUICKSTART_*` values in `packaging/docker/.env` after running
+`sh scripts/container/ensure-local-files.sh`.
+
+<div class="note" markdown="1">
+
+`container-sbs-quickstart-reset` is destructive. This profile is a functional
+quickstart, not a production HA topology.
+
+</div>
+
+## Kubernetes And Kind Production Shape
+
+The Kubernetes path uses the Helm chart at `packaging/helm/namros-community`
+and reads deployment shape from `packaging/k8s/production-kind.env`. The default
+file sets:
+
+| Component | Default count |
+| --- | ---: |
+| Gateway | 2 |
+| SBS service | 2 |
+| SBS data | 5 |
+| TiKV | 1 |
+| PD | 1 |
+| etcd | 1 |
+
+```sh
+# Generate .cache/k8s-production/values.generated.yaml
+make k8s-production-values
+
+# Render Helm manifests from the generated values
+make k8s-production-render
+
+# Deploy to the current Kubernetes context
+make k8s-production-deploy
+
+# Create a kind cluster, build/load local images, and deploy
+make kind-production-deploy
+```
+
+For kind, `packaging/k8s/kind-production.yaml` maps the gateway NodePort to
+`127.0.0.1:9000`. Stop only the Helm release with `make k8s-production-delete`;
+delete the kind cluster with `make kind-production-delete`.
+
+For an external Kubernetes cluster, copy `packaging/k8s/production-kind.env`,
+set `NAMROS_K8S_EMBEDDED_TIKV=false` and `NAMROS_K8S_EMBEDDED_ETCD=false`, then
+provide `NAMROS_K8S_EXTERNAL_TIKV_PD_ENDPOINTS`,
+`NAMROS_K8S_EXTERNAL_ETCD_ENDPOINTS`, published image names, and an existing
+root credential Secret. The kind defaults intentionally create development
+credentials and `emptyDir` storage so the scenario is easy to run and reset.
+
+<div class="note" markdown="1">
+
+`kind-production-deploy` is production-shaped, not a production HA claim. A real
+production deployment needs hardened external etcd/TiKV clusters, persistent SBS
+data volumes, published image digests, TLS/front-proxy policy, and operational
+backup/restore evidence.
 
 </div>
 
@@ -143,6 +229,10 @@ Minimum and recommended CPU, memory, disk, image-download size, and expected sta
 
 | Target | Data behavior |
 | --- | --- |
+| `container-sbs-quickstart-down` | stop the SBS quickstart stack and preserve volumes |
+| `container-sbs-quickstart-reset` | permanently remove SBS quickstart metadata and SBS data |
+| `k8s-production-delete` | uninstall the Helm release from the configured namespace |
+| `kind-production-delete` | delete the configured kind cluster |
 | `container-community-down` | stop the stack and preserve volumes |
 | `container-community-reset` | permanently remove etcd, TiKV, and SBS test state |
 | `container-build` | build local gateway and tools images from NAMROS source; Community targets also build transition SBS images from the configured NAMRBD context |
@@ -154,6 +244,8 @@ Reset commands print the exact project and named volumes they will remove. Upgra
 - Public multi-stage images build without a development-only local NAMRBD module replacement.
 - Linux amd64 and arm64 images run as non-root with a read-only root filesystem.
 - The local profile starts, persists data across down/up, passes smoke, and resets only through the destructive target.
+- The SBS quickstart starts the gateway with `sbs-cluster` storage, passes smoke, and resets only through the destructive target.
+- The Kubernetes production-shaped config renders from `packaging/k8s/production-kind.env` with 2 gateways, 2 SBS services, 5 SBS data nodes, and 1 TiKV instance.
 - The Community profile starts all expected replicas and passes normal and failover smoke.
 - HAProxy routes only to ready gateways; etcd contains both explicit gateway identities.
 - Readiness fails for unavailable mandatory metadata, storage, or multi-gateway coordination dependencies.

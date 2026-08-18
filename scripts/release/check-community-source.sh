@@ -189,9 +189,18 @@ check_local_namrbd_replace() {
 	fi
 }
 
+check_public_doc_make_targets() {
+	local public_makefile="Makefile"
+	if [ -f "$OVERLAY_DIR/Makefile" ]; then
+		public_makefile="$OVERLAY_DIR/Makefile"
+	fi
+	NAMROS_DOCS_PUBLIC_MAKEFILE="$public_makefile" bash scripts/docs/check-html-docs.sh
+}
+
 require_cmd git
 require_cmd "$RG"
 require_cmd "$GO"
+require_cmd bash
 
 allowlist=()
 excludes=()
@@ -248,6 +257,19 @@ if ! "$RG" -n '^export-community:' Makefile >/dev/null; then
 fi
 if ! "$RG" -n '^test-community-export:' Makefile >/dev/null; then
 	error "Makefile must provide test-community-export"
+fi
+if ! "$RG" -n '^VERSION_PACKAGE \?= github\.com/nosway/namros/internal/version$' Makefile >/dev/null; then
+	error "Makefile must define the internal/version linker package"
+fi
+if ! "$RG" -n 'GO_LDFLAGS_VERSION .*\.Version=' Makefile >/dev/null; then
+	error "Makefile must stamp internal/version.Version with linker flags"
+fi
+if ! "$RG" -n -- '-ldflags' Makefile >/dev/null; then
+	error "Makefile build rules must pass Go linker flags"
+fi
+log "verify public docs reference public Makefile targets"
+if ! check_public_doc_make_targets; then
+	fail=1
 fi
 if scripts/release/check-enterprise-build-source.sh "$ROOT_DIR" >/dev/null 2>&1; then
 	error "public Community tree must not be accepted as an Enterprise build source"

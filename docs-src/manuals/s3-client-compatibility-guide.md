@@ -15,20 +15,28 @@ Run these client checks against a local gateway started with `make run-dev` or a
 | Client | Coverage | Example |
 | --- | --- | --- |
 | AWS CLI | put/get/head/range/list, metadata, copy, versioning, CORS, presign, MPU list/abort | `aws s3api list-buckets` |
-| MinIO client | copy/cat/stat/list, server-side move, multipart-sized copy | `mc ls namros` |
-| rclone | copy/list/read, move/delete, multipart-sized copy | `rclone lsd namros:` |
+| MinIO client | copy/cat/stat/list, server-side move, multipart-sized copy, versioned writes | `mc ls namros` |
+| rclone | copy/list/read, move/delete, multipart-sized copy, versioned writes | `rclone lsd namros:` |
 | s3fs-fuse | mount, file read/write/list/rename, xattr-sensitive flows | Linux FUSE host procedure |
 
 ## Common Environment
 
 ```sh
 export NAMROS_ENDPOINT=http://127.0.0.1:9000
-export AWS_ACCESS_KEY_ID=namros
-export AWS_SECRET_ACCESS_KEY=namros-secret
-export AWS_DEFAULT_REGION=us-east-1
+export NAMROS_ACCESS_KEY_ID=namrosroot
+export NAMROS_SECRET_ACCESS_KEY=namrosrootsecret
+export NAMROS_REGION=us-east-1
 ```
 
 Use path-style addressing unless a specific virtual-hosted-style test is being performed. For virtual-hosted-style, DNS or `/etc/hosts` must map bucket hostnames to the gateway.
+
+## Public Reproducer
+
+```sh
+make compat-public-s3
+```
+
+This target requires AWS CLI, `jq`, `curl`, MinIO client, and rclone. It starts a local in-memory gateway when `NAMROS_ENDPOINT` is not already ready, then runs bucket, object, multipart-sized object, and versioned object write coverage for all three clients. `make compat-user-space` remains useful on developer machines because it runs the client smokes whose tools are installed and skips the rest.
 
 ## AWS CLI Smoke
 

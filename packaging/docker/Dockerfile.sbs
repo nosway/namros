@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-ARG GO_VERSION=1.26.5
+ARG GO_VERSION=1.26.6
 ARG ALPINE_VERSION=3.22
 
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS build
@@ -51,7 +51,8 @@ RUN apk add --no-cache ca-certificates curl jq wget \
 	&& chown -R 65532:65532 /workspace /tmp
 COPY --from=build /out/sbsctl /usr/local/bin/sbsctl
 COPY packaging/docker/bin/namros-container-community-bootstrap /usr/local/bin/namros-container-community-bootstrap
-RUN chmod +x /usr/local/bin/namros-container-community-bootstrap
+COPY packaging/docker/bin/namros-container-sbs-quickstart-bootstrap /usr/local/bin/namros-container-sbs-quickstart-bootstrap
+RUN chmod +x /usr/local/bin/namros-container-community-bootstrap /usr/local/bin/namros-container-sbs-quickstart-bootstrap
 USER 65532:65532
 WORKDIR /workspace
 ENTRYPOINT ["/bin/sh", "-lc"]

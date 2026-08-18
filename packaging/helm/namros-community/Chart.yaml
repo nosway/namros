@@ -5,3 +5,20 @@ type: application
 version: 0.1.0
 appVersion: "0.1.0"
 kubeVersion: ">=1.27.0-0"
+home: https://github.com/nosway/namros
+icon: https://raw.githubusercontent.com/nosway/namros/main/docs-src/assets/namros-icon.svg
+sources:
+  - https://github.com/nosway/namros
+maintainers:
+  - name: NAMROS Maintainers
+    url: https://github.com/nosway/namros
+keywords:
+  - s3
+  - object-storage
+  - active-active
+  - tikv
+  - etcd
+  - sbs
+annotations:
+  artifacthub.io/category: storage
+  artifacthub.io/license: Apache-2.0

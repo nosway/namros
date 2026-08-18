@@ -10,6 +10,7 @@
 .github/
 .gitignore
 CODE_OF_CONDUCT.md
+CHANGELOG.md
 CONTRIBUTING.md
 LICENSE
 Makefile
@@ -25,7 +26,15 @@ go.sum
 internal/
 packaging/docker/
 packaging/helm/
+packaging/k8s/
+scripts/chaos/run-active-active-smoke.sh
 scripts/container/
+scripts/compat/
+scripts/coordination/run-etcd-registry-smoke.sh
+scripts/docs/
+scripts/k8s/
+scripts/metadata/run-backup-restore-smoke.sh
+scripts/ops/run-release-readiness-report.sh
 tools/check-docs-render.py
 scripts/lab/run-volume-pool-runtime-add-member-smoke.sh
 scripts/lab/run-volume-pool-drain-read-old-ref-smoke.sh

@@ -17,8 +17,14 @@ make docs-render-check
 If your change touches S3 compatibility behavior, also run:
 
 ```sh
+make compat-public-s3
 make compat-user-space
 ```
+
+`make compat-public-s3` is the strict public reproducer used by CI and requires
+AWS CLI, `jq`, `curl`, MinIO client, and rclone. `make compat-user-space` is a
+developer convenience target that runs the installed client smokes and skips
+missing clients.
 
 Some smoke targets require TiKV, etcd, NAMRBD/SBS, or an 18-node lab
 environment. Document any skipped environment-dependent verification in your

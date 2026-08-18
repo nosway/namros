@@ -133,6 +133,26 @@ aws --endpoint-url "$NAMROS_ENDPOINT" s3api get-object --bucket quickstart --key
 
 The approved Docker and Compose profiles, image policy, secret handling, readiness contract, and implementation status are defined in the [Community container deployment guide](container-deployment-guide.md). Helm is a later, separately documented delivery.
 
+For a public gateway plus SBS backend quickstart:
+
+```sh
+make container-sbs-quickstart-smoke
+```
+
+This starts one gateway, one SBS service, two SBS data nodes, and PD/TiKV test
+metadata through `packaging/docker/compose.sbs-quickstart.yml`. The S3 endpoint
+is `http://127.0.0.1:9002`.
+
+For the production-shaped Kubernetes/kind scenario:
+
+```sh
+make k8s-production-render
+make kind-production-deploy
+```
+
+The default config file is `packaging/k8s/production-kind.env` and renders 2
+gateways, 2 SBS services, 5 SBS data nodes, and one embedded TiKV instance.
+
 ## Community Gateway Flags
 
 | Flag | Typical Value | Meaning |
@@ -150,13 +170,19 @@ The approved Docker and Compose profiles, image policy, secret handling, readine
 1. Run Community tests and edition-boundary checks: `make test-community`.
 2. Start local gateway: `make run-dev`.
 3. From another shell, run the container smoke: `make container-local-smoke`.
-4. For non-container user-space client coverage, run `make compat-user-space`.
-5. Before claiming production-scale readiness, run `make production-scale-check` and review any skipped external smoke gates.
-6. For FUSE coverage, use a Linux host with FUSE mount permissions.
+4. To verify the public gateway with an SBS backend, run `make container-sbs-quickstart-smoke`.
+5. Render the production-shaped Kubernetes config: `make k8s-production-render`.
+6. For kind evaluation, run `make kind-production-deploy`.
+7. For strict public AWS CLI/mc/rclone coverage, run `make compat-public-s3`.
+8. For opportunistic non-container user-space client coverage on a workstation, run `make compat-user-space`.
+9. Before claiming production-scale readiness, run `make production-scale-check` and review any skipped external smoke gates.
+10. For FUSE coverage, use a Linux host with FUSE mount permissions.
 
 ```sh
 make test-community
 make container-local-smoke
+make container-sbs-quickstart-smoke
+make k8s-production-render
 ```
 
 Expected result: each smoke prints a passed line. Failure output should include the client name, bucket name, endpoint, and temporary directory when preservation is enabled.

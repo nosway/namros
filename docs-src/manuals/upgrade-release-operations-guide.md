@@ -10,6 +10,10 @@ Release Operations <span class="badge">Community</span> <span class="badge enter
 
 This document defines the lifecycle management runbooks for validating NAMROS release readiness, executing rolling upgrades with zero-downtime, triggering rollbacks, deploying hotfixes, and packaging airgapped private enterprise distributions.
 
+Product semver, Git tags, and public changelog rules are recorded in
+[CHANGELOG.md](https://github.com/nosway/namros/blob/main/CHANGELOG.md) and
+the [Release workflow](https://github.com/nosway/namros/actions/workflows/release.yml).
+
 ## Release Gate Checklist
 
 ```sh

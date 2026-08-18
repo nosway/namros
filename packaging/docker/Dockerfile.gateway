@@ -1,9 +1,12 @@
 # syntax=docker/dockerfile:1.7
 
-ARG GO_VERSION=1.26.5
+ARG GO_VERSION=1.26.6
 ARG ALPINE_VERSION=3.22
 
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS build
+ARG NAMROS_VERSION=dev
+ARG NAMROS_COMMIT=unknown
+ARG NAMROS_BUILD_DATE=unknown
 RUN apk add --no-cache ca-certificates git
 
 WORKDIR /src/namros
@@ -19,7 +22,9 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 COPY . .
 RUN --mount=type=cache,target=/root/.cache/go-build \
-	CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -trimpath -o /out/namros-gateway ./cmd/namros-gateway
+	CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -trimpath \
+		-ldflags "-X github.com/nosway/namros/internal/version.Version=${NAMROS_VERSION} -X github.com/nosway/namros/internal/version.Commit=${NAMROS_COMMIT} -X github.com/nosway/namros/internal/version.Date=${NAMROS_BUILD_DATE}" \
+		-o /out/namros-gateway ./cmd/namros-gateway
 
 FROM alpine:${ALPINE_VERSION}
 RUN apk add --no-cache ca-certificates wget \

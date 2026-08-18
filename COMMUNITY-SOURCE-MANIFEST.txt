@@ -1,7 +1,7 @@
 NAMROS Community Source Export
 schema_version: 1
-generated_at: 2026-08-13T10:23:28Z
-git_commit: 9179091
+generated_at: 2026-08-18T00:56:22Z
+git_commit: ab0635f
 git_dirty: false
 edition_identity: community
 allowlist_manifest: scripts/release/community-source-allowlist.txt
@@ -15,6 +15,7 @@ Included allowlist entries:
 - .github/
 - .gitignore
 - CODE_OF_CONDUCT.md
+- CHANGELOG.md
 - CONTRIBUTING.md
 - LICENSE
 - Makefile
@@ -30,7 +31,15 @@ Included allowlist entries:
 - internal/
 - packaging/docker/
 - packaging/helm/
+- packaging/k8s/
+- scripts/chaos/run-active-active-smoke.sh
 - scripts/container/
+- scripts/compat/
+- scripts/coordination/run-etcd-registry-smoke.sh
+- scripts/docs/
+- scripts/k8s/
+- scripts/metadata/run-backup-restore-smoke.sh
+- scripts/ops/run-release-readiness-report.sh
 - tools/check-docs-render.py
 - scripts/lab/run-volume-pool-runtime-add-member-smoke.sh
 - scripts/lab/run-volume-pool-drain-read-old-ref-smoke.sh

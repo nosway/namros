@@ -10,6 +10,10 @@
 
 이 문서는 NAMROS 클러스터의 릴리스 준비 상태 검증, 서비스 영향을 최소화하는 무중단 업그레이드, 롤백, 핫픽스, 폐쇄망 및 사설 Enterprise 환경 배포 절차를 설명하는 운영 라이프사이클 가이드입니다.
 
+제품 semver, Git tag, public changelog 규칙은
+[CHANGELOG.md](https://github.com/nosway/namros/blob/main/CHANGELOG.md)와
+[Release workflow](https://github.com/nosway/namros/actions/workflows/release.yml)에 기록되어 있습니다.
+
 ## 릴리스 게이트 체크리스트
 
 ```sh
