@@ -136,13 +136,18 @@ make k8s-production-deploy
 # Create a kind cluster, build/load local images, and deploy
 make kind-production-deploy
 
+# Uninstall and redeploy while preserving the cluster and loaded images
+make kind-production-stop
+make kind-production-start
+
 # Delete the kind cluster and all ephemeral test state
 make kind-production-down
 ```
 
 For kind, `packaging/k8s/kind-production.yaml` maps the gateway NodePort to
-`127.0.0.1:9000`. Stop only the Helm release with `make k8s-production-delete`;
-delete the kind cluster with `make kind-production-down`.
+`127.0.0.1:9000`. Use `make kind-production-stop` and
+`make kind-production-start` to preserve the cluster and loaded images between
+runs. Delete the cluster with `make kind-production-down`.
 
 For an external Kubernetes cluster, copy `packaging/k8s/production-kind.env`,
 set `NAMROS_K8S_EMBEDDED_TIKV=false` and `NAMROS_K8S_EMBEDDED_ETCD=false`, then
@@ -235,6 +240,8 @@ Minimum and recommended CPU, memory, disk, image-download size, and expected sta
 | `container-sbs-quickstart-down` | stop the SBS quickstart stack and preserve volumes |
 | `container-sbs-quickstart-reset` | permanently remove SBS quickstart metadata and SBS data |
 | `k8s-production-delete` | uninstall the Helm release from the configured namespace |
+| `kind-production-stop` | uninstall NAMROS while preserving the configured kind cluster and loaded images |
+| `kind-production-start` | redeploy NAMROS into the existing kind cluster without rebuilding images |
 | `kind-production-down` | delete the configured kind cluster and its ephemeral test state |
 | `container-community-down` | stop the stack and preserve volumes |
 | `container-community-reset` | permanently remove etcd, TiKV, and SBS test state |

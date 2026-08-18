@@ -154,6 +154,9 @@ production-shaped Kubernetes/kind 시나리오는 다음 명령으로 확인합�
 ```sh
 make k8s-production-render
 make kind-production-deploy
+# 기존 cluster와 로드된 image를 유지한 채 중지 및 재실행
+make kind-production-stop
+make kind-production-start
 # 완료 후 kind cluster와 임시 테스트 상태 삭제
 make kind-production-down
 ```

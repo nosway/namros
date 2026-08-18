@@ -148,6 +148,9 @@ For the production-shaped Kubernetes/kind scenario:
 ```sh
 make k8s-production-render
 make kind-production-deploy
+# Reuse the existing cluster and loaded images
+make kind-production-stop
+make kind-production-start
 # When finished, delete the kind cluster and its ephemeral test state
 make kind-production-down
 ```

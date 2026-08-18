@@ -32,6 +32,8 @@ Actions:
   kind-up            Create the kind cluster when it does not exist
   kind-load-images   Load configured local images into kind
   kind-deploy        kind-up, optionally build/load images, then deploy
+  kind-start         Deploy into an existing kind cluster without rebuilding images
+  kind-stop          Uninstall the release while keeping the kind cluster and images
   kind-down          Delete the configured kind cluster
 USAGE
 }
@@ -275,28 +277,37 @@ render() {
 }
 
 deploy() {
+	local kube_context="${1:-}"
+	local kubectl_context_args=()
+	local helm_context_args=()
+	if [ -n "$kube_context" ]; then
+		kubectl_context_args=(--context "$kube_context")
+		helm_context_args=(--kube-context "$kube_context")
+	fi
 	write_values
 	require_cmd helm
 	require_cmd kubectl
-	kubectl create namespace "$NAMROS_K8S_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+	kubectl "${kubectl_context_args[@]}" create namespace "$NAMROS_K8S_NAMESPACE" --dry-run=client -o yaml | kubectl "${kubectl_context_args[@]}" apply -f -
 	# The post-install hooks register the SBS nodes and create the volume pool.
 	# Gateways require that pool at startup, so keep them scaled to zero until
 	# the first release and its bootstrap hooks have completed.
 	log "bootstrap release with gateways disabled"
 	helm upgrade --install "$NAMROS_K8S_RELEASE" "$chart_dir" \
+		"${helm_context_args[@]}" \
 		--namespace "$NAMROS_K8S_NAMESPACE" \
 		-f "$values_out" \
 		--set gateway.replicas=0 \
 		--timeout "$NAMROS_K8S_DEPLOY_TIMEOUT"
 	log "activate configured gateway replicas"
 	helm upgrade "$NAMROS_K8S_RELEASE" "$chart_dir" \
+		"${helm_context_args[@]}" \
 		--namespace "$NAMROS_K8S_NAMESPACE" \
 		-f "$values_out" \
 		--timeout "$NAMROS_K8S_DEPLOY_TIMEOUT"
 	# SBS standby instances intentionally fail their leader-only readiness
 	# probe, so Helm cannot wait for every Deployment. Hook Jobs already wait
 	# for bootstrap dependencies; finish by waiting for the user-facing gateway.
-	kubectl -n "$NAMROS_K8S_NAMESPACE" wait \
+	kubectl "${kubectl_context_args[@]}" -n "$NAMROS_K8S_NAMESPACE" wait \
 		--for=condition=Available \
 		deployment \
 		-l "app.kubernetes.io/instance=$NAMROS_K8S_RELEASE,app.kubernetes.io/component=gateway" \
@@ -304,9 +315,14 @@ deploy() {
 }
 
 delete_release() {
+	local kube_context="${1:-}"
+	local helm_context_args=()
+	if [ -n "$kube_context" ]; then
+		helm_context_args=(--kube-context "$kube_context")
+	fi
 	load_config
 	require_cmd helm
-	helm uninstall "$NAMROS_K8S_RELEASE" --namespace "$NAMROS_K8S_NAMESPACE" || true
+	helm uninstall "$NAMROS_K8S_RELEASE" "${helm_context_args[@]}" --namespace "$NAMROS_K8S_NAMESPACE" || true
 }
 
 status() {
@@ -357,6 +373,25 @@ kind_load_images() {
 	done
 }
 
+require_kind_cluster() {
+	require_cmd kind
+	if ! kind get clusters | grep -Fx "$NAMROS_K8S_KIND_CLUSTER" >/dev/null 2>&1; then
+		die "kind cluster $NAMROS_K8S_KIND_CLUSTER does not exist; run make kind-production-deploy first"
+	fi
+}
+
+kind_start() {
+	load_config
+	require_kind_cluster
+	deploy "kind-$NAMROS_K8S_KIND_CLUSTER"
+}
+
+kind_stop() {
+	load_config
+	require_kind_cluster
+	delete_release "kind-$NAMROS_K8S_KIND_CLUSTER"
+}
+
 kind_deploy() {
 	load_config
 	kind_up
@@ -364,7 +399,7 @@ kind_deploy() {
 		build_images
 	fi
 	kind_load_images
-	deploy
+	deploy "kind-$NAMROS_K8S_KIND_CLUSTER"
 }
 
 kind_down() {
@@ -400,6 +435,12 @@ kind-load-images)
 	;;
 kind-deploy)
 	kind_deploy
+	;;
+kind-start)
+	kind_start
+	;;
+kind-stop)
+	kind_stop
 	;;
 kind-down)
 	kind_down
