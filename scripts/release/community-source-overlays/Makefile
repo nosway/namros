@@ -226,8 +226,11 @@ container-local-reset:
 
 container-sbs-quickstart-up:
 	sh scripts/container/ensure-local-files.sh
-	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart up -d $(CONTAINER_SBS_BUILD_FLAG) sbs-quickstart-pd sbs-quickstart-tikv sbs-quickstart-service sbs-quickstart-data-1 sbs-quickstart-data-2
-	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart run $(CONTAINER_SBS_BUILD_FLAG) --rm sbs-quickstart-bootstrap
+	@if [ "$(NAMROS_USE_NAMRBD_SBS_IMAGES)" != "1" ] && [ "$(NAMROS_USE_NAMRBD_SBS_IMAGES)" != "true" ] && [ "$(NAMROS_USE_NAMRBD_SBS_IMAGES)" != "yes" ]; then \
+		$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart build sbs-quickstart-service sbs-quickstart-data-1 sbs-quickstart-bootstrap; \
+	fi
+	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart up -d --no-build sbs-quickstart-pd sbs-quickstart-tikv sbs-quickstart-service sbs-quickstart-data-1 sbs-quickstart-data-2
+	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart run --no-build --rm sbs-quickstart-bootstrap
 	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart run --build --rm sbs-quickstart-pool-bootstrap
 	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart up -d --build sbs-quickstart-gateway
 
