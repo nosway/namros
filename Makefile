@@ -230,7 +230,7 @@ container-sbs-quickstart-up:
 		$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart build sbs-quickstart-service sbs-quickstart-data-1 sbs-quickstart-bootstrap; \
 	fi
 	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart up -d --no-build sbs-quickstart-pd sbs-quickstart-tikv sbs-quickstart-service sbs-quickstart-data-1 sbs-quickstart-data-2
-	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart run --no-build --rm sbs-quickstart-bootstrap
+	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart run --rm sbs-quickstart-bootstrap
 	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart run --build --rm sbs-quickstart-pool-bootstrap
 	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_SBS_QUICKSTART_COMPOSE_FILE)" --profile sbs-quickstart up -d --build sbs-quickstart-gateway
 
