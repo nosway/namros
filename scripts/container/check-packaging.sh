@@ -70,6 +70,7 @@ require_pattern packaging/docker/compose.sbs-quickstart.yml '^  sbs-quickstart-s
 require_pattern packaging/docker/compose.sbs-quickstart.yml '^  sbs-quickstart-data-1:' 'SBS quickstart first data node'
 require_pattern packaging/docker/compose.sbs-quickstart.yml '^  sbs-quickstart-data-2:' 'SBS quickstart second data node'
 require_pattern packaging/docker/compose.sbs-quickstart.yml 'sbs-quickstart-pool-bootstrap' 'SBS quickstart volume-pool bootstrap service'
+require_pattern packaging/docker/compose.sbs-quickstart.yml 'namros-container-sbs-quickstart-bootstrap:/usr/local/bin/namros-container-sbs-quickstart-bootstrap:ro' 'SBS quickstart mounts its own bootstrap helper'
 require_pattern packaging/docker/compose.sbs-quickstart.yml 'NAMROS_DEPLOYMENT_PROFILE: dev' 'SBS quickstart uses dev deployment profile'
 require_pattern packaging/docker/compose.sbs-quickstart.yml 'NAMROS_STORAGE_BACKEND: sbs-cluster' 'SBS quickstart gateway uses SBS backend'
 require_pattern packaging/docker/compose.sbs-quickstart.yml 'NAMROS_SBS_QUICKSTART_PORT:-9002' 'SBS quickstart host port default'

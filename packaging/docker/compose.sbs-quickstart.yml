@@ -159,6 +159,8 @@ services:
         condition: service_healthy
       sbs-quickstart-data-2:
         condition: service_healthy
+    volumes:
+      - ./bin/namros-container-sbs-quickstart-bootstrap:/usr/local/bin/namros-container-sbs-quickstart-bootstrap:ro
     read_only: true
     tmpfs:
       - /tmp:size=64m
