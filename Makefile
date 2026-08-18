@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 
 .PHONY: test test-community test-enterprise lint build-all build-community build-enterprise build-gateway build-admin build-mcp build-sbs-exporter build-notification-adapter build-ops-report build-s3bench check-enterprise-build-source run-dev run-compat compat-user-space compat-public-s3 compat-sbs-physical-user-space compat-sbs-cluster-ec compat-awscli compat-mc compat-rclone compat-report container-packaging-check container-build container-local-up container-local-smoke container-local-down container-local-reset container-sbs-quickstart-up container-sbs-quickstart-smoke container-sbs-quickstart-down container-sbs-quickstart-reset container-community-up container-community-smoke container-community-failover-smoke container-community-down container-community-reset release-readiness production-scale-check release-artifact-metadata helm-chart-check community-source-check community-source-export community-release-check enterprise-release-check publication-readiness smoke-etcd-registry smoke-active-active smoke-metadata-backup-restore docs-source-check docs-build docs-render-check html-docs-check
-.PHONY: k8s-production-values k8s-production-render k8s-production-deploy k8s-production-delete k8s-production-status kind-production-up kind-production-build-images kind-production-load-images kind-production-deploy kind-production-delete
+.PHONY: k8s-production-values k8s-production-render k8s-production-deploy k8s-production-delete k8s-production-status kind-production-up kind-production-build-images kind-production-load-images kind-production-deploy kind-production-down kind-production-delete
 .PHONY: help build check-edition-boundary check-community-export export-community test-community-export check-publication-readiness smoke-sbs-session-refcount-open smoke-sbs-session-close-guard smoke-sbs-session-fence
 
 GO ?= go
@@ -92,6 +92,7 @@ help:
 	@printf "  make container-community-smoke Run the Community cross-gateway and load-balancer smoke\n"
 	@printf "  make k8s-production-render Render the production-shaped Kubernetes config from %s\n" "$(K8S_PRODUCTION_CONFIG)"
 	@printf "  make kind-production-deploy Create a kind cluster and deploy the production-shaped topology\n"
+	@printf "  make kind-production-down Delete the production-shaped kind cluster and its test state\n"
 	@printf "  make docs-render-check Build and verify the public documentation site\n"
 	@printf "  make html-docs-check Alias for docs-render-check\n"
 
@@ -301,8 +302,11 @@ kind-production-load-images:
 kind-production-deploy:
 	$(K8S_PRODUCTION_SCRIPT) kind-deploy "$(K8S_PRODUCTION_CONFIG)"
 
-kind-production-delete:
+kind-production-down:
 	$(K8S_PRODUCTION_SCRIPT) kind-down "$(K8S_PRODUCTION_CONFIG)"
+
+# Backward-compatible alias.
+kind-production-delete: kind-production-down
 
 production-scale-check:
 	scripts/release/check-production-scale-readiness.sh

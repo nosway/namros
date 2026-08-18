@@ -85,7 +85,12 @@ make kind-production-deploy
 The default config file is `packaging/k8s/production-kind.env`. It renders a
 Helm deployment with 2 gateways, 2 SBS services, 5 SBS data nodes, and one
 embedded TiKV instance for evaluation. The kind gateway is mapped to
-`http://127.0.0.1:9000`.
+`http://127.0.0.1:9000`. When finished, delete the kind cluster and all of its
+ephemeral test state:
+
+```sh
+make kind-production-down
+```
 
 ## Common Checks
 

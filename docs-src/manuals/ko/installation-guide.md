@@ -154,6 +154,8 @@ production-shaped Kubernetes/kind 시나리오는 다음 명령으로 확인합�
 ```sh
 make k8s-production-render
 make kind-production-deploy
+# 완료 후 kind cluster와 임시 테스트 상태 삭제
+make kind-production-down
 ```
 
 기본 설정 파일은 `packaging/k8s/production-kind.env`이며 gateway 2개,

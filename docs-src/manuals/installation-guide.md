@@ -148,6 +148,8 @@ For the production-shaped Kubernetes/kind scenario:
 ```sh
 make k8s-production-render
 make kind-production-deploy
+# When finished, delete the kind cluster and its ephemeral test state
+make kind-production-down
 ```
 
 The default config file is `packaging/k8s/production-kind.env` and renders 2

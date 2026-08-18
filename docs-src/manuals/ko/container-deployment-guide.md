@@ -135,12 +135,15 @@ make k8s-production-deploy
 
 # kind cluster 생성, local image build/load, 배포
 make kind-production-deploy
+
+# kind cluster와 모든 임시 테스트 상태 삭제
+make kind-production-down
 ```
 
 kind에서는 `packaging/k8s/kind-production.yaml`이 gateway NodePort를
 `127.0.0.1:9000`에 매핑합니다. Helm release만 중지하려면
 `make k8s-production-delete`, kind cluster 자체를 삭제하려면
-`make kind-production-delete`를 사용합니다.
+`make kind-production-down`을 사용합니다.
 
 외부 Kubernetes cluster에 배포하려면 `packaging/k8s/production-kind.env`를
 복사한 뒤 `NAMROS_K8S_EMBEDDED_TIKV=false`,
@@ -234,7 +237,7 @@ Readiness 응답은 component 상태와 안정적인 reason code를 제공하되
 | `container-sbs-quickstart-down` | SBS quickstart stack을 중지하고 volume 보존 |
 | `container-sbs-quickstart-reset` | SBS quickstart 메타데이터와 SBS data를 영구 삭제 |
 | `k8s-production-delete` | 설정된 namespace에서 Helm release 제거 |
-| `kind-production-delete` | 설정된 kind cluster 삭제 |
+| `kind-production-down` | 설정된 kind cluster와 임시 테스트 상태 삭제 |
 | `container-community-down` | stack을 중지하고 volume 보존 |
 | `container-community-reset` | etcd, TiKV, SBS 테스트 상태를 영구 삭제 |
 | `container-build` | NAMROS 소스에서 local gateway/tools 이미지를 빌드합니다. Community 타깃은 설정된 NAMRBD context에서 전환 SBS 이미지도 빌드합니다. |
