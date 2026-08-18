@@ -44,6 +44,8 @@ require_pattern packaging/docker/Dockerfile.sbs '^FROM sbs-runtime-base AS sbs-s
 require_pattern packaging/docker/Dockerfile.sbs '^FROM sbs-runtime-base AS sbs-data$' 'SBS data runtime stage'
 require_pattern packaging/docker/Dockerfile.sbs '^HEALTHCHECK .*9081/readyz' 'SBS service Dockerfile healthcheck'
 require_pattern packaging/docker/Dockerfile.sbs '^HEALTHCHECK .*9082/readyz' 'SBS data Dockerfile healthcheck'
+require_pattern packaging/docker/Dockerfile.sbs '/var/lib/namrbd/sbs-data' 'SBS data volume mount point'
+require_pattern packaging/docker/Dockerfile.sbs '/var/lib/namrbd/sbs-payload' 'SBS service volume mount point'
 require_pattern packaging/docker/Dockerfile.sbs 'namros-container-sbs-quickstart-bootstrap' 'SBS quickstart bootstrap helper in sbsctl image'
 require_pattern packaging/docker/Dockerfile.tools 'namros-admin' 'tools image namros-admin binary'
 require_pattern packaging/docker/Dockerfile.tools 'namros-ops-report' 'tools image namros-ops-report binary'

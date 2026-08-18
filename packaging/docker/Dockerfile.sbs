@@ -27,7 +27,7 @@ FROM alpine:${ALPINE_VERSION} AS sbs-runtime-base
 RUN apk add --no-cache ca-certificates wget \
 	&& addgroup -g 65532 namros \
 	&& adduser -D -G namros -u 65532 namros \
-	&& mkdir -p /var/lib/namrbd /tmp \
+	&& mkdir -p /var/lib/namrbd/sbs-data /var/lib/namrbd/sbs-payload /tmp \
 	&& chown -R 65532:65532 /var/lib/namrbd /tmp
 USER 65532:65532
 
