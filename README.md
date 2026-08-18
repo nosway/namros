@@ -88,6 +88,21 @@ embedded TiKV instance for evaluation. The kind gateway is mapped to
 `http://127.0.0.1:9000`. For repeated testing, stop and restart NAMROS while
 keeping the kind cluster and its loaded images:
 
+> **Ephemeral test data:** All application data in this kind scenario is
+> disposable. Embedded etcd, PD/TiKV, SBS service payloads, and SBS data use
+> `emptyDir` volumes. Pod replacement, `make kind-production-stop`, or
+> `make kind-production-down` can therefore erase metadata and stored objects.
+> Do not use this topology for durable data.
+>
+> For persistence, deploy with external durable etcd/TiKV services (start from
+> `packaging/helm/namros-community/values.production.yaml`) and replace the SBS
+> `emptyDir` volumes with per-node PersistentVolumeClaims backed by a suitable
+> StorageClass, normally using StatefulSets. The current Community chart does
+> not yet expose a `persistence.enabled` switch, so this requires a chart
+> customization. A volume provisioned only inside kind will not survive
+> `kind-production-down`; use storage external to the kind node if data must
+> survive cluster deletion.
+
 ```sh
 make kind-production-stop
 make kind-production-start
