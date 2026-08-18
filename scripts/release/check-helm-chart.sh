@@ -117,6 +117,8 @@ require_pattern packaging/k8s/kind-production.yaml 'hostPort: 9000' 'kind gatewa
 require_pattern scripts/k8s/deploy-production.sh 'write-values' 'K8s production config writer action'
 require_pattern scripts/k8s/deploy-production.sh 'kind-deploy' 'kind production deploy action'
 require_pattern scripts/k8s/deploy-production.sh 'NAMROS_K8S_SBS_DATA_REPLICAS' 'K8s production SBS data replica config'
+require_pattern scripts/k8s/deploy-production.sh '^.*--set gateway\.replicas=0' 'gateway-disabled SBS bootstrap deployment phase'
+require_pattern scripts/k8s/deploy-production.sh 'activate configured gateway replicas' 'gateway activation deployment phase'
 
 if ! bash -n "$repo_root/scripts/k8s/deploy-production.sh"; then
 	fail "K8s production deploy script has a syntax error"

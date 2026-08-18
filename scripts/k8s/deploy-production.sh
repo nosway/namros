@@ -279,7 +279,18 @@ deploy() {
 	require_cmd helm
 	require_cmd kubectl
 	kubectl create namespace "$NAMROS_K8S_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+	# The post-install hooks register the SBS nodes and create the volume pool.
+	# Gateways require that pool at startup, so keep them scaled to zero until
+	# the first release and its bootstrap hooks have completed.
+	log "bootstrap release with gateways disabled"
 	helm upgrade --install "$NAMROS_K8S_RELEASE" "$chart_dir" \
+		--namespace "$NAMROS_K8S_NAMESPACE" \
+		-f "$values_out" \
+		--set gateway.replicas=0 \
+		--wait \
+		--timeout "$NAMROS_K8S_DEPLOY_TIMEOUT"
+	log "activate configured gateway replicas"
+	helm upgrade "$NAMROS_K8S_RELEASE" "$chart_dir" \
 		--namespace "$NAMROS_K8S_NAMESPACE" \
 		-f "$values_out" \
 		--wait \
