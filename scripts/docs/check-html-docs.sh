@@ -5,6 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 RG="${RG:-rg}"
+GREP="${GREP:-grep}"
 AWK="${AWK:-awk}"
 MAKEFILE="${NAMROS_DOCS_PUBLIC_MAKEFILE:-$ROOT_DIR/Makefile}"
 
@@ -37,6 +38,26 @@ require_cmd() {
 	fi
 }
 
+search_doc_lines() {
+	local pattern="$1"
+	shift
+	if command -v "$RG" >/dev/null 2>&1; then
+		"$RG" -n "$pattern" "$@" 2>/dev/null || true
+	else
+		"$GREP" -RInE -- "$pattern" "$@" 2>/dev/null || true
+	fi
+}
+
+search_doc_matches() {
+	local pattern="$1"
+	shift
+	if command -v "$RG" >/dev/null 2>&1; then
+		"$RG" -n -o "$pattern" "$@" 2>/dev/null || true
+	else
+		"$GREP" -RInEo -- "$pattern" "$@" 2>/dev/null || true
+	fi
+}
+
 add_existing_root() {
 	local path="$1"
 	if [ -e "$path" ]; then
@@ -44,7 +65,7 @@ add_existing_root() {
 	fi
 }
 
-require_cmd "$RG"
+require_cmd "$GREP"
 require_cmd "$AWK"
 
 doc_roots=()
@@ -72,7 +93,7 @@ fi
 
 log "scan stale CLI flags and environment names"
 stale_cli_pattern='(^|[^[:alnum:]_-])-coordination-endpoints|(^|[^[:alnum:]_-])-metadata-endpoints|(^|[^[:alnum:]_-])-metadata-keyspace|(^|[^[:alnum:]_-])-pd-endpoints|(^|[^[:alnum:]_])ETCD_ENDPOINTS=|(^|[^[:alnum:]_])ETCD_ROOT='
-stale_hits="$("$RG" -n "$stale_cli_pattern" "${doc_roots[@]}" 2>/dev/null || true)"
+stale_hits="$(search_doc_lines "$stale_cli_pattern" "${doc_roots[@]}")"
 if [ -n "$stale_hits" ]; then
 	error "stale CLI flag or environment variable in public documentation"
 	printf '%s\n' "$stale_hits" >&2
@@ -92,7 +113,7 @@ while IFS= read -r hit; do
 	if ! grep -Fxq "$target" "$target_file"; then
 		error "public docs reference missing Makefile target: $file:$line: make $target"
 	fi
-done < <("$RG" -n -o "$make_ref_pattern" "${doc_roots[@]}" 2>/dev/null || true)
+done < <(search_doc_matches "$make_ref_pattern" "${doc_roots[@]}")
 
 if [ "$fail" -ne 0 ]; then
 	exit 1
