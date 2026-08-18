@@ -16,12 +16,12 @@ WORKDIR /src/namros
 COPY --from=namrbd / /src/NAMRBD
 
 COPY go.mod go.sum ./
+COPY . .
 RUN go mod edit -replace github.com/nosway/namrbd=/src/NAMRBD
 RUN --mount=type=cache,target=/go/pkg/mod \
 	--mount=type=cache,target=/root/.cache/go-build \
 	go mod download
 
-COPY . .
 RUN --mount=type=cache,target=/root/.cache/go-build \
 	CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -trimpath \
 		-ldflags "-X github.com/nosway/namros/internal/version.Version=${NAMROS_VERSION} -X github.com/nosway/namros/internal/version.Commit=${NAMROS_COMMIT} -X github.com/nosway/namros/internal/version.Date=${NAMROS_BUILD_DATE}" \
