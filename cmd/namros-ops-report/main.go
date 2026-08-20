@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nosway/namros/internal/cliflag"
 	"github.com/nosway/namros/internal/mcpops"
 	"github.com/nosway/namros/internal/opsreport"
 	"github.com/nosway/namros/internal/sbsops"
@@ -30,7 +31,7 @@ func main() {
 	var etcdRoot string
 	mcpCfg := mcpops.DefaultConfig()
 	flag.StringVar(&scope, "scope", "cluster", "report scope label")
-	flag.StringVar(&adminEndpoints, "sbs-admin-endpoints", "", "comma-separated SBS admin endpoints")
+	cliflag.StringVarWithDeprecatedAlias(flag.CommandLine, &adminEndpoints, "sbs-service-endpoints", "", "comma-separated SBS service gRPC endpoints", "sbs-admin-endpoints")
 	flag.StringVar(&dataEndpoints, "sbs-data-endpoints", "", "comma-separated SBS data endpoints")
 	flag.StringVar(&volumeIDs, "sbs-volume-ids", "", "comma-separated SBS volume ids")
 	flag.StringVar(&namrbdEndpoint, "namrbd-sbs-observability-endpoint", "", "NAMRBD SBS read-only observability endpoint or base URL")

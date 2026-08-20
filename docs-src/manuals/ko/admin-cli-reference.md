@@ -55,7 +55,7 @@ namros-gateway \
 | `-tikv-pd-endpoints` | `host:2379` | `-metadata-backend tikv` 사용 시 필요한 쉼표 구분 PD endpoint 목록. |
 | `-tikv-keyspace` | `namros` | TiKV keyspace 이름 또는 v1 key prefix fallback. |
 | `-storage-backend` | `local`, `sbs-physical`, `sbs-cluster` | Payload segment backend. Production 배포는 SBS volume-pool id와 함께 `sbs-cluster`를 사용합니다. |
-| `-sbs-admin-endpoint` | `sbs-admin:9443` | SBS 기반 스토리지용 SBS admin gRPC endpoint. |
+| `-sbs-service-endpoint` | `sbs-service:9443` | SBS 기반 스토리지용 SBS service gRPC endpoint. 환경변수는 `NAMROS_SBS_SERVICE_ENDPOINT`입니다. 기존 `-sbs-admin-endpoint`와 `NAMROS_SBS_ADMIN_ENDPOINT` 별칭은 deprecated되었습니다. |
 | `-sbs-data-endpoint` | `sbs-data:9460` | chunk 또는 shard IO용 SBS data gRPC endpoint. |
 | `-sbs-volume-id` | `18a00001` | `sbs-physical` 또는 `sbs-ec` storage에 사용할 SBS volume id. |
 | `-sbs-volume-pool-id` | `standard-repl` | production SBS-backed storage가 사용하는 metadata registry volume pool id. |

@@ -30,14 +30,18 @@ NAMROS_SBS_ATTACHMENT_ID="${NAMROS_SBS_ATTACHMENT_ID:-att-$NAMROS_SBS_GATEWAY_ID
 NAMROS_SBS_GENERATION="${NAMROS_SBS_GENERATION:-}"
 NAMROS_SBS_VERIFY_READBACK="${NAMROS_SBS_VERIFY_READBACK:-true}"
 NAMROS_GATEWAY_LOG="${NAMROS_GATEWAY_LOG:-}"
-NAMROS_SBS_ADMIN_ENDPOINT="${NAMROS_SBS_ADMIN_ENDPOINT:-${NAMROS_18NODE_SBS_ADMIN_ENDPOINT:-}}"
+if [ -n "${NAMROS_SBS_ADMIN_ENDPOINT:-}" ]; then
+	log "WARN: NAMROS_SBS_ADMIN_ENDPOINT is deprecated; use NAMROS_SBS_SERVICE_ENDPOINT instead"
+fi
+NAMROS_SBS_SERVICE_ENDPOINT="${NAMROS_SBS_SERVICE_ENDPOINT:-${NAMROS_SBS_ADMIN_ENDPOINT:-${NAMROS_18NODE_SBS_ADMIN_ENDPOINT:-}}}"
+unset NAMROS_SBS_ADMIN_ENDPOINT
 NAMROS_SBS_DATA_ENDPOINT="${NAMROS_SBS_DATA_ENDPOINT:-${NAMROS_18NODE_SBS_DATA_ENDPOINT:-}}"
 
 require_cmd "$GO"
 require_cmd curl
 
-if [ -z "$NAMROS_SBS_ADMIN_ENDPOINT" ] && compat_should_use_18node_sbs; then
-	NAMROS_SBS_ADMIN_ENDPOINT="$(compat_resolve_18node_sbs_admin_endpoint)"
+if [ -z "$NAMROS_SBS_SERVICE_ENDPOINT" ] && compat_should_use_18node_sbs; then
+	NAMROS_SBS_SERVICE_ENDPOINT="$(compat_resolve_18node_sbs_admin_endpoint)"
 fi
 
 require_env() {
@@ -61,7 +65,7 @@ if [ -z "$USER_NAMROS_ENDPOINT" ]; then
 fi
 export NAMROS_ENDPOINT
 
-require_env NAMROS_SBS_ADMIN_ENDPOINT
+require_env NAMROS_SBS_SERVICE_ENDPOINT
 require_env NAMROS_SBS_DATA_ENDPOINT
 compat_ensure_18node_sbs_volume "$NAMROS_SBS_VOLUME_ID"
 
@@ -95,7 +99,7 @@ gateway_args=(
 	-region "$NAMROS_REGION"
 	-metadata-backend "$NAMROS_METADATA_BACKEND"
 	-storage-backend sbs-physical
-	-sbs-admin-endpoint "$NAMROS_SBS_ADMIN_ENDPOINT"
+	-sbs-service-endpoint "$NAMROS_SBS_SERVICE_ENDPOINT"
 	-sbs-data-endpoint "$NAMROS_SBS_DATA_ENDPOINT"
 	-sbs-gateway-id "$NAMROS_SBS_GATEWAY_ID"
 	-sbs-verify-readback="$NAMROS_SBS_VERIFY_READBACK"
@@ -148,7 +152,7 @@ log "start sbs-physical gateway: listen=$NAMROS_GATEWAY_LISTEN endpoint=$NAMROS_
 if [ "$NAMROS_METADATA_BACKEND" = "tikv" ]; then
 	log "tikv metadata: pd=$NAMROS_TIKV_PD_ENDPOINTS api=$NAMROS_TIKV_API_VERSION keyspace=$NAMROS_TIKV_KEYSPACE"
 fi
-log "sbs physical endpoints: admin=$NAMROS_SBS_ADMIN_ENDPOINT data=$NAMROS_SBS_DATA_ENDPOINT"
+log "sbs physical endpoints: service=$NAMROS_SBS_SERVICE_ENDPOINT data=$NAMROS_SBS_DATA_ENDPOINT"
 
 log "build namros-gateway: $gateway_bin"
 "$GO" build -o "$gateway_bin" ./cmd/namros-gateway >"$NAMROS_GATEWAY_LOG" 2>&1

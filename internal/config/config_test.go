@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"os"
 	"strings"
 	"testing"
@@ -175,6 +176,81 @@ func TestParseDefaults(t *testing.T) {
 	}
 	if cfg.RootSecretAccessKey != DefaultRootSecretKey {
 		t.Fatalf("RootSecretAccessKey = %q, want default", cfg.RootSecretAccessKey)
+	}
+}
+
+func TestParseDeprecatedSBSAdminEndpointAlias(t *testing.T) {
+	clearNAMROSEnv(t)
+	var output bytes.Buffer
+	cfg, err := parse([]string{"--sbs-admin-endpoint", "sbs.example:9443"}, &output)
+	if err != nil {
+		t.Fatalf("parse(deprecated SBS endpoint alias) error = %v", err)
+	}
+	if cfg.SBSAdminEndpoint != "sbs.example:9443" {
+		t.Fatalf("SBSAdminEndpoint = %q, want %q", cfg.SBSAdminEndpoint, "sbs.example:9443")
+	}
+	if got := output.String(); !strings.Contains(got, "--sbs-admin-endpoint is deprecated; use --sbs-service-endpoint instead") {
+		t.Fatalf("deprecated flag output = %q", got)
+	}
+}
+
+func TestParseSBSServiceEndpointEnvironmentCompatibility(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		serviceEnv  string
+		adminEnv    string
+		args        []string
+		want        string
+		wantWarning bool
+	}{
+		{
+			name:       "canonical environment",
+			serviceEnv: "service.example:9443",
+			want:       "service.example:9443",
+		},
+		{
+			name:        "deprecated environment fallback",
+			adminEnv:    "admin.example:9443",
+			want:        "admin.example:9443",
+			wantWarning: true,
+		},
+		{
+			name:        "canonical environment wins",
+			serviceEnv:  "service.example:9443",
+			adminEnv:    "admin.example:9443",
+			want:        "service.example:9443",
+			wantWarning: true,
+		},
+		{
+			name:        "canonical flag wins",
+			serviceEnv:  "service.example:9443",
+			adminEnv:    "admin.example:9443",
+			args:        []string{"--sbs-service-endpoint", "flag.example:9443"},
+			want:        "flag.example:9443",
+			wantWarning: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			clearNAMROSEnv(t)
+			if tc.serviceEnv != "" {
+				t.Setenv("NAMROS_SBS_SERVICE_ENDPOINT", tc.serviceEnv)
+			}
+			if tc.adminEnv != "" {
+				t.Setenv("NAMROS_SBS_ADMIN_ENDPOINT", tc.adminEnv)
+			}
+			var output bytes.Buffer
+			cfg, err := parse(tc.args, &output)
+			if err != nil {
+				t.Fatalf("parse() error = %v", err)
+			}
+			if cfg.SBSAdminEndpoint != tc.want {
+				t.Fatalf("SBSAdminEndpoint = %q, want %q", cfg.SBSAdminEndpoint, tc.want)
+			}
+			gotWarning := strings.Contains(output.String(), "NAMROS_SBS_ADMIN_ENDPOINT is deprecated; use NAMROS_SBS_SERVICE_ENDPOINT instead")
+			if gotWarning != tc.wantWarning {
+				t.Fatalf("output = %q, deprecation warning = %t, want %t", output.String(), gotWarning, tc.wantWarning)
+			}
+		})
 	}
 }
 
@@ -372,6 +448,7 @@ func TestParseEnvironmentOverrides(t *testing.T) {
 	t.Setenv("NAMROS_METADATA_PATH", "/var/lib/namros/meta")
 	t.Setenv("NAMROS_STORAGE_BACKEND", "local")
 	t.Setenv("NAMROS_STORAGE_PATH", "/var/lib/namros/segments")
+	t.Setenv("NAMROS_SBS_SERVICE_ENDPOINT", "sbs-service:9443")
 	t.Setenv("NAMROS_COORDINATION_BACKEND", "etcd")
 	t.Setenv("NAMROS_ETCD_ENDPOINTS", "etcd-a:2379,etcd-b:2379")
 	t.Setenv("NAMROS_GATEWAY_INSTANCE_ID", "gateway-1")
@@ -418,6 +495,9 @@ func TestParseEnvironmentOverrides(t *testing.T) {
 	}
 	if cfg.StorageBackend != StorageBackendLocal || cfg.StoragePath != "/var/lib/namros/segments" {
 		t.Fatalf("storage = %q path=%q", cfg.StorageBackend, cfg.StoragePath)
+	}
+	if cfg.SBSAdminEndpoint != "sbs-service:9443" {
+		t.Fatalf("SBSAdminEndpoint = %q", cfg.SBSAdminEndpoint)
 	}
 	if cfg.CoordinationBackend != CoordinationBackendEtcd || len(cfg.EtcdEndpoints) != 2 || cfg.EtcdEndpoints[0] != "etcd-a:2379" || cfg.EtcdEndpoints[1] != "etcd-b:2379" {
 		t.Fatalf("coordination = %q endpoints=%v", cfg.CoordinationBackend, cfg.EtcdEndpoints)
@@ -698,7 +778,7 @@ func TestParseProductionProfile(t *testing.T) {
 		"-metadata-backend", "tikv",
 		"-coordination-backend", "etcd",
 		"-storage-backend", "sbs-physical",
-		"-sbs-admin-endpoint", "127.0.0.1:19091",
+		"-sbs-service-endpoint", "127.0.0.1:19091",
 		"-sbs-data-endpoint", "127.0.0.1:19092",
 		"-sbs-writer-group-id", "object-writers",
 		"-sbs-session-id", "gw-prod-boot-1",
@@ -737,7 +817,7 @@ func TestParseSBSPhysicalOptions(t *testing.T) {
 	clearNAMROSEnv(t)
 	cfg, err := Parse([]string{
 		"-storage-backend", "sbs-physical",
-		"-sbs-admin-endpoint", "127.0.0.1:19091",
+		"-sbs-service-endpoint", "127.0.0.1:19091",
 		"-sbs-data-endpoint", "127.0.0.1:19092",
 		"-sbs-volume-id", "0a0b0002",
 		"-sbs-chunk-size-bytes", "1048576",
@@ -818,7 +898,7 @@ func TestParseSBSClusterOptions(t *testing.T) {
 	withCurrentEdition(t, edition.Enterprise)
 	cfg, err := Parse([]string{
 		"-storage-backend", "sbs-cluster",
-		"-sbs-admin-endpoint", "127.0.0.1:19091",
+		"-sbs-service-endpoint", "127.0.0.1:19091",
 		"-sbs-data-endpoint", "127.0.0.1:19092",
 		"-sbs-volume-id", "0a0b0004",
 		"-sbs-chunk-size-bytes", "1048576",
@@ -874,7 +954,7 @@ func TestParseSBSVolumePoolOptions(t *testing.T) {
 	withCurrentEdition(t, edition.Enterprise)
 	cfg, err := Parse([]string{
 		"-storage-backend", "sbs-cluster",
-		"-sbs-admin-endpoint", "127.0.0.1:19091",
+		"-sbs-service-endpoint", "127.0.0.1:19091",
 		"-sbs-data-endpoint", "127.0.0.1:19092",
 		"-sbs-gateway-id", "gw-a",
 		"-sbs-generation", "17",
@@ -907,7 +987,7 @@ func TestParseSBSSessionIdentityOptions(t *testing.T) {
 	withCurrentEdition(t, edition.Enterprise)
 	cfg, err := Parse([]string{
 		"-storage-backend", "sbs-cluster",
-		"-sbs-admin-endpoint", "127.0.0.1:19091",
+		"-sbs-service-endpoint", "127.0.0.1:19091",
 		"-sbs-data-endpoint", "127.0.0.1:19092",
 		"-sbs-writer-group-id", "object-writers",
 		"-sbs-session-id", "gw-a-boot-1",
@@ -936,7 +1016,7 @@ func TestParseSBSSessionIdentityFromEnv(t *testing.T) {
 	t.Setenv("NAMROS_SBS_SESSION_HEARTBEAT", "10s")
 	cfg, err := Parse([]string{
 		"-storage-backend", "sbs-cluster",
-		"-sbs-admin-endpoint", "127.0.0.1:19091",
+		"-sbs-service-endpoint", "127.0.0.1:19091",
 		"-sbs-data-endpoint", "127.0.0.1:19092",
 		"-sbs-session-id", "gw-cli-wins",
 	})

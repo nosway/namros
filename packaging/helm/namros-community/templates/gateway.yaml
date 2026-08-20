@@ -72,7 +72,7 @@ spec:
               value: sbs-cluster
             - name: NAMROS_GC_CANDIDATE_QUEUE
               value: metadata
-            - name: NAMROS_SBS_ADMIN_ENDPOINT
+            - name: NAMROS_SBS_SERVICE_ENDPOINT
               value: "{{ include "namros.fullname" . }}-sbs-admin:9443"
             - name: NAMROS_SBS_DATA_ENDPOINT
               value: "{{ include "namros.fullname" . }}-{{ $data0.id }}:9444"

@@ -4,11 +4,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/nosway/namros/internal/cliflag"
 	"github.com/nosway/namros/internal/edition"
 )
 
@@ -30,8 +32,8 @@ const (
 	DefaultCoordinationBackend               = "none"
 	DefaultEtcdDialTimeout                   = 3 * time.Second
 	DefaultGatewayRegistryPrefix             = "/namros/gateways"
-	DefaultGatewayLeaseTTL                   = 10 * time.Second
-	DefaultGatewayHeartbeat                  = 3 * time.Second
+	DefaultGatewayLeaseTTL                   = 15 * time.Second
+	DefaultGatewayHeartbeat                  = 5 * time.Second
 	DefaultGatewayDataBudgetUnknownBytes     = 8 << 20
 	DefaultDedupeSchedulerInterval           = 5 * time.Minute
 	DefaultDedupeSchedulerLockTTL            = 30 * time.Minute
@@ -288,11 +290,16 @@ func Default() Config {
 }
 
 func Parse(args []string) (Config, error) {
+	return parse(args, os.Stderr)
+}
+
+func parse(args []string, output io.Writer) (Config, error) {
 	cfg := Default()
-	if err := applyEnvironment(&cfg, args); err != nil {
+	if err := applyEnvironment(&cfg, args, output); err != nil {
 		return Config{}, err
 	}
 	fs := flag.NewFlagSet("namros-gateway", flag.ContinueOnError)
+	fs.SetOutput(output)
 	fs.StringVar(&cfg.ListenAddr, "listen", cfg.ListenAddr, "HTTP listen address")
 	fs.StringVar(&cfg.DeploymentProfile, "deployment-profile", cfg.DeploymentProfile, "deployment profile: dev or production")
 	fs.BoolVar(&cfg.AllowUnsafeProductionShortcuts, "allow-unsafe-production-shortcuts", cfg.AllowUnsafeProductionShortcuts, "allow production profile to use development-only backends for lab validation")
@@ -314,7 +321,7 @@ func Parse(args []string) (Config, error) {
 	fs.StringVar(&cfg.StorageBackend, "storage-backend", cfg.StorageBackend, "segment storage backend")
 	fs.StringVar(&cfg.StoragePath, "storage-path", cfg.StoragePath, "segment storage path for local or sbs-local backends")
 	fs.StringVar(&cfg.SBSStatePath, "sbs-state-path", cfg.SBSStatePath, "optional SBS adapter state path")
-	fs.StringVar(&cfg.SBSAdminEndpoint, "sbs-admin-endpoint", cfg.SBSAdminEndpoint, "SBS admin gRPC endpoint for sbs-physical chunk allocation")
+	cliflag.StringVarWithDeprecatedAlias(fs, &cfg.SBSAdminEndpoint, "sbs-service-endpoint", cfg.SBSAdminEndpoint, "SBS service gRPC endpoint for sbs-physical chunk allocation", "sbs-admin-endpoint")
 	fs.StringVar(&cfg.SBSDataEndpoint, "sbs-data-endpoint", cfg.SBSDataEndpoint, "SBS data gRPC endpoint for sbs-physical chunk IO or sbs-ec shard IO")
 	fs.StringVar(&cfg.SBSVolumeID, "sbs-volume-id", cfg.SBSVolumeID, "SBS volume id for sbs-physical or sbs-ec storage")
 	sbsVolumePool := ""
@@ -433,7 +440,7 @@ func Parse(args []string) (Config, error) {
 	return cfg, nil
 }
 
-func applyEnvironment(cfg *Config, args []string) error {
+func applyEnvironment(cfg *Config, args []string, output io.Writer) error {
 	applyStringEnv(&cfg.ListenAddr, "NAMROS_LISTEN", "listen", args)
 	applyStringEnv(&cfg.DeploymentProfile, "NAMROS_DEPLOYMENT_PROFILE", "deployment-profile", args)
 	if err := applyBoolEnv(&cfg.AllowUnsafeProductionShortcuts, "NAMROS_ALLOW_UNSAFE_PRODUCTION_SHORTCUTS", "allow-unsafe-production-shortcuts", args); err != nil {
@@ -466,7 +473,15 @@ func applyEnvironment(cfg *Config, args []string) error {
 	applyStringEnv(&cfg.StorageBackend, "NAMROS_STORAGE_BACKEND", "storage-backend", args)
 	applyStringEnv(&cfg.StoragePath, "NAMROS_STORAGE_PATH", "storage-path", args)
 	applyStringEnv(&cfg.SBSStatePath, "NAMROS_SBS_STATE_PATH", "sbs-state-path", args)
-	applyStringEnv(&cfg.SBSAdminEndpoint, "NAMROS_SBS_ADMIN_ENDPOINT", "sbs-admin-endpoint", args)
+	applyStringEnvWithDeprecatedAlias(
+		&cfg.SBSAdminEndpoint,
+		"NAMROS_SBS_SERVICE_ENDPOINT",
+		"NAMROS_SBS_ADMIN_ENDPOINT",
+		"sbs-service-endpoint",
+		"sbs-admin-endpoint",
+		args,
+		output,
+	)
 	applyStringEnv(&cfg.SBSDataEndpoint, "NAMROS_SBS_DATA_ENDPOINT", "sbs-data-endpoint", args)
 	applyStringEnv(&cfg.SBSVolumeID, "NAMROS_SBS_VOLUME_ID", "sbs-volume-id", args)
 	if err := applyUint64Env(&cfg.SBSChunkSizeBytes, "NAMROS_SBS_CHUNK_SIZE_BYTES", "sbs-chunk-size-bytes", args); err != nil {
@@ -657,6 +672,23 @@ func applyStringEnv(dst *string, envName, flagName string, args []string) {
 	}
 	if value, ok := os.LookupEnv(envName); ok {
 		*dst = value
+	}
+}
+
+func applyStringEnvWithDeprecatedAlias(dst *string, envName, deprecatedEnvName, flagName, deprecatedFlagName string, args []string, output io.Writer) {
+	deprecatedValue, deprecatedSet := os.LookupEnv(deprecatedEnvName)
+	if deprecatedSet {
+		_, _ = fmt.Fprintf(output, "warning: %s is deprecated; use %s instead\n", deprecatedEnvName, envName)
+	}
+	if argHasFlag(args, flagName) || argHasFlag(args, deprecatedFlagName) {
+		return
+	}
+	if value, ok := os.LookupEnv(envName); ok {
+		*dst = value
+		return
+	}
+	if deprecatedSet {
+		*dst = deprecatedValue
 	}
 }
 

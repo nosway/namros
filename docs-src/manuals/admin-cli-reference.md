@@ -55,7 +55,7 @@ namros-gateway \
 | `-tikv-pd-endpoints` | `host:2379` | Comma-separated PD endpoints when `-metadata-backend tikv` is used. |
 | `-tikv-keyspace` | `namros` | TiKV keyspace name or v1 key prefix fallback. |
 | `-storage-backend` | `local`, `sbs-physical`, `sbs-cluster` | Payload segment backend. Production deployments use `sbs-cluster` with an SBS volume-pool id. |
-| `-sbs-admin-endpoint` | `sbs-admin:9443` | SBS admin gRPC endpoint for SBS-backed storage. |
+| `-sbs-service-endpoint` | `sbs-service:9443` | SBS service gRPC endpoint for SBS-backed storage. Environment: `NAMROS_SBS_SERVICE_ENDPOINT`. The legacy `-sbs-admin-endpoint` and `NAMROS_SBS_ADMIN_ENDPOINT` aliases are deprecated. |
 | `-sbs-data-endpoint` | `sbs-data:9460` | SBS data gRPC endpoint for chunk or shard IO. |
 | `-sbs-volume-id` | `18a00001` | SBS volume id for `sbs-physical` or `sbs-ec` storage. |
 | `-sbs-volume-pool-id` | `standard-repl` | Metadata registry volume pool id used by production SBS-backed storage. |

@@ -83,6 +83,7 @@ require_pattern packaging/helm/namros-community/values.production.yaml 'enabled:
 require_pattern packaging/helm/namros-community/values.production.yaml 'existingSecret: namros-root-credentials' 'production existing secret profile'
 require_pattern packaging/helm/namros-community/templates/gateway.yaml 'NAMROS_DEPLOYMENT_PROFILE' 'gateway deployment profile env'
 require_pattern packaging/helm/namros-community/templates/gateway.yaml 'NAMROS_GC_CANDIDATE_QUEUE' 'gateway metadata GC queue env'
+require_pattern packaging/helm/namros-community/templates/gateway.yaml 'NAMROS_SBS_SERVICE_ENDPOINT' 'gateway SBS service endpoint env'
 require_pattern packaging/helm/namros-community/templates/gateway.yaml 'NAMROS_SBS_VOLUME_POOL_ID' 'gateway volume-pool env'
 require_pattern packaging/helm/namros-community/templates/gateway.yaml 'NAMROS_SBS_ATTACHMENT_ID' 'gateway shared attachment env'
 require_pattern packaging/helm/namros-community/templates/gateway.yaml 'NAMROS_SBS_WRITER_GROUP_ID' 'gateway writer group env'

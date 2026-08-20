@@ -16,6 +16,7 @@ import (
 
 	"github.com/nosway/namros/internal/adminstatus"
 	"github.com/nosway/namros/internal/auth"
+	"github.com/nosway/namros/internal/cliflag"
 	"github.com/nosway/namros/internal/config"
 	"github.com/nosway/namros/internal/edition"
 	"github.com/nosway/namros/internal/iam"
@@ -978,7 +979,7 @@ func (c adminCommand) runMetadataRestoreValidate(ctx context.Context, args []str
 	fs.StringVar(&cfg.StorageBackend, "storage-backend", cfg.StorageBackend, "segment storage backend: local, sbs, sbs-local, sbs-physical, sbs-ec, or sbs-cluster")
 	fs.StringVar(&cfg.StoragePath, "storage-path", cfg.StoragePath, "segment storage path for local or sbs-local backends")
 	fs.StringVar(&cfg.SBSStatePath, "sbs-state-path", cfg.SBSStatePath, "SBS local adapter state path")
-	fs.StringVar(&cfg.SBSAdminEndpoint, "sbs-admin-endpoint", cfg.SBSAdminEndpoint, "SBS admin gRPC endpoint for sbs-physical or sbs-cluster storage")
+	cliflag.StringVarWithDeprecatedAlias(fs, &cfg.SBSAdminEndpoint, "sbs-service-endpoint", cfg.SBSAdminEndpoint, "SBS service gRPC endpoint for sbs-physical or sbs-cluster storage", "sbs-admin-endpoint")
 	fs.StringVar(&cfg.SBSDataEndpoint, "sbs-data-endpoint", cfg.SBSDataEndpoint, "SBS data gRPC endpoint for SBS-backed storage")
 	fs.StringVar(&cfg.SBSVolumeID, "sbs-volume-id", cfg.SBSVolumeID, "SBS volume id for SBS-backed storage")
 	fs.StringVar(&sbsVolumePool, "sbs-volume-pool", "", "semicolon-separated static SBS volume pool members for restore validation")

@@ -228,7 +228,7 @@ services:
       NAMROS_TIKV_PD_ENDPOINTS: sbs-quickstart-pd:2379
       NAMROS_STORAGE_BACKEND: sbs-cluster
       NAMROS_GC_CANDIDATE_QUEUE: metadata
-      NAMROS_SBS_ADMIN_ENDPOINT: sbs-quickstart-service:9443
+      NAMROS_SBS_SERVICE_ENDPOINT: sbs-quickstart-service:9443
       NAMROS_SBS_DATA_ENDPOINT: sbs-quickstart-data-1:9444
       NAMROS_SBS_VOLUME_ID: ${NAMROS_SBS_QUICKSTART_VOLUME_ID:-18c00001}
       NAMROS_SBS_VOLUME_POOL_ID: ${NAMROS_SBS_QUICKSTART_VOLUME_POOL_ID:-quickstart-pool}
