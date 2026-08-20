@@ -4,7 +4,7 @@ go 1.26.6
 
 require (
 	github.com/gin-gonic/gin v1.11.0
-	github.com/klauspost/reedsolomon v1.14.0
+	github.com/klauspost/reedsolomon v1.14.2
 	go.etcd.io/etcd/client/v3 v3.6.8
 )
 
