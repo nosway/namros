@@ -125,7 +125,9 @@ aws_s3api put-bucket-versioning --bucket "$bucket" --versioning-configuration St
 printf 'rclone version one\n' >"$tmpdir/version-one.txt"
 printf 'rclone version two\n' >"$tmpdir/version-two.txt"
 rclone_cmd copyto "$tmpdir/version-one.txt" "$remote/versioned.txt"
-rclone_cmd copyto "$tmpdir/version-two.txt" "$remote/versioned.txt"
+# Older rclone releases can skip this PUT because both fixtures have the
+# same size and are created within the same mtime resolution window.
+rclone_cmd copyto --ignore-times "$tmpdir/version-two.txt" "$remote/versioned.txt"
 aws_s3api list-object-versions --bucket "$bucket" --prefix versioned.txt --output json >"$tmpdir/versions.json"
 jq -e '[.Versions[]? | select(.Key == "versioned.txt")] | length >= 2' "$tmpdir/versions.json" >/dev/null
 rclone_cmd copyto "$remote/versioned.txt" "$tmpdir/version-latest.downloaded.txt"
