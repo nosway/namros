@@ -32,8 +32,8 @@ const (
 	DefaultCoordinationBackend               = "none"
 	DefaultEtcdDialTimeout                   = 3 * time.Second
 	DefaultGatewayRegistryPrefix             = "/namros/gateways"
-	DefaultGatewayLeaseTTL                   = 15 * time.Second
-	DefaultGatewayHeartbeat                  = 5 * time.Second
+	DefaultGatewayLeaseTTL                   = 10 * time.Second
+	DefaultGatewayHeartbeat                  = 3 * time.Second
 	DefaultGatewayDataBudgetUnknownBytes     = 8 << 20
 	DefaultDedupeSchedulerInterval           = 5 * time.Minute
 	DefaultDedupeSchedulerLockTTL            = 30 * time.Minute

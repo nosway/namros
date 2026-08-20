@@ -4,11 +4,10 @@ set -euo pipefail
 
 REPO_DIR="${1:-$(pwd)}"
 GO="${GO:-go}"
-RG="${RG:-rg}"
-RG_CHECK_EXCLUDES=(
-	--glob '!scripts/release/check-enterprise-build-source.sh'
-	--glob '!scripts/release/check-community-source.sh'
-	--glob '!scripts/release/check-publication-readiness.sh'
+GIT_GREP_EXCLUDES=(
+	':(exclude)scripts/release/check-enterprise-build-source.sh'
+	':(exclude)scripts/release/check-community-source.sh'
+	':(exclude)scripts/release/check-publication-readiness.sh'
 )
 
 log() {
@@ -29,7 +28,6 @@ require_cmd() {
 
 require_cmd git
 require_cmd "$GO"
-require_cmd "$RG"
 
 if [ ! -d "$REPO_DIR" ]; then
 	die "enterprise source directory not found: $REPO_DIR"
@@ -41,21 +39,21 @@ fi
 REPO_DIR="$(cd -- "$REPO_DIR" && pwd)"
 cd "$REPO_DIR"
 
-if ! "$RG" -n '^module github\.com/nosway/namros$' go.mod >/dev/null; then
+if ! git grep -q -E -e '^module github\.com/nosway/namros$' -- go.mod; then
 	die "enterprise source must use module github.com/nosway/namros"
 fi
 
-identity_hits="$("$RG" -n '^const current = Enterprise$' internal/edition 2>/dev/null || true)"
+identity_hits="$(git grep -n -E -e '^const current = Enterprise$' -- internal/edition 2>/dev/null || true)"
 if [ -z "$identity_hits" ]; then
 	die "enterprise source must provide internal/edition current identity as Enterprise; use a private overlay checkout via NAMROS_ENTERPRISE_REPO"
 fi
 
-community_identity_hits="$("$RG" -n '^const current = Community$' internal/edition 2>/dev/null || true)"
+community_identity_hits="$(git grep -n -E -e '^const current = Community$' -- internal/edition 2>/dev/null || true)"
 if [ -n "$community_identity_hits" ]; then
 	die "enterprise source still contains Community current identity; replace the Community identity file in the private overlay"
 fi
 
-if "$RG" -n "${RG_CHECK_EXCLUDES[@]}" -- 'NAMROS_EDITION|"-edition"|StringVar\(&cfg\.Edition|Var\(&cfg\.Edition' cmd internal scripts Makefile >/dev/null 2>&1; then
+if git grep -q -E -e 'NAMROS_EDITION|"-edition"|StringVar\(&cfg\.Edition|Var\(&cfg\.Edition' -- cmd internal scripts Makefile "${GIT_GREP_EXCLUDES[@]}"; then
 	die "enterprise source must not expose a runtime edition switch"
 fi
 

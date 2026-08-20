@@ -8,11 +8,10 @@ ALLOWLIST_FILE="$SCRIPT_DIR/community-source-allowlist.txt"
 EXCLUDES_FILE="$SCRIPT_DIR/community-source-excludes.txt"
 OVERLAY_DIR="$SCRIPT_DIR/community-source-overlays"
 GO="${GO:-go}"
-RG="${RG:-rg}"
-RG_CHECK_EXCLUDES=(
-	--glob '!scripts/release/check-community-source.sh'
-	--glob '!scripts/release/check-enterprise-build-source.sh'
-	--glob '!scripts/release/check-publication-readiness.sh'
+GIT_GREP_EXCLUDES=(
+	':(exclude)scripts/release/check-community-source.sh'
+	':(exclude)scripts/release/check-enterprise-build-source.sh'
+	':(exclude)scripts/release/check-publication-readiness.sh'
 )
 
 cd "$ROOT_DIR"
@@ -40,7 +39,7 @@ check_absent() {
 	local pattern="$2"
 	shift 2
 	local output
-	output="$("$RG" -n "${RG_CHECK_EXCLUDES[@]}" -- "$pattern" "$@" 2>/dev/null || true)"
+	output="$(git grep -n -E -e "$pattern" -- "$@" "${GIT_GREP_EXCLUDES[@]}" 2>/dev/null || true)"
 	if [ -n "$output" ]; then
 		error "$description"
 		printf '%s\n' "$output" >&2
@@ -178,8 +177,8 @@ prepare_community_test_tree() {
 
 check_local_namrbd_replace() {
 	local replace_hits unexpected_hits
-	replace_hits="$("$RG" -n '^replace[[:space:]]+github\.com/nosway/namrbd[[:space:]]+=>[[:space:]]+\.\./NAMRBD[[:space:]]*$' go.mod 2>/dev/null || true)"
-	unexpected_hits="$("$RG" -n 'replace[[:space:]]+.*namrbd[[:space:]]*=>|\.\./NAMRBD' go.mod 2>/dev/null || true)"
+	replace_hits="$(git grep -n -E -e '^replace[[:space:]]+github\.com/nosway/namrbd[[:space:]]+=>[[:space:]]+\.\./NAMRBD[[:space:]]*$' -- go.mod 2>/dev/null || true)"
+	unexpected_hits="$(git grep -n -E -e 'replace[[:space:]]+.*namrbd[[:space:]]*=>|\.\./NAMRBD' -- go.mod 2>/dev/null || true)"
 	if [ -n "$unexpected_hits" ] && [ "$unexpected_hits" != "$replace_hits" ]; then
 		error "go.mod may only use the temporary local NAMRBD replace: replace github.com/nosway/namrbd => ../NAMRBD"
 		printf '%s\n' "$unexpected_hits" >&2
@@ -198,7 +197,6 @@ check_public_doc_make_targets() {
 }
 
 require_cmd git
-require_cmd "$RG"
 require_cmd "$GO"
 require_cmd bash
 
@@ -223,10 +221,10 @@ check_absent "public admin imports private dedupe implementation" '(github\.com/
 check_absent "public enterprise build tag leaked" '//go:build .*enterprise|// \+build .*enterprise|namros_enterprise' cmd internal scripts Makefile
 
 log "verify public Go module paths"
-if ! "$RG" -n '^module github\.com/nosway/namros$' go.mod >/dev/null; then
+if ! git grep -q -E -e '^module github\.com/nosway/namros$' -- go.mod; then
 	error "go.mod module path must be github.com/nosway/namros"
 fi
-if ! "$RG" -n 'github\.com/nosway/namrbd[[:space:]]+v' go.mod >/dev/null; then
+if ! git grep -q -E -e 'github\.com/nosway/namrbd[[:space:]]+v' -- go.mod; then
 	error "go.mod must depend on github.com/nosway/namrbd"
 fi
 check_local_namrbd_replace
@@ -235,36 +233,36 @@ check_absent "short NAMRBD import path leaked" '"namrbd/' cmd internal scripts/r
 check_absent "short NAMROS internal import path leaked" '"namros/internal/' cmd internal scripts/release/community-source-overlays
 
 log "verify Community identity file"
-if ! "$RG" -n '^const current = Community$' internal/edition/current_community.go >/dev/null; then
+if ! git grep -q -E -e '^const current = Community$' -- internal/edition/current_community.go; then
 	error "internal/edition/current_community.go must fix current edition to Community"
 fi
 
 log "verify edition build targets keep Enterprise overlay private"
-if ! "$RG" -n '^build-community:' Makefile >/dev/null; then
+if ! git grep -q -E -e '^build-community:' -- Makefile; then
 	error "Makefile must provide build-community"
 fi
-if ! "$RG" -n '^build-enterprise:' Makefile >/dev/null; then
+if ! git grep -q -E -e '^build-enterprise:' -- Makefile; then
 	error "Makefile must provide build-enterprise"
 fi
-if ! "$RG" -n '^check-edition-boundary:' Makefile >/dev/null; then
+if ! git grep -q -E -e '^check-edition-boundary:' -- Makefile; then
 	error "Makefile must provide check-edition-boundary"
 fi
-if ! "$RG" -n '^check-community-export:' Makefile >/dev/null; then
+if ! git grep -q -E -e '^check-community-export:' -- Makefile; then
 	error "Makefile must provide check-community-export"
 fi
-if ! "$RG" -n '^export-community:' Makefile >/dev/null; then
+if ! git grep -q -E -e '^export-community:' -- Makefile; then
 	error "Makefile must provide export-community"
 fi
-if ! "$RG" -n '^test-community-export:' Makefile >/dev/null; then
+if ! git grep -q -E -e '^test-community-export:' -- Makefile; then
 	error "Makefile must provide test-community-export"
 fi
-if ! "$RG" -n '^VERSION_PACKAGE \?= github\.com/nosway/namros/internal/version$' Makefile >/dev/null; then
+if ! git grep -q -E -e '^VERSION_PACKAGE \?= github\.com/nosway/namros/internal/version$' -- Makefile; then
 	error "Makefile must define the internal/version linker package"
 fi
-if ! "$RG" -n 'GO_LDFLAGS_VERSION .*\.Version=' Makefile >/dev/null; then
+if ! git grep -q -E -e 'GO_LDFLAGS_VERSION .*\.Version=' -- Makefile; then
 	error "Makefile must stamp internal/version.Version with linker flags"
 fi
-if ! "$RG" -n -- '-ldflags' Makefile >/dev/null; then
+if ! git grep -q -E -e '-ldflags' -- Makefile; then
 	error "Makefile build rules must pass Go linker flags"
 fi
 log "verify public docs reference public Makefile targets"

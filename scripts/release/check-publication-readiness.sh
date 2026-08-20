@@ -8,11 +8,11 @@ ALLOWLIST_FILE="$SCRIPT_DIR/community-source-allowlist.txt"
 EXCLUDES_FILE="$SCRIPT_DIR/community-source-excludes.txt"
 OVERLAYS_DIR="$SCRIPT_DIR/community-source-overlays"
 OVERLAYS_REL="scripts/release/community-source-overlays"
-RG="${RG:-rg}"
-RG_CHECK_EXCLUDES=(
-	--glob '!scripts/release/check-publication-readiness.sh'
-	--glob '!scripts/release/check-community-source.sh'
-	--glob '!scripts/release/export-community-source.sh'
+GREP="${GREP:-grep}"
+GIT_GREP_EXCLUDES=(
+	':(exclude)scripts/release/check-publication-readiness.sh'
+	':(exclude)scripts/release/check-community-source.sh'
+	':(exclude)scripts/release/export-community-source.sh'
 )
 
 cd "$ROOT_DIR"
@@ -59,7 +59,7 @@ check_absent() {
 	local pattern="$2"
 	shift 2
 	local output
-	output="$("$RG" -n "${RG_CHECK_EXCLUDES[@]}" -- "$pattern" "$@" 2>/dev/null || true)"
+	output="$(git grep -n -E -e "$pattern" -- "$@" "${GIT_GREP_EXCLUDES[@]}" 2>/dev/null || true)"
 	if [ -n "$output" ]; then
 		error "$description"
 		printf '%s\n' "$output" >&2
@@ -74,7 +74,7 @@ check_absent_in_files() {
 	if [ "$#" -eq 0 ]; then
 		return 0
 	fi
-	output="$("$RG" -n "${RG_CHECK_EXCLUDES[@]}" -- "$pattern" "$@" 2>/dev/null || true)"
+	output="$(git grep -n -E -e "$pattern" -- "$@" "${GIT_GREP_EXCLUDES[@]}" 2>/dev/null || true)"
 	if [ -n "$output" ]; then
 		error "$description"
 		printf '%s\n' "$output" >&2
@@ -163,8 +163,8 @@ collect_public_files() {
 
 check_local_namrbd_replace() {
 	local replace_hits unexpected_hits
-	replace_hits="$("$RG" -n '^replace[[:space:]]+github\.com/nosway/namrbd[[:space:]]+=>[[:space:]]+\.\./NAMRBD[[:space:]]*$' go.mod 2>/dev/null || true)"
-	unexpected_hits="$("$RG" -n 'replace[[:space:]]+.*namrbd[[:space:]]*=>|\.\./NAMRBD' go.mod 2>/dev/null || true)"
+	replace_hits="$(git grep -n -E -e '^replace[[:space:]]+github\.com/nosway/namrbd[[:space:]]+=>[[:space:]]+\.\./NAMRBD[[:space:]]*$' -- go.mod 2>/dev/null || true)"
+	unexpected_hits="$(git grep -n -E -e 'replace[[:space:]]+.*namrbd[[:space:]]*=>|\.\./NAMRBD' -- go.mod 2>/dev/null || true)"
 	if [ -n "$unexpected_hits" ] && [ "$unexpected_hits" != "$replace_hits" ]; then
 		error "go.mod may only use the temporary local NAMRBD replace stripped by export-community"
 		printf '%s\n' "$unexpected_hits" >&2
@@ -176,7 +176,7 @@ check_local_namrbd_replace() {
 
 require_cmd git
 require_cmd bash
-require_cmd "$RG"
+require_cmd "$GREP"
 require_file "$ALLOWLIST_FILE"
 require_file "$EXCLUDES_FILE"
 
@@ -265,24 +265,24 @@ else
 fi
 
 log "verify Docs workflow keeps push CI independent from GitHub Pages setup"
-if ! "$RG" -n -F 'make docs-render-check' .github/workflows/docs-pages.yml >/dev/null; then
+if ! git grep -q -F -e 'make docs-render-check' -- .github/workflows/docs-pages.yml; then
 	error "Docs workflow must render-check docs-src"
 fi
-if ! "$RG" -n -F 'deploy_pages:' .github/workflows/docs-pages.yml >/dev/null; then
+if ! git grep -q -F -e 'deploy_pages:' -- .github/workflows/docs-pages.yml; then
 	error "Docs workflow must require explicit Pages deployment input"
 fi
-if ! "$RG" -n -F "github.event_name == 'workflow_dispatch' && inputs.deploy_pages" .github/workflows/docs-pages.yml >/dev/null; then
+if ! git grep -q -F -e "github.event_name == 'workflow_dispatch' && inputs.deploy_pages" -- .github/workflows/docs-pages.yml; then
 	error "Docs workflow must deploy Pages only from explicit workflow_dispatch"
 fi
-if ! "$RG" -n -F 'actions/configure-pages' .github/workflows/docs-pages.yml >/dev/null; then
+if ! git grep -q -F -e 'actions/configure-pages' -- .github/workflows/docs-pages.yml; then
 	error "Docs workflow must keep a manual configure-pages path"
 fi
-if ! "$RG" -n -F 'actions/deploy-pages' .github/workflows/docs-pages.yml >/dev/null; then
+if ! git grep -q -F -e 'actions/deploy-pages' -- .github/workflows/docs-pages.yml; then
 	error "Docs workflow must keep a manual Pages deploy path"
 fi
 
 log "verify Community CI runs public compatibility and real Helm checks"
-if ! "$RG" -n -F 'make compat-public-s3' .github/workflows/community.yml >/dev/null; then
+if ! git grep -q -F -e 'make compat-public-s3' -- .github/workflows/community.yml; then
 	error "Community CI must run strict public S3 compatibility smoke"
 fi
 for pattern in \
@@ -292,11 +292,11 @@ for pattern in \
 	'NAMROS_COMPAT_AUTOSTART_GATEWAY' \
 	'NAMROS_COMPAT_MC_LARGE_OBJECT_MIB' \
 	'NAMROS_COMPAT_RCLONE_UPLOAD_CUTOFF'; do
-	if ! "$RG" -n "$pattern" .github/workflows/community.yml >/dev/null; then
+	if ! git grep -q -E -e "$pattern" -- .github/workflows/community.yml; then
 		error "Community CI S3 compatibility job is missing required pattern: $pattern"
 	fi
 done
-if ! "$RG" -n -F 'NAMROS_HELM_REQUIRE_HELM=true make helm-chart-check' .github/workflows/community.yml >/dev/null; then
+if ! git grep -q -F -e 'NAMROS_HELM_REQUIRE_HELM=true make helm-chart-check' -- .github/workflows/community.yml; then
 	error "Community CI must run helm-chart-check with Helm CLI required"
 fi
 
@@ -314,37 +314,37 @@ for pattern in \
 	'NAMROS_RELEASE_GENERATE_SBOM=1' \
 	'checksums\.sha256' \
 	'softprops/action-gh-release'; do
-	if ! "$RG" -n "$pattern" .github/workflows/release.yml >/dev/null; then
+	if ! git grep -q -E -e "$pattern" -- .github/workflows/release.yml; then
 		error "release workflow is missing required contract pattern: $pattern"
 	fi
 done
 
 log "verify binaries are stamped with release version metadata"
 for file in Makefile scripts/release/community-source-overlays/Makefile; do
-	if ! "$RG" -n '^VERSION_PACKAGE \?= github\.com/nosway/namros/internal/version$' "$file" >/dev/null; then
+	if ! git grep -q -E -e '^VERSION_PACKAGE \?= github\.com/nosway/namros/internal/version$' -- "$file"; then
 		error "$file must define the internal/version linker package"
 	fi
-	if ! "$RG" -n 'GO_LDFLAGS_VERSION .*\.Version=' "$file" >/dev/null; then
+	if ! git grep -q -E -e 'GO_LDFLAGS_VERSION .*\.Version=' -- "$file"; then
 		error "$file must stamp internal/version.Version with linker flags"
 	fi
-	if ! "$RG" -n -- '-ldflags' "$file" >/dev/null; then
+	if ! git grep -q -E -e '-ldflags' -- "$file"; then
 		error "$file build rules must pass Go linker flags"
 	fi
 done
 for file in packaging/docker/Dockerfile.gateway packaging/docker/Dockerfile.tools; do
-	if ! "$RG" -n 'internal/version\.Version' "$file" >/dev/null; then
+	if ! git grep -q -E -e 'internal/version\.Version' -- "$file"; then
 		error "$file must stamp internal/version.Version"
 	fi
-	if ! "$RG" -n -- '-ldflags' "$file" >/dev/null; then
+	if ! git grep -q -E -e '-ldflags' -- "$file"; then
 		error "$file build rules must pass Go linker flags"
 	fi
 done
 
 log "verify public Go module paths"
-if ! "$RG" -n '^module github\.com/nosway/namros$' go.mod >/dev/null; then
+if ! git grep -q -E -e '^module github\.com/nosway/namros$' -- go.mod; then
 	error "go.mod module path must be github.com/nosway/namros"
 fi
-if ! "$RG" -n 'github\.com/nosway/namrbd[[:space:]]+v' go.mod >/dev/null; then
+if ! git grep -q -E -e 'github\.com/nosway/namrbd[[:space:]]+v' -- go.mod; then
 	error "go.mod must depend on github.com/nosway/namrbd"
 fi
 check_local_namrbd_replace
@@ -391,7 +391,7 @@ fi
 if ! bash -n scripts/release/write-release-artifact-metadata.sh; then
 	error "release artifact metadata script has a syntax error"
 fi
-if ! "$RG" -n 'packaging/helm/namros-community' scripts/release/check-helm-chart.sh >/dev/null; then
+if ! git grep -q -E -e 'packaging/helm/namros-community' -- scripts/release/check-helm-chart.sh; then
 	error "Helm chart check must validate packaging/helm/namros-community"
 fi
 for pattern in \
@@ -401,7 +401,7 @@ for pattern in \
 	'^maintainers:' \
 	'^keywords:' \
 	'artifacthub\.io/category'; do
-	if ! "$RG" -n "$pattern" packaging/helm/namros-community/Chart.yaml >/dev/null; then
+	if ! git grep -q -E -e "$pattern" -- packaging/helm/namros-community/Chart.yaml; then
 		error "Helm chart metadata is missing required pattern: $pattern"
 	fi
 done
@@ -410,7 +410,7 @@ for pattern in \
 	'kind: PodMonitor' \
 	'helm\.sh/hook": test' \
 	'NAMROS_HELM_REQUIRE_HELM'; do
-	if ! "$RG" -n "$pattern" scripts/release/check-helm-chart.sh packaging/helm/namros-community/templates >/dev/null; then
+	if ! git grep -q -E -e "$pattern" -- scripts/release/check-helm-chart.sh packaging/helm/namros-community/templates; then
 		error "Helm chart checks/templates are missing required pattern: $pattern"
 	fi
 done
@@ -421,29 +421,29 @@ for pattern in \
 	'provenance\.json' \
 	'sbom-status\.json' \
 	'NAMROS_RELEASE_GENERATE_SBOM'; do
-	if ! "$RG" -n "$pattern" scripts/release/write-release-artifact-metadata.sh >/dev/null; then
+	if ! git grep -q -E -e "$pattern" -- scripts/release/write-release-artifact-metadata.sh; then
 		error "release artifact metadata script is missing required contract pattern: $pattern"
 	fi
 done
-if ! "$RG" -n 'write-release-artifact-metadata\.sh' scripts/release/export-community-source.sh >/dev/null; then
+if ! git grep -q -E -e 'write-release-artifact-metadata\.sh' -- scripts/release/export-community-source.sh; then
 	error "community source export must emit release artifact metadata"
 fi
 
 log "verify generated/local artifacts are not tracked"
-tracked_junk="$(git ls-files | "$RG" '(^|/)\.DS_Store$|^\.cache/|^dist/|^\.namros/|^tmp/|\.log$' || true)"
+tracked_junk="$(git ls-files | "$GREP" -E '(^|/)\.DS_Store$|^\.cache/|^dist/|^\.namros/|^tmp/|\.log$' || true)"
 if [ -n "$tracked_junk" ]; then
 	error "generated or local artifacts are tracked"
 	printf '%s\n' "$tracked_junk" >&2
 fi
 
 log "verify release hygiene files"
-if ! "$RG" -n '^/dist/$' .gitignore >/dev/null; then
+if ! git grep -q -E -e '^/dist/$' -- .gitignore; then
 	error ".gitignore must ignore /dist/"
 fi
-if ! "$RG" -n '^/\.namros/$' .gitignore >/dev/null; then
+if ! git grep -q -E -e '^/\.namros/$' -- .gitignore; then
 	error ".gitignore must ignore /.namros/"
 fi
-if ! "$RG" -n '^\.DS_Store$' .gitignore >/dev/null; then
+if ! git grep -q -E -e '^\.DS_Store$' -- .gitignore; then
 	error ".gitignore must ignore .DS_Store"
 fi
 
