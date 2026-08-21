@@ -10,7 +10,7 @@ require (
 
 require (
 	github.com/cockroachdb/pebble v1.1.5
-	github.com/nosway/namrbd v1.0.0-rc
+	github.com/nosway/namrbd v1.0.0
 	github.com/pingcap/kvproto v0.0.0-20230403051650-e166ae588106
 	github.com/prometheus/client_golang v1.20.5
 	github.com/tikv/client-go/v2 v2.0.7

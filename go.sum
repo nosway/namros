@@ -123,8 +123,8 @@ github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9G
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
-github.com/nosway/namrbd v1.0.0-rc h1:iYp+TZYPLl//j3uMnDAGKjywFwF/otzdYPpHvsbIRo0=
-github.com/nosway/namrbd v1.0.0-rc/go.mod h1:+64Q8bgdpDiVMFeAeTGDMArqhUnTGu3J/2fOvlBZX/A=
+github.com/nosway/namrbd v1.0.0 h1:aB0G9eM0KKNnxqwOoESt8JrU4UHOjhZUgNuF1RGRs40=
+github.com/nosway/namrbd v1.0.0/go.mod h1:+64Q8bgdpDiVMFeAeTGDMArqhUnTGu3J/2fOvlBZX/A=
 github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
