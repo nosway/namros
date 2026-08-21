@@ -45,7 +45,7 @@ make smoke-active-active
 make compat-sbs-cluster-ec
 ```
 
-`smoke-active-active`는 게이트웨이 간 읽기/쓰기와 장애 전환 동작을 검증합니다. `compat-sbs-cluster-ec`는 추가로 SBS admin/data 엔드포인트와 호환 샤드 경로가 준비된 SBS 볼륨을 요구합니다.
+`smoke-active-active`는 게이트웨이 간 읽기/쓰기와 장애 전환 동작을 검증합니다. `compat-sbs-cluster-ec`는 추가로 SBS service/data 엔드포인트와 호환 샤드 경로가 준비된 SBS 볼륨을 요구합니다.
 
 ## 문제 해결
 

@@ -31,7 +31,7 @@ NAMROS is not NAMRBD. NAMRBD is a network attached block-device product. NAMROS 
 | Local Community | Development, S3 API verification, user-space compatibility smoke | single `namros-gateway`, Pebble or memory metadata, local segment store | <span class="badge">Community</span> |
 | Compatibility Lab | AWS CLI, MinIO client, rclone, s3fs-fuse validation | local gateway plus client tools; Linux FUSE host when needed | <span class="badge">Community</span> |
 | Active-active Metadata Lab | multi-gateway availability and cache correctness | TiKV/PD, etcd, shared segment path | <span class="badge">Community</span> |
-| SBS EC Lab | EC multipart write/read path | TiKV/PD, SBS admin/data, prepared volume and shard routes | <span class="badge enterprise">Enterprise edition only</span> |
+| SBS EC Lab | EC multipart write/read path | TiKV/PD, SBS service/data, prepared volume and shard routes | <span class="badge enterprise">Enterprise edition only</span> |
 
 ## 5-Minute Community Quick Start
 

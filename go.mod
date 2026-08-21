@@ -14,6 +14,7 @@ require (
 	github.com/pingcap/kvproto v0.0.0-20230403051650-e166ae588106
 	github.com/prometheus/client_golang v1.20.5
 	github.com/tikv/client-go/v2 v2.0.7
+	go.etcd.io/etcd/api/v3 v3.6.8
 	golang.org/x/crypto v0.51.0
 	google.golang.org/grpc v1.82.1
 )
@@ -78,7 +79,6 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/twmb/murmur3 v1.1.3 // indirect
 	github.com/ugorji/go/codec v1.3.0 // indirect
-	go.etcd.io/etcd/api/v3 v3.6.8 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.6.8 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/mock v0.5.0 // indirect

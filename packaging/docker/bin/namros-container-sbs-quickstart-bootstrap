@@ -63,7 +63,7 @@ trim_value() {
 
 cluster_id="${NAMROS_SBS_QUICKSTART_CLUSTER_ID:-namros-sbs-quickstart}"
 sbs_cluster_id="${NAMROS_SBS_QUICKSTART_SBS_CLUSTER_ID:-namros-sbs-quickstart-cluster}"
-admin_endpoint="${NAMROS_SBS_QUICKSTART_ADMIN_ENDPOINT:-sbs-quickstart-service:9443}"
+service_endpoint="${NAMROS_SBS_QUICKSTART_SERVICE_ENDPOINT:-sbs-quickstart-service:9443}"
 service_ready_url="${NAMROS_SBS_QUICKSTART_SERVICE_READY_URL:-http://sbs-quickstart-service:9081/readyz}"
 data_1_ready_url="${NAMROS_SBS_QUICKSTART_DATA_1_READY_URL:-http://sbs-quickstart-data-1:9082/readyz}"
 data_2_ready_url="${NAMROS_SBS_QUICKSTART_DATA_2_READY_URL:-http://sbs-quickstart-data-2:9082/readyz}"
@@ -71,8 +71,8 @@ data_1_node_id="${NAMROS_SBS_QUICKSTART_DATA_1_NODE_ID:-sbs-quickstart-data-1}"
 data_2_node_id="${NAMROS_SBS_QUICKSTART_DATA_2_NODE_ID:-sbs-quickstart-data-2}"
 data_1_grpc_endpoint="${NAMROS_SBS_QUICKSTART_DATA_1_GRPC_ENDPOINT:-sbs-quickstart-data-1:9444}"
 data_2_grpc_endpoint="${NAMROS_SBS_QUICKSTART_DATA_2_GRPC_ENDPOINT:-sbs-quickstart-data-2:9444}"
-data_1_admin_http="${NAMROS_SBS_QUICKSTART_DATA_1_ADMIN_HTTP_ENDPOINT:-http://sbs-quickstart-data-1:9082}"
-data_2_admin_http="${NAMROS_SBS_QUICKSTART_DATA_2_ADMIN_HTTP_ENDPOINT:-http://sbs-quickstart-data-2:9082}"
+data_1_service_http="${NAMROS_SBS_QUICKSTART_DATA_1_SERVICE_HTTP_ENDPOINT:-http://sbs-quickstart-data-1:9082}"
+data_2_service_http="${NAMROS_SBS_QUICKSTART_DATA_2_SERVICE_HTTP_ENDPOINT:-http://sbs-quickstart-data-2:9082}"
 volume_ids="${NAMROS_SBS_QUICKSTART_VOLUME_IDS:-18c00001,18c00002}"
 volume_size="${NAMROS_SBS_QUICKSTART_VOLUME_SIZE:-64M}"
 block_size="${NAMROS_SBS_QUICKSTART_BLOCK_SIZE:-4K}"
@@ -90,7 +90,7 @@ wait_http "$data_1_ready_url" sbs-quickstart-data-1
 wait_http "$data_2_ready_url" sbs-quickstart-data-2
 
 if sbsctl_run cluster status \
-	--admin-endpoint "$admin_endpoint" \
+	--sbs-service-endpoint "$service_endpoint" \
 	--cluster-id "$cluster_id" \
 	--sbs-cluster-id "$sbs_cluster_id" \
 	--timeout "$timeout" >/dev/null 2>&1; then
@@ -98,7 +98,7 @@ if sbsctl_run cluster status \
 else
 	log "initialize cluster: $cluster_id/$sbs_cluster_id"
 	sbsctl_run cluster init \
-		--admin-endpoint "$admin_endpoint" \
+		--sbs-service-endpoint "$service_endpoint" \
 		--cluster-id "$cluster_id" \
 		--sbs-cluster-id "$sbs_cluster_id" \
 		--actor container-quickstart \
@@ -109,11 +109,11 @@ fi
 join_node() {
 	node_id="$1"
 	grpc_endpoint="$2"
-	admin_http="$3"
+	service_http="$3"
 	zone="$4"
 
 	if sbsctl_run node status \
-		--admin-endpoint "$admin_endpoint" \
+		--sbs-service-endpoint "$service_endpoint" \
 		--cluster-id "$cluster_id" \
 		--sbs-cluster-id "$sbs_cluster_id" \
 		--node-id "$node_id" \
@@ -124,12 +124,12 @@ join_node() {
 
 	log "join node: $node_id grpc=$grpc_endpoint"
 	sbsctl_run node join \
-		--admin-endpoint "$admin_endpoint" \
+		--sbs-service-endpoint "$service_endpoint" \
 		--cluster-id "$cluster_id" \
 		--sbs-cluster-id "$sbs_cluster_id" \
 		--node-id "$node_id" \
 		--grpc-endpoint "$grpc_endpoint" \
-		--admin-http-endpoint "$admin_http" \
+		--sbs-service-http-endpoint "$service_http" \
 		--zone "$zone" \
 		--auto-create-zone \
 		--actor container-quickstart \
@@ -140,7 +140,7 @@ join_node() {
 create_volume() {
 	volume_id="$1"
 	if sbsctl_run volume status \
-		--admin-endpoint "$admin_endpoint" \
+		--sbs-service-endpoint "$service_endpoint" \
 		--cluster-id "$cluster_id" \
 		--sbs-cluster-id "$sbs_cluster_id" \
 		--volume-id "$volume_id" \
@@ -151,7 +151,7 @@ create_volume() {
 
 	log "create replicated volume: $volume_id"
 	sbsctl_run volume create \
-		--admin-endpoint "$admin_endpoint" \
+		--sbs-service-endpoint "$service_endpoint" \
 		--cluster-id "$cluster_id" \
 		--sbs-cluster-id "$sbs_cluster_id" \
 		--volume-id "$volume_id" \
@@ -169,14 +169,14 @@ create_volume() {
 materialize_volume_on_node() {
 	volume_id="$1"
 	node_id="$2"
-	admin_http="$3"
-	url="${admin_http%/}/debug/materialize-volume?volume_id=$volume_id&size_bytes=$volume_size_bytes&block_size=$block_size_bytes&prefix=sbs-$volume_id&allocation_chunk_size_bytes=$allocation_chunk_size_bytes&allocation_page_bytes=$allocation_page_size_bytes"
+	service_http="$3"
+	url="${service_http%/}/debug/materialize-volume?volume_id=$volume_id&size_bytes=$volume_size_bytes&block_size=$block_size_bytes&prefix=sbs-$volume_id&allocation_chunk_size_bytes=$allocation_chunk_size_bytes&allocation_page_bytes=$allocation_page_size_bytes"
 	log "materialize volume on $node_id: $volume_id"
 	curl -fsS -X POST "$url" >/dev/null
 }
 
-join_node "$data_1_node_id" "$data_1_grpc_endpoint" "$data_1_admin_http" zone-a
-join_node "$data_2_node_id" "$data_2_grpc_endpoint" "$data_2_admin_http" zone-b
+join_node "$data_1_node_id" "$data_1_grpc_endpoint" "$data_1_service_http" zone-a
+join_node "$data_2_node_id" "$data_2_grpc_endpoint" "$data_2_service_http" zone-b
 
 old_ifs="$IFS"
 IFS=,
@@ -185,8 +185,8 @@ for raw_volume_id in $volume_ids; do
 	volume_id="$(trim_value "$raw_volume_id")"
 	if [ -n "$volume_id" ]; then
 		create_volume "$volume_id"
-		materialize_volume_on_node "$volume_id" "$data_1_node_id" "$data_1_admin_http"
-		materialize_volume_on_node "$volume_id" "$data_2_node_id" "$data_2_admin_http"
+		materialize_volume_on_node "$volume_id" "$data_1_node_id" "$data_1_service_http"
+		materialize_volume_on_node "$volume_id" "$data_2_node_id" "$data_2_service_http"
 	fi
 	IFS=,
 done

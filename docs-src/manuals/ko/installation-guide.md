@@ -221,7 +221,7 @@ namros-gateway \
 | --- | --- | --- |
 | etcd | 게이트웨이 레지스트리와 상태 임대 | [etcd HA 가이드](etcd-ha-cluster-install-operations-guide.md) |
 | TiKV/PD | 분산 정본 메타데이터 | [TiKV HA 가이드](tikv-ha-cluster-install-operations-guide.md) |
-| SBS admin/data | Community 복제 물리 스토리지, Enterprise EC 스토리지 | [컨테이너 배포](container-deployment-guide.md) |
+| SBS service/data | Community 복제 물리 스토리지, Enterprise EC 스토리지 | [컨테이너 배포](container-deployment-guide.md) |
 | KMS/컴플라이언스 서비스 | 키 상태와 증빙 워크플로 | [MCP 운영 가이드](mcp-operations-guide.md) |
 
 ## 설치 후 문제 해결

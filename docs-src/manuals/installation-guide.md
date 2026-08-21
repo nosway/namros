@@ -215,7 +215,7 @@ namros-gateway \
 | --- | --- | --- |
 | etcd | gateway registry and health lease | [etcd HA guide](etcd-ha-cluster-install-operations-guide.md) |
 | TiKV/PD | distributed authoritative metadata | [TiKV HA guide](tikv-ha-cluster-install-operations-guide.md) |
-| SBS admin/data | Community replicated physical storage; Enterprise EC storage | [container deployment](container-deployment-guide.md) |
+| SBS service/data | Community replicated physical storage; Enterprise EC storage | [container deployment](container-deployment-guide.md) |
 | KMS/compliance services | key posture and evidence workflows | [MCP operations guide](mcp-operations-guide.md) |
 
 ## Post-install Troubleshooting

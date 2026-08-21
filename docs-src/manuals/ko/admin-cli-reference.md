@@ -55,7 +55,7 @@ namros-gateway \
 | `-tikv-pd-endpoints` | `host:2379` | `-metadata-backend tikv` 사용 시 필요한 쉼표 구분 PD endpoint 목록. |
 | `-tikv-keyspace` | `namros` | TiKV keyspace 이름 또는 v1 key prefix fallback. |
 | `-storage-backend` | `local`, `sbs-physical`, `sbs-cluster` | Payload segment backend. Production 배포는 SBS volume-pool id와 함께 `sbs-cluster`를 사용합니다. |
-| `-sbs-service-endpoint` | `sbs-service:9443` | SBS 기반 스토리지용 SBS service gRPC endpoint. 환경변수는 `NAMROS_SBS_SERVICE_ENDPOINT`입니다. 기존 `-sbs-admin-endpoint`와 `NAMROS_SBS_ADMIN_ENDPOINT` 별칭은 deprecated되었습니다. |
+| `-sbs-service-endpoint` | `sbs-service:9443` | SBS 기반 스토리지용 SBS service gRPC endpoint. 환경변수는 `NAMROS_SBS_SERVICE_ENDPOINT`입니다. |
 | `-sbs-data-endpoint` | `sbs-data:9460` | chunk 또는 shard IO용 SBS data gRPC endpoint. |
 | `-sbs-volume-id` | `18a00001` | `sbs-physical` 또는 `sbs-ec` storage에 사용할 SBS volume id. |
 | `-sbs-volume-pool-id` | `standard-repl` | production SBS-backed storage가 사용하는 metadata registry volume pool id. |
@@ -85,7 +85,7 @@ namros-gateway \
 | --- | --- | --- |
 | `status` | 메타데이터 상태, 최근 operation counter, production readiness posture를 요약합니다. | `namros-admin status -metadata-backend tikv -tikv-pd-endpoints host:2379 -deployment-profile production -storage-backend sbs-cluster -sbs-volume-pool-id standard-repl -sbs-writer-group-id object-writers -sbs-session-id gw-a-boot-1 -sbs-volume-epoch 1 -coordination-backend etcd -etcd-endpoints host:2379 -gc-candidate-queue metadata` |
 | `metadata-scale-budget` | multipart object, protected ref, GC candidate의 metadata value와 transaction 크기를 추정합니다. | `namros-admin metadata-scale-budget -part-count 10000` |
-| `volume-pool-put` | SBS 기반 게이트웨이가 사용할 volume-pool metadata를 기록합니다. | `namros-admin volume-pool-put -pool-id replicated-rf3 -member volume_id=18a00001,data_endpoint=sbs-data-a:9460,state=active` |
+| `volume-pool-put` | SBS 기반 게이트웨이가 사용할 volume-pool metadata를 기록합니다. | `namros-admin volume-pool-put -pool-id replicated-rf3 -member volume_id=18a00001,service_endpoint=sbs-service-a:9443,data_endpoint=sbs-data-a:9460,state=active` |
 | `bucket-quota-put` | Community 버킷 최대 오브젝트 크기 quota를 설정합니다. | `namros-admin bucket-quota-put -bucket photos -max-object-size-bytes 1073741824` |
 | `bucket-quota-get` | 버킷 최대 오브젝트 크기 quota를 조회합니다. | `namros-admin bucket-quota-get -bucket photos` |
 | `bucket-quota-delete` | 버킷 최대 오브젝트 크기 quota를 삭제합니다. | `namros-admin bucket-quota-delete -bucket photos` |
@@ -100,6 +100,8 @@ namros-gateway \
 | `iam-principal-inspect` | CLI flag로 구성된 IAM principal을 정규화해 출력합니다. | `namros-admin iam-principal-inspect -tenant-id root -access-key-id namros -root` |
 | `iam-policy-simulate` | principal/action/resource 조합에 대해 inline 또는 file 기반 S3/IAM policy를 평가합니다. | `namros-admin iam-policy-simulate -action s3:GetObject -resource arn:aws:s3:::photos/a.jpg -policy-file policy.json` |
 | `iam-mapping-validate` | 외부 IAM mapping specification JSON 파일을 검증합니다. | `namros-admin iam-mapping-validate -input mapping.json` |
+
+정적 volume-pool member specification에는 `service_endpoint`를 사용합니다. `namros-sbs-exporter`와 `namros-ops-report`는 복수형 `-sbs-service-endpoints` 플래그를 사용합니다.
 
 ## 4. Enterprise-gated 명령
 

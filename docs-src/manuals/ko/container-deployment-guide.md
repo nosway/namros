@@ -175,11 +175,11 @@ cluster, persistent SBS data volume, 게시 image digest, TLS/front-proxy policy
 | Gateway | 2개 | 명시적 ID `namros-gateway-a`/`namros-gateway-b`와 advertise endpoint |
 | Coordination | etcd 1개 | 테스트 전용 registry와 lease, HA 아님 |
 | Metadata | PD service 1개와 TiKV service 1개 | 테스트 전용 정본 메타데이터, HA 아님, wrapper hardening 필요 |
-| SBS control plane | service 2개와 내부 HAProxy | 현재 gateway interface용 단일 안정 admin endpoint |
+| SBS control plane | service 2개와 내부 HAProxy | 현재 gateway interface용 단일 안정 service endpoint |
 | SBS data plane | data node 4개와 내부 HAProxy | 현재 gateway interface용 단일 안정 data endpoint |
 | SBS bootstrap | one-shot job 2개 | 설정된 복제 volume을 생성한 뒤 gateway 시작 전에 metadata volume pool 등록 |
 
-게이트웨이가 현재 admin endpoint와 data endpoint를 각각 하나씩 받으므로 초기 호환 방식으로 SBS 내부 load balancer를 사용합니다. client-side endpoint list 또는 SBS native discovery로 교체하려면 interface 변경과 동등한 장애 전환 테스트가 필요합니다.
+게이트웨이가 현재 service endpoint와 data endpoint를 각각 하나씩 받으므로 초기 호환 방식으로 SBS 내부 load balancer를 사용합니다. client-side endpoint list 또는 SBS native discovery로 교체하려면 interface 변경과 동등한 장애 전환 테스트가 필요합니다.
 
 ```sh
 # Community Compose 진입점: packaging/docker/compose.community.yml

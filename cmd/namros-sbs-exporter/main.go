@@ -8,21 +8,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nosway/namros/internal/cliflag"
 	"github.com/nosway/namros/internal/sbsops"
 )
 
 func main() {
 	var listen string
 	var clusterID string
-	var adminEndpoints string
+	var serviceEndpoints string
 	var dataEndpoints string
 	var volumeIDs string
 	var namrbdEndpoint string
 	var namrbdTimeout time.Duration
 	flag.StringVar(&listen, "listen", "127.0.0.1:19110", "HTTP listen address for SBS operations exporter")
 	flag.StringVar(&clusterID, "cluster-id", "", "SBS cluster id label shown in JSON status")
-	cliflag.StringVarWithDeprecatedAlias(flag.CommandLine, &adminEndpoints, "sbs-service-endpoints", "", "comma-separated SBS service gRPC endpoints", "sbs-admin-endpoints")
+	flag.StringVar(&serviceEndpoints, "sbs-service-endpoints", "", "comma-separated SBS service gRPC endpoints")
 	flag.StringVar(&dataEndpoints, "sbs-data-endpoints", "", "comma-separated SBS data endpoints")
 	flag.StringVar(&volumeIDs, "sbs-volume-ids", "", "comma-separated SBS volume ids")
 	flag.StringVar(&namrbdEndpoint, "namrbd-sbs-observability-endpoint", "", "NAMRBD SBS read-only observability endpoint or base URL")
@@ -31,7 +30,7 @@ func main() {
 
 	collector := sbsops.NewCollector(sbsops.Config{
 		ClusterID:                      clusterID,
-		AdminEndpoints:                 splitComma(adminEndpoints),
+		AdminEndpoints:                 splitComma(serviceEndpoints),
 		DataEndpoints:                  splitComma(dataEndpoints),
 		VolumeIDs:                      splitComma(volumeIDs),
 		NAMRBDSBSObservabilityEndpoint: namrbdEndpoint,

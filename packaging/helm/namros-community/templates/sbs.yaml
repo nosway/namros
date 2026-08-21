@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "namros.fullname" . }}-sbs-admin
+  name: {{ include "namros.fullname" . }}-sbs-service
   labels:
     {{- include "namros.labels" . | nindent 4 }}
     app.kubernetes.io/component: sbs-service
@@ -43,7 +43,7 @@ metadata:
 spec:
   # Bootstrap checks every SBS process, including the intentional standby.
   # Keep this per-node endpoint published while /readyz continues to expose
-  # only the mutation-ready leader through the aggregate admin Service.
+  # only the mutation-ready leader through the aggregate service Service.
   publishNotReadyAddresses: true
   ports:
     - name: grpc
@@ -91,8 +91,8 @@ spec:
             - --node-id={{ $node.id }}
             - --metadata-backend=tikv
             - --tikv-pd-endpoints={{ include "namros.tikvPDEndpoints" $root }}
-            - --grpc-listen=0.0.0.0:9443
-            - --http-listen=0.0.0.0:9081
+            - --sbs-service-listen=0.0.0.0:9443
+            - --sbs-service-http-listen=0.0.0.0:9081
             - --payload-root=/var/lib/namrbd/sbs-payload
           ports:
             - name: grpc
@@ -171,8 +171,8 @@ spec:
           imagePullPolicy: {{ $root.Values.images.sbsData.pullPolicy }}
           args:
             - --path=/var/lib/namrbd/sbs-data
-            - --grpc-listen=0.0.0.0:9444
-            - --http-listen=0.0.0.0:9082
+            - --sbs-data-listen=0.0.0.0:9444
+            - --sbs-data-http-listen=0.0.0.0:9082
           ports:
             - name: grpc
               containerPort: 9444

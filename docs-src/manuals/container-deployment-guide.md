@@ -173,11 +173,11 @@ backup/restore evidence.
 | Gateway | two | explicit IDs `namros-gateway-a`/`namros-gateway-b` and explicit advertised endpoints |
 | Coordination | one etcd | test-only registry and leases; not HA |
 | Metadata | one PD service plus one TiKV service | test-only authoritative metadata; not HA; wrapper hardening pending |
-| SBS control plane | two services plus internal HAProxy | one stable admin endpoint for the current gateway interface |
+| SBS control plane | two services plus internal HAProxy | one stable service endpoint for the current gateway interface |
 | SBS data plane | four nodes plus internal HAProxy | one stable data endpoint for the current gateway interface |
 | SBS bootstrap | two one-shot jobs | create configured replicated volumes, then register the metadata volume pool before gateways start |
 
-Internal SBS load balancers are the initial compatibility solution because the gateway currently accepts one admin and one data endpoint. Client-side endpoint lists or native SBS discovery may replace them only through a documented interface change and equivalent failover tests.
+Internal SBS load balancers are the initial compatibility solution because the gateway currently accepts one service and one data endpoint. Client-side endpoint lists or native SBS discovery may replace them only through a documented interface change and equivalent failover tests.
 
 ```sh
 # Community Compose entrypoint: packaging/docker/compose.community.yml

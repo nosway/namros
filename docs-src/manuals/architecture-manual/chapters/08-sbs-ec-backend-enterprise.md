@@ -20,7 +20,7 @@ This chapter defines the Enterprise SBS Erasure Coding backend contract. The pub
 
 | Area | Current public Community behavior | Enterprise/spec status |
 | --- | --- | --- |
-| SBS physical replicated path | Community SBS-backed storage can be validated with prepared SBS admin/data endpoints and a volume id. | Also available as the replicated class in Enterprise deployments. |
+| SBS physical replicated path | Community SBS-backed storage can be validated with prepared SBS service/data endpoints and a volume id. | Also available as the replicated class in Enterprise deployments. |
 | SBS EC/classroute path | Edition-gated. Public Community builds must not expose an EC unlock flag or build tag. | Enterprise contract for EC shard placement, reads, repair, and audit evidence. |
 | Healing commands | `dedupe-scrub` and `dedupe-repair` return Enterprise-required responses in Community builds. | Private Enterprise overlay owns EC healing and repair execution. |
 

@@ -39,10 +39,10 @@ services:
     extends:
       file: compose.yaml
       service: sbs-data-4
-  sbs-admin-lb:
+  sbs-service-lb:
     extends:
       file: compose.yaml
-      service: sbs-admin-lb
+      service: sbs-service-lb
   sbs-data-lb:
     extends:
       file: compose.yaml

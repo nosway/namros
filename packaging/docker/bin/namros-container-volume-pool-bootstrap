@@ -9,7 +9,7 @@ metadata_backend="${NAMROS_METADATA_BACKEND:-tikv}"
 tikv_pd_endpoints="${NAMROS_TIKV_PD_ENDPOINTS:-pd:2379}"
 pool_id="${NAMROS_COMMUNITY_SBS_VOLUME_POOL_ID:-object-pool}"
 generation="${NAMROS_COMMUNITY_SBS_VOLUME_POOL_GENERATION:-0}"
-admin_endpoint="${NAMROS_COMMUNITY_SBS_ADMIN_ENDPOINT:-sbs-admin-lb:9443}"
+service_endpoint="${NAMROS_COMMUNITY_SBS_SERVICE_ENDPOINT:-sbs-service-lb:9443}"
 data_endpoint="${NAMROS_COMMUNITY_SBS_DATA_ENDPOINT:-sbs-data-1:9444}"
 data_endpoints="${NAMROS_COMMUNITY_SBS_DATA_ENDPOINTS:-$data_endpoint}"
 chunk_size_bytes="${NAMROS_COMMUNITY_SBS_CHUNK_SIZE_BYTES:-1048576}"
@@ -69,7 +69,7 @@ for raw_volume_id in $volume_ids; do
 		continue
 	fi
 	member_data_endpoint="$(endpoint_at "$data_endpoints" "$member_count" "$data_endpoint")"
-	member="volume_id=$volume_id,admin_endpoint=$admin_endpoint,data_endpoint=$member_data_endpoint,generation=$generation,chunk_size_bytes=$chunk_size_bytes,state=active,weight=1"
+	member="volume_id=$volume_id,service_endpoint=$service_endpoint,data_endpoint=$member_data_endpoint,generation=$generation,chunk_size_bytes=$chunk_size_bytes,state=active,weight=1"
 	set -- "$@" -member "$member"
 	member_count=$((member_count + 1))
 	IFS=,

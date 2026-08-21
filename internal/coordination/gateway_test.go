@@ -2,9 +2,14 @@ package coordination
 
 import (
 	"encoding/json"
+	"math/rand"
 	"strings"
 	"testing"
 	"time"
+
+	"go.etcd.io/etcd/api/v3/etcdserverpb"
+	"go.etcd.io/etcd/api/v3/mvccpb"
+	clientv3 "go.etcd.io/etcd/client/v3"
 
 	"github.com/nosway/namros/internal/config"
 )
@@ -32,7 +37,7 @@ func TestGatewayConfigFromAppDefaultsIdentityAndAdvertiseEndpoint(t *testing.T) 
 
 func TestGatewayRegistryKeySanitizesInstanceID(t *testing.T) {
 	got := GatewayRegistryKey("/namros/gateways/", "host/a")
-	if got != "/namros/gateways/host_a" {
+	if got != "/namros/gateways/host_a/status" {
 		t.Fatalf("GatewayRegistryKey() = %q", got)
 	}
 }
@@ -63,6 +68,10 @@ func TestBuildAndEncodeGatewayRecord(t *testing.T) {
 	if record.StartedAtUnix != 100 || record.LastHeartbeatUnix != 130 {
 		t.Fatalf("timestamps = started:%d heartbeat:%d", record.StartedAtUnix, record.LastHeartbeatUnix)
 	}
+	if record.SchemaVersion != 1 || record.Product != "namros" || record.Role != "object" ||
+		record.Readiness != "ready" || record.DrainState != "active" {
+		t.Fatalf("fleet envelope = %+v", record)
+	}
 	encoded, err := EncodeGatewayRecord(record)
 	if err != nil {
 		t.Fatalf("EncodeGatewayRecord() error = %v", err)
@@ -73,6 +82,61 @@ func TestBuildAndEncodeGatewayRecord(t *testing.T) {
 	}
 	if decoded.InstanceID != "gw-a" || decoded.AdvertiseEndpoint != "10.0.0.1:9000" {
 		t.Fatalf("decoded record = %+v", decoded)
+	}
+}
+
+func TestGatewayFleetCadenceAndJitter(t *testing.T) {
+	if config.DefaultGatewayLeaseTTL != 15*time.Second || config.DefaultGatewayHeartbeat != 5*time.Second {
+		t.Fatalf("gateway cadence = %s/%s, want 15s/5s", config.DefaultGatewayLeaseTTL, config.DefaultGatewayHeartbeat)
+	}
+	rnd := rand.New(rand.NewSource(1))
+	for i := 0; i < 1000; i++ {
+		got := jitteredHeartbeat(5*time.Second, rnd)
+		if got < 4*time.Second || got > 6*time.Second {
+			t.Fatalf("jittered heartbeat %s is outside +/-20%%", got)
+		}
+	}
+}
+
+func TestLegacyGatewayRecordDecodesIntoFleetEnvelope(t *testing.T) {
+	var record GatewayRecord
+	if err := json.Unmarshal([]byte(`{"instance_id":"old-a","advertise_endpoint":"10.0.0.1:9000","healthy":true,"ready":true,"status":"ready","last_heartbeat_unix":10}`), &record); err != nil {
+		t.Fatal(err)
+	}
+	if record.InstanceID != "old-a" || record.Product != "namros" || record.Role != "object" || record.Readiness != "ready" {
+		t.Fatalf("legacy normalization = %+v", record)
+	}
+}
+
+func TestGatewayFleetPageAndWatchCarryRevision(t *testing.T) {
+	record := BuildGatewayRecord(GatewayConfig{InstanceID: "gw-a", AdvertiseEndpoint: "10.0.0.1:9000"}, time.Unix(10, 0))
+	payload, err := json.Marshal(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	prefix := "/namros/gateways/"
+	kv := &mvccpb.KeyValue{Key: []byte(prefix + "gw-a/status"), Value: payload, ModRevision: 40}
+	page, err := decodeGatewayFleetPage(prefix, &clientv3.GetResponse{
+		Header: &etcdserverpb.ResponseHeader{Revision: 41}, Kvs: []*mvccpb.KeyValue{kv}, More: true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if page.Revision != 41 || page.NextCursor != prefix+"gw-a/status" || page.Records[0].RegistryRevision != 40 {
+		t.Fatalf("page = %+v", page)
+	}
+	events, err := decodeGatewayFleetWatch(prefix, clientv3.WatchResponse{
+		Header: etcdserverpb.ResponseHeader{Revision: 42},
+		Events: []*clientv3.Event{
+			{Type: clientv3.EventTypePut, Kv: kv},
+			{Type: clientv3.EventTypeDelete, Kv: &mvccpb.KeyValue{Key: []byte(prefix + "gw-b/status"), ModRevision: 42}},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(events) != 2 || events[0].Type != "put" || events[0].Revision != 40 || events[1].Type != "delete" || events[1].Revision != 42 {
+		t.Fatalf("events = %+v", events)
 	}
 }
 

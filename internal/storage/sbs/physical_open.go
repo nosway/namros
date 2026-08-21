@@ -48,7 +48,7 @@ func OpenPhysical(ctx context.Context, cfg PhysicalOpenConfig) (*PhysicalStore, 
 	}
 	cfg.AdminEndpoint = strings.TrimSpace(cfg.AdminEndpoint)
 	if cfg.AdminEndpoint == "" {
-		return nil, nil, fmt.Errorf("%w: sbs admin endpoint is required", storage.ErrInvalidArgument)
+		return nil, nil, fmt.Errorf("%w: sbs service endpoint is required", storage.ErrInvalidArgument)
 	}
 	cfg.DataEndpoint = strings.TrimSpace(cfg.DataEndpoint)
 	if cfg.DataEndpoint == "" {
@@ -92,7 +92,7 @@ func OpenPhysical(ctx context.Context, cfg PhysicalOpenConfig) (*PhysicalStore, 
 	dialOptions := physicalGRPCDialOptions(cfg.DialOptions)
 	adminConn, err := grpc.NewClient(cfg.AdminEndpoint, dialOptions...)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w: dial sbs admin endpoint %q: %v", storage.ErrUnavailable, cfg.AdminEndpoint, err)
+		return nil, nil, fmt.Errorf("%w: dial sbs service endpoint %q: %v", storage.ErrUnavailable, cfg.AdminEndpoint, err)
 	}
 	cleanup := func() error {
 		return adminConn.Close()

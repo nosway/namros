@@ -254,7 +254,7 @@ container-sbs-quickstart-reset:
 
 container-community-up:
 	sh scripts/container/ensure-local-files.sh
-	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_COMMUNITY_COMPOSE_FILE)" --profile community up -d $(CONTAINER_SBS_BUILD_FLAG) etcd pd tikv sbs-service-1 sbs-service-2 sbs-data-1 sbs-data-2 sbs-data-3 sbs-data-4 sbs-admin-lb sbs-data-lb
+	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_COMMUNITY_COMPOSE_FILE)" --profile community up -d $(CONTAINER_SBS_BUILD_FLAG) etcd pd tikv sbs-service-1 sbs-service-2 sbs-data-1 sbs-data-2 sbs-data-3 sbs-data-4 sbs-service-lb sbs-data-lb
 	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_COMMUNITY_COMPOSE_FILE)" --profile community run $(CONTAINER_SBS_BUILD_FLAG) --rm sbs-bootstrap
 	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_COMMUNITY_COMPOSE_FILE)" --profile community run --build --rm namros-pool-bootstrap
 	$(DOCKER_COMPOSE) --env-file "$(CONTAINER_ENV_FILE)" -f "$(CONTAINER_COMMUNITY_COMPOSE_FILE)" --profile community up -d --build namros-gateway-a namros-gateway-b s3-lb

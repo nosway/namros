@@ -33,8 +33,8 @@ spec:
               value: {{ .Values.sbs.clusterId | quote }}
             - name: NAMROS_COMMUNITY_SBS_CLUSTER_ID
               value: {{ .Values.sbs.sbsClusterId | quote }}
-            - name: NAMROS_COMMUNITY_SBS_ADMIN_ENDPOINT
-              value: "{{ include "namros.fullname" . }}-sbs-admin:9443"
+            - name: NAMROS_COMMUNITY_SBS_SERVICE_ENDPOINT
+              value: "{{ include "namros.fullname" . }}-sbs-service:9443"
             - name: NAMROS_COMMUNITY_SBS_VOLUME_IDS
               value: {{ join "," .Values.sbs.volumeIds | quote }}
             - name: NAMROS_COMMUNITY_SBS_VOLUME_SIZE
@@ -55,8 +55,8 @@ spec:
               value: {{ include "namros.sbsDataNodeIDs" . | quote }}
             - name: NAMROS_COMMUNITY_SBS_DATA_GRPC_ENDPOINTS
               value: {{ include "namros.sbsDataGRPCEndpoints" . | quote }}
-            - name: NAMROS_COMMUNITY_SBS_DATA_ADMIN_HTTP_ENDPOINTS
-              value: {{ include "namros.sbsDataAdminHTTPEndpoints" . | quote }}
+            - name: NAMROS_COMMUNITY_SBS_DATA_SERVICE_HTTP_ENDPOINTS
+              value: {{ include "namros.sbsDataServiceHTTPEndpoints" . | quote }}
             - name: NAMROS_COMMUNITY_SBS_DATA_ZONES
               value: {{ include "namros.sbsDataZones" . | quote }}
           securityContext:
@@ -108,8 +108,8 @@ spec:
               value: {{ .Values.sbs.volumePoolId | quote }}
             - name: NAMROS_COMMUNITY_SBS_VOLUME_POOL_GENERATION
               value: {{ .Values.sbs.volumePoolGeneration | quote }}
-            - name: NAMROS_COMMUNITY_SBS_ADMIN_ENDPOINT
-              value: "{{ include "namros.fullname" . }}-sbs-admin:9443"
+            - name: NAMROS_COMMUNITY_SBS_SERVICE_ENDPOINT
+              value: "{{ include "namros.fullname" . }}-sbs-service:9443"
             - name: NAMROS_COMMUNITY_SBS_DATA_ENDPOINT
               value: "{{ include "namros.fullname" . }}-{{ $data0.id }}:9444"
             - name: NAMROS_COMMUNITY_SBS_DATA_ENDPOINTS

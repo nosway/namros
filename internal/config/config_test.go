@@ -179,18 +179,15 @@ func TestParseDefaults(t *testing.T) {
 	}
 }
 
-func TestParseDeprecatedSBSAdminEndpointAlias(t *testing.T) {
+func TestParseRejectsSBSAdminEndpointFlag(t *testing.T) {
 	clearNAMROSEnv(t)
 	var output bytes.Buffer
-	cfg, err := parse([]string{"--sbs-admin-endpoint", "sbs.example:9443"}, &output)
-	if err != nil {
-		t.Fatalf("parse(deprecated SBS endpoint alias) error = %v", err)
+	_, err := parse([]string{"--sbs-admin-endpoint", "sbs.example:9443"}, &output)
+	if err == nil || !strings.Contains(err.Error(), "sbs-admin-endpoint") {
+		t.Fatalf("parse(removed SBS endpoint flag) error = %v", err)
 	}
-	if cfg.SBSAdminEndpoint != "sbs.example:9443" {
-		t.Fatalf("SBSAdminEndpoint = %q, want %q", cfg.SBSAdminEndpoint, "sbs.example:9443")
-	}
-	if got := output.String(); !strings.Contains(got, "--sbs-admin-endpoint is deprecated; use --sbs-service-endpoint instead") {
-		t.Fatalf("deprecated flag output = %q", got)
+	if got := output.String(); !strings.Contains(got, "-sbs-service-endpoint") {
+		t.Fatalf("flag output = %q, want canonical SBS service endpoint flag", got)
 	}
 }
 
@@ -960,7 +957,7 @@ func TestParseSBSVolumePoolOptions(t *testing.T) {
 		"-sbs-generation", "17",
 		"-sbs-writer-group-id", "object-writers-default",
 		"-sbs-session-id", "gw-a-boot-1",
-		"-sbs-volume-pool", "volume_id=18a00001,attachment_id=att-a,writer_group_id=object-writers-a,volume_epoch=8,shards=sbs-a|sbs-b,state=active,weight=2,write_concurrency=5,available_bytes=1048576,used_percent=25,high_watermark_percent=90;volume_id=18a00002,data_endpoint=127.0.0.2:19092,attachment_id=att-b,readonly=true,generation=19,state=draining",
+		"-sbs-volume-pool", "volume_id=18a00001,attachment_id=att-a,writer_group_id=object-writers-a,volume_epoch=8,shards=sbs-a|sbs-b,state=active,weight=2,write_concurrency=5,available_bytes=1048576,used_percent=25,high_watermark_percent=90;volume_id=18a00002,service_endpoint=127.0.0.2:19091,data_endpoint=127.0.0.2:19092,attachment_id=att-b,readonly=true,generation=19,state=draining",
 	})
 	if err != nil {
 		t.Fatalf("Parse(sbs-volume-pool) error = %v", err)
@@ -974,7 +971,7 @@ func TestParseSBSVolumePoolOptions(t *testing.T) {
 	if got := cfg.SBSVolumePool[0].ShardStoreIDs; len(got) != 2 || got[0] != "sbs-a" || got[1] != "sbs-b" {
 		t.Fatalf("pool[0].ShardStoreIDs = %v", got)
 	}
-	if got := cfg.SBSVolumePool[1]; got.VolumeID != "18a00002" || got.DataEndpoint != "127.0.0.2:19092" || got.AttachmentID != "att-b" || !got.ReadOnly || got.Generation != 19 || got.State != "draining" {
+	if got := cfg.SBSVolumePool[1]; got.VolumeID != "18a00002" || got.AdminEndpoint != "127.0.0.2:19091" || got.DataEndpoint != "127.0.0.2:19092" || got.AttachmentID != "att-b" || !got.ReadOnly || got.Generation != 19 || got.State != "draining" {
 		t.Fatalf("pool[1] = %+v", got)
 	}
 	if cfg.SBSGeneration != 17 {

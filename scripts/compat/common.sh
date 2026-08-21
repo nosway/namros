@@ -55,9 +55,9 @@ compat_load_18node_lab_env() {
 	lab_load_env "${NAMROS_18NODE_ENV_FILE:-$NAMROS_COMPAT_REPO_ROOT/scripts/lab/namros-18node-lab.env}"
 }
 
-compat_resolve_18node_sbs_admin_endpoint() {
+compat_resolve_18node_sbs_service_endpoint() {
 	compat_load_18node_lab_env
-	lab_resolve_sbs_admin_endpoint
+	lab_resolve_sbs_service_endpoint
 }
 
 compat_resolve_18node_sbs_data_http_endpoint() {
