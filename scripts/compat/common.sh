@@ -213,7 +213,7 @@ compat_autostart_gateway() {
 
 	log "start autostart gateway: endpoint=$NAMROS_ENDPOINT listen=$listen"
 	"$gateway_bin" \
-		-listen "$listen" \
+		-http-listen "$listen" \
 		-region "$NAMROS_REGION" \
 		-metadata-backend memory \
 		-storage-backend memory \

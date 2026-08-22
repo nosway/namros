@@ -28,7 +28,7 @@ The gateway process accepts S3-compatible HTTP requests. Production Community de
 
 ```sh
 namros-gateway \
-  -listen 0.0.0.0:9000 \
+  -http-listen 0.0.0.0:9000 \
   -deployment-profile production \
   -metadata-backend tikv \
   -tikv-pd-endpoints 192.168.10.6:2379 \
@@ -47,7 +47,7 @@ namros-gateway \
 
 | Flag | Typical value | Description |
 | --- | --- | --- |
-| `-listen` | `127.0.0.1:9000` | HTTP listen address for S3 API requests. |
+| `-http-listen` | `127.0.0.1:9000` | HTTP listen address for S3 API requests. |
 | `-deployment-profile` | `dev`, `production` | Validation profile. Production rejects development-only metadata, storage, direct single-volume, and unfenced shared-attachment shortcuts. |
 | `-region` | `us-east-1` | Region expected by SigV4 clients and compatibility scripts. |
 | `-metadata-backend` | `pebble`, `tikv`, `memory` | Authoritative metadata backend. |

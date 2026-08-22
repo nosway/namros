@@ -299,7 +299,7 @@ func parse(args []string, output io.Writer) (Config, error) {
 	}
 	fs := flag.NewFlagSet("namros-gateway", flag.ContinueOnError)
 	fs.SetOutput(output)
-	fs.StringVar(&cfg.ListenAddr, "listen", cfg.ListenAddr, "HTTP listen address")
+	fs.StringVar(&cfg.ListenAddr, "http-listen", cfg.ListenAddr, "HTTP listen address")
 	fs.StringVar(&cfg.DeploymentProfile, "deployment-profile", cfg.DeploymentProfile, "deployment profile: dev or production")
 	fs.BoolVar(&cfg.AllowUnsafeProductionShortcuts, "allow-unsafe-production-shortcuts", cfg.AllowUnsafeProductionShortcuts, "allow production profile to use development-only backends for lab validation")
 	fs.StringVar(&cfg.Region, "region", cfg.Region, "S3-compatible default region")
@@ -440,7 +440,7 @@ func parse(args []string, output io.Writer) (Config, error) {
 }
 
 func applyEnvironment(cfg *Config, args []string, output io.Writer) error {
-	applyStringEnv(&cfg.ListenAddr, "NAMROS_LISTEN", "listen", args)
+	applyStringEnv(&cfg.ListenAddr, "NAMROS_LISTEN", "http-listen", args)
 	applyStringEnv(&cfg.DeploymentProfile, "NAMROS_DEPLOYMENT_PROFILE", "deployment-profile", args)
 	if err := applyBoolEnv(&cfg.AllowUnsafeProductionShortcuts, "NAMROS_ALLOW_UNSAFE_PRODUCTION_SHORTCUTS", "allow-unsafe-production-shortcuts", args); err != nil {
 		return err

@@ -31,7 +31,7 @@ Day-2 Operations
 
 ```sh
 go run ./cmd/namros-gateway \
-  -listen 127.0.0.1:9000 \
+  -http-listen 127.0.0.1:9000 \
   -region us-east-1 \
   -metadata-backend pebble \
   -metadata-path .namros/meta \

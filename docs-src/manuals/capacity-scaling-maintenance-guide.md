@@ -57,7 +57,7 @@ Since NAMROS gateways do not hold persistent authoritative state, they can be sc
 ```sh
 # Start a new gateway instance and register it with the etcd coordination cluster
 namros-gateway \
-  -listen 192.168.10.12:9000 \
+  -http-listen 192.168.10.12:9000 \
   -deployment-profile production \
   -coordination-backend etcd \
   -etcd-endpoints 192.168.10.5:12379 \

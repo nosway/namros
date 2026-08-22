@@ -91,7 +91,7 @@ dump_gateway_log() {
 gateway_bin="$tmpdir/namros-gateway"
 gateway_args=(
 	"$gateway_bin"
-	-listen "$NAMROS_GATEWAY_LISTEN"
+	-http-listen "$NAMROS_GATEWAY_LISTEN"
 	-region "$NAMROS_REGION"
 	-metadata-backend "$NAMROS_METADATA_BACKEND"
 	-storage-backend sbs-physical

@@ -162,7 +162,7 @@ gateways, 2 SBS services, 5 SBS data nodes, and one embedded TiKV instance.
 
 | Flag | Typical Value | Meaning |
 | --- | --- | --- |
-| `-listen` | `127.0.0.1:9000` | HTTP listen address. |
+| `-http-listen` | `127.0.0.1:9000` | HTTP listen address. |
 | `-deployment-profile` | `dev`, `production` | Validation profile. Production rejects memory/Pebble/local/single-volume and unfenced shared-attachment shortcuts unless the explicit lab override is set. |
 | `-region` | `us-east-1` | Region used by S3 compatibility clients. |
 | `-metadata-backend` | `pebble` | Authoritative metadata backend for local Community runs. |
@@ -222,7 +222,7 @@ namros-gateway \
 
 | Signal | Likely Cause | Action |
 | --- | --- | --- |
-| Port 9000 already in use | existing gateway or other service | Stop the process or run gateway with another `-listen` address. |
+| Port 9000 already in use | existing gateway or other service | Stop the process or run gateway with another `-http-listen` address. |
 | AWS CLI metadata assertion fails | stale gateway binary or metadata behavior mismatch | Rebuild, restart gateway, and rerun the client smoke. |
 | rclone size mismatch | payload write/read path issue | Preserve tmpdir and inspect gateway log and object HEAD. |
 | s3fs mount failure | FUSE permissions or missing Linux package | Run on a Linux host and install the required FUSE/xattr packages. |

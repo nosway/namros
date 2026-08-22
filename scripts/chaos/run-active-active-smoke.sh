@@ -204,7 +204,7 @@ start_gateway() {
 
 	log "start gateway $label: listen=$listen endpoint=$endpoint registry_key=$registry_key"
 	"$gateway_bin" \
-		-listen "$listen" \
+		-http-listen "$listen" \
 		-region "$NAMROS_REGION" \
 		-metadata-backend "$NAMROS_METADATA_BACKEND" \
 		-tikv-pd-endpoints "$NAMROS_TIKV_PD_ENDPOINTS" \

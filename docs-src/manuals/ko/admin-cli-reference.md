@@ -28,7 +28,7 @@
 
 ```sh
 namros-gateway \
-  -listen 0.0.0.0:9000 \
+  -http-listen 0.0.0.0:9000 \
   -deployment-profile production \
   -metadata-backend tikv \
   -tikv-pd-endpoints 192.168.10.6:2379 \
@@ -47,7 +47,7 @@ namros-gateway \
 
 | 플래그 | 일반 값 | 설명 |
 | --- | --- | --- |
-| `-listen` | `127.0.0.1:9000` | S3 API 요청을 받을 HTTP 수신 주소. |
+| `-http-listen` | `127.0.0.1:9000` | S3 API 요청을 받을 HTTP 수신 주소. |
 | `-deployment-profile` | `dev`, `production` | 검증 profile. Production은 개발 전용 메타데이터, 스토리지, 직접 단일 volume, unfenced shared attachment shortcut을 거부합니다. |
 | `-region` | `us-east-1` | SigV4 클라이언트와 호환성 스크립트가 사용하는 리전. |
 | `-metadata-backend` | `pebble`, `tikv`, `memory` | 정본 메타데이터 백엔드. |

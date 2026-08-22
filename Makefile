@@ -160,7 +160,7 @@ check-enterprise-build-source:
 
 run-dev:
 	$(GO) run ./cmd/namros-gateway \
-		-listen 127.0.0.1:9000 \
+		-http-listen 127.0.0.1:9000 \
 		-region us-east-1 \
 		-metadata-backend pebble \
 		-metadata-path .namros/meta \
@@ -169,7 +169,7 @@ run-dev:
 
 run-compat:
 	$(GO) run ./cmd/namros-gateway \
-		-listen 0.0.0.0:9000 \
+		-http-listen 0.0.0.0:9000 \
 		-region us-east-1 \
 		-metadata-backend pebble \
 		-metadata-path .namros/meta \

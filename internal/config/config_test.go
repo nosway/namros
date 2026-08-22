@@ -2,6 +2,8 @@ package config
 
 import (
 	"bytes"
+	"errors"
+	"flag"
 	"os"
 	"strings"
 	"testing"
@@ -179,6 +181,25 @@ func TestParseDefaults(t *testing.T) {
 	}
 }
 
+func TestParseHelp(t *testing.T) {
+	clearNAMROSEnv(t)
+	var output bytes.Buffer
+	_, err := parse([]string{"--help"}, &output)
+	if !errors.Is(err, flag.ErrHelp) {
+		t.Fatalf("parse(--help) error = %v, want flag.ErrHelp", err)
+	}
+	help := output.String()
+	if !strings.Contains(help, "Usage of namros-gateway:") {
+		t.Fatalf("help output missing usage header: %q", help)
+	}
+	if !strings.Contains(help, "-http-listen string") {
+		t.Fatalf("help output missing -http-listen: %q", help)
+	}
+	if strings.Contains(help, "  -listen string") {
+		t.Fatalf("help output contains obsolete -listen flag: %q", help)
+	}
+}
+
 func TestParseRejectsSBSAdminEndpointFlag(t *testing.T) {
 	clearNAMROSEnv(t)
 	var output bytes.Buffer
@@ -255,7 +276,7 @@ func TestParseOverrides(t *testing.T) {
 	clearNAMROSEnv(t)
 	withCurrentEdition(t, edition.Enterprise)
 	cfg, err := Parse([]string{
-		"-listen", "127.0.0.1:19000",
+		"-http-listen", "127.0.0.1:19000",
 		"-deployment-profile", "dev",
 		"-allow-unsafe-production-shortcuts=false",
 		"-region", "ap-northeast-2",

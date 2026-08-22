@@ -57,7 +57,7 @@ NAMROS 게이트웨이는 영속적인 정본 상태(authoritative state)를 보
 ```sh
 # etcd coordination 클러스터에 새 게이트웨이를 등록하며 시작
 namros-gateway \
-  -listen 192.168.10.12:9000 \
+  -http-listen 192.168.10.12:9000 \
   -deployment-profile production \
   -coordination-backend etcd \
   -etcd-endpoints 192.168.10.5:12379 \
