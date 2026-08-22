@@ -48,8 +48,8 @@ services:
       - --node-id=sbs-quickstart-service
       - --metadata-backend=tikv
       - --tikv-pd-endpoints=sbs-quickstart-pd:2379
-      - --grpc-listen=0.0.0.0:9443
-      - --http-listen=0.0.0.0:9081
+      - --sbs-service-listen=0.0.0.0:9443
+      - --sbs-service-http-listen=0.0.0.0:9081
       - --payload-root=/var/lib/namrbd/sbs-payload
     depends_on:
       - sbs-quickstart-tikv
@@ -82,8 +82,8 @@ services:
         namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
     command:
       - --path=/var/lib/namrbd/sbs-data
-      - --grpc-listen=0.0.0.0:9444
-      - --http-listen=0.0.0.0:9082
+      - --sbs-data-listen=0.0.0.0:9444
+      - --sbs-data-http-listen=0.0.0.0:9082
     volumes:
       - namros-sbs-quickstart-data-1:/var/lib/namrbd/sbs-data
     read_only: true
@@ -113,8 +113,8 @@ services:
         namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
     command:
       - --path=/var/lib/namrbd/sbs-data
-      - --grpc-listen=0.0.0.0:9444
-      - --http-listen=0.0.0.0:9082
+      - --sbs-data-listen=0.0.0.0:9444
+      - --sbs-data-http-listen=0.0.0.0:9082
     volumes:
       - namros-sbs-quickstart-data-2:/var/lib/namrbd/sbs-data
     read_only: true
@@ -145,7 +145,7 @@ services:
     environment:
       NAMROS_SBS_QUICKSTART_CLUSTER_ID: ${NAMROS_SBS_QUICKSTART_CLUSTER_ID:-namros-sbs-quickstart}
       NAMROS_SBS_QUICKSTART_SBS_CLUSTER_ID: ${NAMROS_SBS_QUICKSTART_SBS_CLUSTER_ID:-namros-sbs-quickstart-cluster}
-      NAMROS_SBS_QUICKSTART_ADMIN_ENDPOINT: sbs-quickstart-service:9443
+      NAMROS_SBS_QUICKSTART_SERVICE_ENDPOINT: sbs-quickstart-service:9443
       NAMROS_SBS_QUICKSTART_VOLUME_IDS: ${NAMROS_SBS_QUICKSTART_VOLUME_IDS:-18c00001,18c00002}
       NAMROS_SBS_QUICKSTART_VOLUME_SIZE: ${NAMROS_SBS_QUICKSTART_VOLUME_SIZE:-64M}
       NAMROS_SBS_QUICKSTART_BLOCK_SIZE: ${NAMROS_SBS_QUICKSTART_BLOCK_SIZE:-4K}
@@ -189,7 +189,7 @@ services:
       NAMROS_COMMUNITY_SBS_VOLUME_IDS: ${NAMROS_SBS_QUICKSTART_VOLUME_IDS:-18c00001,18c00002}
       NAMROS_COMMUNITY_SBS_VOLUME_POOL_ID: ${NAMROS_SBS_QUICKSTART_VOLUME_POOL_ID:-quickstart-pool}
       NAMROS_COMMUNITY_SBS_VOLUME_POOL_GENERATION: ${NAMROS_SBS_QUICKSTART_VOLUME_POOL_GENERATION:-0}
-      NAMROS_COMMUNITY_SBS_ADMIN_ENDPOINT: sbs-quickstart-service:9443
+      NAMROS_COMMUNITY_SBS_SERVICE_ENDPOINT: sbs-quickstart-service:9443
       NAMROS_COMMUNITY_SBS_DATA_ENDPOINT: sbs-quickstart-data-1:9444
       NAMROS_COMMUNITY_SBS_DATA_ENDPOINTS: sbs-quickstart-data-1:9444,sbs-quickstart-data-2:9444
       NAMROS_COMMUNITY_SBS_CHUNK_SIZE_BYTES: ${NAMROS_SBS_QUICKSTART_CHUNK_SIZE_BYTES:-1048576}

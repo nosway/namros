@@ -16,7 +16,6 @@ import (
 
 	"github.com/nosway/namros/internal/adminstatus"
 	"github.com/nosway/namros/internal/auth"
-	"github.com/nosway/namros/internal/cliflag"
 	"github.com/nosway/namros/internal/config"
 	"github.com/nosway/namros/internal/edition"
 	"github.com/nosway/namros/internal/iam"
@@ -979,7 +978,7 @@ func (c adminCommand) runMetadataRestoreValidate(ctx context.Context, args []str
 	fs.StringVar(&cfg.StorageBackend, "storage-backend", cfg.StorageBackend, "segment storage backend: local, sbs, sbs-local, sbs-physical, sbs-ec, or sbs-cluster")
 	fs.StringVar(&cfg.StoragePath, "storage-path", cfg.StoragePath, "segment storage path for local or sbs-local backends")
 	fs.StringVar(&cfg.SBSStatePath, "sbs-state-path", cfg.SBSStatePath, "SBS local adapter state path")
-	cliflag.StringVarWithDeprecatedAlias(fs, &cfg.SBSAdminEndpoint, "sbs-service-endpoint", cfg.SBSAdminEndpoint, "SBS service gRPC endpoint for sbs-physical or sbs-cluster storage", "sbs-admin-endpoint")
+	fs.StringVar(&cfg.SBSAdminEndpoint, "sbs-service-endpoint", cfg.SBSAdminEndpoint, "SBS service gRPC endpoint for sbs-physical or sbs-cluster storage")
 	fs.StringVar(&cfg.SBSDataEndpoint, "sbs-data-endpoint", cfg.SBSDataEndpoint, "SBS data gRPC endpoint for SBS-backed storage")
 	fs.StringVar(&cfg.SBSVolumeID, "sbs-volume-id", cfg.SBSVolumeID, "SBS volume id for SBS-backed storage")
 	fs.StringVar(&sbsVolumePool, "sbs-volume-pool", "", "semicolon-separated static SBS volume pool members for restore validation")
@@ -1106,7 +1105,7 @@ func (c adminCommand) runVolumePoolPut(ctx context.Context, args []string) error
 	fs.Uint64Var(&generation, "generation", 0, "volume pool generation; 0 auto-increments")
 	fs.StringVar(&durabilityClass, "durability-class", "", "durability class label")
 	fs.Var(&storageClassIDs, "storage-class", "storage class id bound to this pool; repeatable or comma-separated")
-	fs.Var(&memberSpecs, "member", "volume pool member spec; repeatable, e.g. volume_id=18a00001,admin_endpoint=sbs-admin-a:9443,data_endpoint=sbs-data-a:9460,state=active")
+	fs.Var(&memberSpecs, "member", "volume pool member spec; repeatable, e.g. volume_id=18a00001,service_endpoint=sbs-service-a:9443,data_endpoint=sbs-data-a:9460,state=active")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -4779,7 +4778,7 @@ func parseVolumePoolMemberSpec(spec string) (model.VolumePoolMember, error) {
 		switch key {
 		case "volume_id", "volume":
 			member.VolumeID = value
-		case "admin_endpoint", "admin":
+		case "service_endpoint", "service", "admin_endpoint", "admin":
 			member.AdminEndpoint = value
 		case "data_endpoint", "data":
 			member.DataEndpoint = value

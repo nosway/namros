@@ -66,7 +66,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- range $i, $node := .Values.sbs.data.nodes -}}{{- if $i }},{{ end -}}{{ include "namros.fullname" $root }}-{{ $node.id }}:9444{{- end -}}
 {{- end -}}
 
-{{- define "namros.sbsDataAdminHTTPEndpoints" -}}
+{{- define "namros.sbsDataServiceHTTPEndpoints" -}}
 {{- $root := . -}}
 {{- range $i, $node := .Values.sbs.data.nodes -}}{{- if $i }},{{ end -}}http://{{ include "namros.fullname" $root }}-{{ $node.id }}:9082{{- end -}}
 {{- end -}}

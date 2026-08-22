@@ -48,7 +48,7 @@ Run a local gateway with Pebble metadata and local segment storage:
 
 ```sh
 go run ./cmd/namros-gateway \
-  -listen 127.0.0.1:9000 \
+  -http-listen 127.0.0.1:9000 \
   -region us-east-1 \
   -metadata-backend pebble \
   -metadata-path .namros/meta \
@@ -65,6 +65,29 @@ AWS_DEFAULT_REGION=us-east-1
 ```
 
 Use a local S3 client against `http://127.0.0.1:9000`.
+
+### POSIX access with s3fs-fuse
+
+To access buckets and objects stored in NAMROS through a filesystem-like POSIX
+interface, mount a bucket with
+[s3fs-fuse](https://github.com/s3fs-fuse/s3fs-fuse). For example, after
+installing `s3fs`, create a credentials file and mount the bucket through the
+local NAMROS gateway:
+
+```sh
+printf '%s\n' 'namrosroot:namrosrootsecret' > "${HOME}/.passwd-s3fs"
+chmod 600 "${HOME}/.passwd-s3fs"
+mkdir -p ./namros-mount
+s3fs my-bucket ./namros-mount \
+  -o passwd_file="${HOME}/.passwd-s3fs" \
+  -o url=http://127.0.0.1:9000 \
+  -o use_path_request_style
+```
+
+Files created under `./namros-mount` are stored as objects in `my-bucket`, and
+existing objects can be accessed through the mounted directory. This provides
+a filesystem-style interface over the S3 API; object storage does not provide
+all semantics or performance characteristics of a native POSIX filesystem.
 
 To try the public gateway with an SBS backend through Docker:
 

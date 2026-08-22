@@ -25,13 +25,13 @@ Day-2 운영
 | Local Community | 게이트웨이, Pebble, 로컬 세그먼트 경로 | 개발 및 사용자 공간 호환성 검증 |
 | 호환성 실험실 | 게이트웨이와 AWS CLI/mc/rclone/s3fs 클라이언트 | 외부 클라이언트 검증 |
 | Active-active Community | 여러 게이트웨이, TiKV, etcd, 공유 스토리지 | 가용성과 무상태 게이트웨이 검증 |
-| SBS EC Enterprise | TiKV, SBS admin/data, EC 샤드 경로, 게이트웨이 | EC 스토리지 클래스 검증 |
+| SBS EC Enterprise | TiKV, SBS service/data, EC 샤드 경로, 게이트웨이 | EC 스토리지 클래스 검증 |
 
 ## 게이트웨이 설정
 
 ```sh
 go run ./cmd/namros-gateway \
-  -listen 127.0.0.1:9000 \
+  -http-listen 127.0.0.1:9000 \
   -region us-east-1 \
   -metadata-backend pebble \
   -metadata-path .namros/meta \

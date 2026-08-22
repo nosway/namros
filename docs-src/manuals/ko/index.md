@@ -31,7 +31,7 @@ NAMROS는 NAMRBD가 아닙니다. NAMRBD는 네트워크 연결 블록 디바이
 | Local Community | 개발, S3 API 검증, 사용자 공간 호환성 스모크 | 단일 `namros-gateway`, Pebble 또는 메모리 메타데이터, 로컬 세그먼트 저장소 | <span class="badge">Community</span> |
 | 호환성 실험실 | AWS CLI, MinIO client, rclone, s3fs-fuse 검증 | 로컬 게이트웨이와 클라이언트 도구, 필요 시 Linux FUSE 호스트 | <span class="badge">Community</span> |
 | Active-active 메타데이터 실험실 | 다중 게이트웨이 가용성과 캐시 정확성 | TiKV/PD, etcd, 공유 세그먼트 경로 | <span class="badge">Community</span> |
-| SBS EC 실험실 | EC 멀티파트 쓰기/읽기 경로 | TiKV/PD, SBS admin/data, 준비된 볼륨과 샤드 경로 | <span class="badge enterprise">Enterprise edition only</span> |
+| SBS EC 실험실 | EC 멀티파트 쓰기/읽기 경로 | TiKV/PD, SBS service/data, 준비된 볼륨과 샤드 경로 | <span class="badge enterprise">Enterprise edition only</span> |
 
 ## 5분 Community 빠른 시작
 

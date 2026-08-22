@@ -92,7 +92,7 @@ if [ "$fail" -ne 0 ]; then
 fi
 
 log "scan stale CLI flags and environment names"
-stale_cli_pattern='(^|[^[:alnum:]_-])-coordination-endpoints|(^|[^[:alnum:]_-])-metadata-endpoints|(^|[^[:alnum:]_-])-metadata-keyspace|(^|[^[:alnum:]_-])-pd-endpoints|(^|[^[:alnum:]_])ETCD_ENDPOINTS=|(^|[^[:alnum:]_])ETCD_ROOT='
+stale_cli_pattern='(^|[^[:alnum:]_-])-coordination-endpoints|(^|[^[:alnum:]_-])-metadata-endpoints|(^|[^[:alnum:]_-])-metadata-keyspace|(^|[^[:alnum:]_-])-pd-endpoints|(^|[^[:alnum:]_-])-sbs-admin-endpoints?|(^|[^[:alnum:]_-])--admin-http-endpoint|(^|[^[:alnum:]_])NAMROS_SBS_ADMIN_ENDPOINT|(^|[^[:alnum:]_])SBS_ADMIN_ENDPOINTS|(^|[^[:alnum:]_])ETCD_ENDPOINTS=|(^|[^[:alnum:]_])ETCD_ROOT='
 stale_hits="$(search_doc_lines "$stale_cli_pattern" "${doc_roots[@]}")"
 if [ -n "$stale_hits" ]; then
 	error "stale CLI flag or environment variable in public documentation"

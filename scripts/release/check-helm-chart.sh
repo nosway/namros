@@ -101,7 +101,7 @@ require_pattern packaging/helm/namros-community/templates/jobs.yaml 'helm.sh/hoo
 require_pattern packaging/helm/namros-community/templates/jobs.yaml 'helm.sh/hook-weight: "20"' 'pool bootstrap hook order'
 require_pattern packaging/helm/namros-community/templates/_helpers.tpl ':9081/healthz' 'SBS bootstrap process health checks'
 require_pattern packaging/helm/namros-community/templates/sbs.yaml 'publishNotReadyAddresses: true' 'per-node SBS standby bootstrap discovery'
-require_pattern packaging/helm/namros-community/templates/sbs.yaml '--grpc-listen=0\.0\.0\.0:9444' 'SBS data 9444 listener'
+require_pattern packaging/helm/namros-community/templates/sbs.yaml '--sbs-data-listen=0\.0\.0\.0:9444' 'SBS data 9444 listener'
 require_pattern packaging/helm/namros-community/templates/sbs.yaml 'app.kubernetes.io/component: sbs-service' 'SBS service workload'
 require_pattern packaging/helm/namros-community/templates/sbs.yaml 'app.kubernetes.io/component: sbs-data' 'SBS data workload'
 require_pattern packaging/helm/namros-community/templates/_helpers.tpl 'metadata\.tikv\.pdEndpoints is required' 'production TiKV endpoint requirement'

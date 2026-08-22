@@ -28,7 +28,7 @@ The gateway process accepts S3-compatible HTTP requests. Production Community de
 
 ```sh
 namros-gateway \
-  -listen 0.0.0.0:9000 \
+  -http-listen 0.0.0.0:9000 \
   -deployment-profile production \
   -metadata-backend tikv \
   -tikv-pd-endpoints 192.168.10.6:2379 \
@@ -47,7 +47,7 @@ namros-gateway \
 
 | Flag | Typical value | Description |
 | --- | --- | --- |
-| `-listen` | `127.0.0.1:9000` | HTTP listen address for S3 API requests. |
+| `-http-listen` | `127.0.0.1:9000` | HTTP listen address for S3 API requests. |
 | `-deployment-profile` | `dev`, `production` | Validation profile. Production rejects development-only metadata, storage, direct single-volume, and unfenced shared-attachment shortcuts. |
 | `-region` | `us-east-1` | Region expected by SigV4 clients and compatibility scripts. |
 | `-metadata-backend` | `pebble`, `tikv`, `memory` | Authoritative metadata backend. |
@@ -55,7 +55,7 @@ namros-gateway \
 | `-tikv-pd-endpoints` | `host:2379` | Comma-separated PD endpoints when `-metadata-backend tikv` is used. |
 | `-tikv-keyspace` | `namros` | TiKV keyspace name or v1 key prefix fallback. |
 | `-storage-backend` | `local`, `sbs-physical`, `sbs-cluster` | Payload segment backend. Production deployments use `sbs-cluster` with an SBS volume-pool id. |
-| `-sbs-service-endpoint` | `sbs-service:9443` | SBS service gRPC endpoint for SBS-backed storage. Environment: `NAMROS_SBS_SERVICE_ENDPOINT`. The legacy `-sbs-admin-endpoint` and `NAMROS_SBS_ADMIN_ENDPOINT` aliases are deprecated. |
+| `-sbs-service-endpoint` | `sbs-service:9443` | SBS service gRPC endpoint for SBS-backed storage. Environment: `NAMROS_SBS_SERVICE_ENDPOINT`. |
 | `-sbs-data-endpoint` | `sbs-data:9460` | SBS data gRPC endpoint for chunk or shard IO. |
 | `-sbs-volume-id` | `18a00001` | SBS volume id for `sbs-physical` or `sbs-ec` storage. |
 | `-sbs-volume-pool-id` | `standard-repl` | Metadata registry volume pool id used by production SBS-backed storage. |
@@ -85,7 +85,7 @@ Most metadata-backed admin commands accept the same backend selection flags. Use
 | --- | --- | --- |
 | `status` | Summarize metadata health, recent operation counters, and production readiness posture. | `namros-admin status -metadata-backend tikv -tikv-pd-endpoints host:2379 -deployment-profile production -storage-backend sbs-cluster -sbs-volume-pool-id standard-repl -sbs-writer-group-id object-writers -sbs-session-id gw-a-boot-1 -sbs-volume-epoch 1 -coordination-backend etcd -etcd-endpoints host:2379 -gc-candidate-queue metadata` |
 | `metadata-scale-budget` | Estimate metadata value and transaction size for multipart objects, protected refs, and GC candidates. | `namros-admin metadata-scale-budget -part-count 10000` |
-| `volume-pool-put` | Write SBS volume-pool metadata used by SBS-backed gateways. | `namros-admin volume-pool-put -pool-id replicated-rf3 -member volume_id=18a00001,data_endpoint=sbs-data-a:9460,state=active` |
+| `volume-pool-put` | Write SBS volume-pool metadata used by SBS-backed gateways. | `namros-admin volume-pool-put -pool-id replicated-rf3 -member volume_id=18a00001,service_endpoint=sbs-service-a:9443,data_endpoint=sbs-data-a:9460,state=active` |
 | `bucket-quota-put` | Set Community bucket max-object-size quota. | `namros-admin bucket-quota-put -bucket photos -max-object-size-bytes 1073741824` |
 | `bucket-quota-get` | Read bucket max-object-size quota. | `namros-admin bucket-quota-get -bucket photos` |
 | `bucket-quota-delete` | Remove bucket max-object-size quota. | `namros-admin bucket-quota-delete -bucket photos` |
@@ -100,6 +100,8 @@ Most metadata-backed admin commands accept the same backend selection flags. Use
 | `iam-principal-inspect` | Render the normalized IAM principal built from CLI flags. | `namros-admin iam-principal-inspect -tenant-id root -access-key-id namros -root` |
 | `iam-policy-simulate` | Evaluate an inline or file-based S3/IAM policy for a principal/action/resource tuple. | `namros-admin iam-policy-simulate -action s3:GetObject -resource arn:aws:s3:::photos/a.jpg -policy-file policy.json` |
 | `iam-mapping-validate` | Validate an external IAM mapping specification JSON file. | `namros-admin iam-mapping-validate -input mapping.json` |
+
+Use `service_endpoint` in static volume-pool member specifications. `namros-sbs-exporter` and `namros-ops-report` use the plural `-sbs-service-endpoints` flag.
 
 ## 4. Enterprise-gated Commands
 

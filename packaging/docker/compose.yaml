@@ -142,8 +142,8 @@ services:
       - --node-id=sbs-service-1
       - --metadata-backend=tikv
       - --tikv-pd-endpoints=pd:2379
-      - --grpc-listen=0.0.0.0:9443
-      - --http-listen=0.0.0.0:9081
+      - --sbs-service-listen=0.0.0.0:9443
+      - --sbs-service-http-listen=0.0.0.0:9081
       - --payload-root=/var/lib/namrbd/sbs-payload
     depends_on:
       - tikv
@@ -180,8 +180,8 @@ services:
       - --node-id=sbs-service-2
       - --metadata-backend=tikv
       - --tikv-pd-endpoints=pd:2379
-      - --grpc-listen=0.0.0.0:9443
-      - --http-listen=0.0.0.0:9081
+      - --sbs-service-listen=0.0.0.0:9443
+      - --sbs-service-http-listen=0.0.0.0:9081
       - --payload-root=/var/lib/namrbd/sbs-payload
     depends_on:
       - tikv
@@ -214,8 +214,8 @@ services:
         namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
     command:
       - --path=/var/lib/namrbd/sbs-data
-      - --grpc-listen=0.0.0.0:9444
-      - --http-listen=0.0.0.0:9082
+      - --sbs-data-listen=0.0.0.0:9444
+      - --sbs-data-http-listen=0.0.0.0:9082
     volumes:
       - namros-community-sbs-data-1:/var/lib/namrbd/sbs-data
     read_only: true
@@ -245,8 +245,8 @@ services:
         namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
     command:
       - --path=/var/lib/namrbd/sbs-data
-      - --grpc-listen=0.0.0.0:9444
-      - --http-listen=0.0.0.0:9082
+      - --sbs-data-listen=0.0.0.0:9444
+      - --sbs-data-http-listen=0.0.0.0:9082
     volumes:
       - namros-community-sbs-data-2:/var/lib/namrbd/sbs-data
     read_only: true
@@ -276,8 +276,8 @@ services:
         namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
     command:
       - --path=/var/lib/namrbd/sbs-data
-      - --grpc-listen=0.0.0.0:9444
-      - --http-listen=0.0.0.0:9082
+      - --sbs-data-listen=0.0.0.0:9444
+      - --sbs-data-http-listen=0.0.0.0:9082
     volumes:
       - namros-community-sbs-data-3:/var/lib/namrbd/sbs-data
     read_only: true
@@ -307,8 +307,8 @@ services:
         namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v0.1.0}
     command:
       - --path=/var/lib/namrbd/sbs-data
-      - --grpc-listen=0.0.0.0:9444
-      - --http-listen=0.0.0.0:9082
+      - --sbs-data-listen=0.0.0.0:9444
+      - --sbs-data-http-listen=0.0.0.0:9082
     volumes:
       - namros-community-sbs-data-4:/var/lib/namrbd/sbs-data
     read_only: true
@@ -326,12 +326,12 @@ services:
       retries: 24
       start_period: 5s
 
-  sbs-admin-lb:
+  sbs-service-lb:
     profiles:
       - community
     image: ${NAMROS_HAPROXY_IMAGE:-haproxy:3.0-alpine}
     volumes:
-      - ./haproxy/sbs-admin.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./haproxy/sbs-service.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     depends_on:
       sbs-service-1:
         condition: service_started
@@ -367,7 +367,7 @@ services:
     environment:
       NAMROS_COMMUNITY_CLUSTER_ID: ${NAMROS_COMMUNITY_CLUSTER_ID:-namros-community}
       NAMROS_COMMUNITY_SBS_CLUSTER_ID: ${NAMROS_COMMUNITY_SBS_CLUSTER_ID:-namros-community-sbs}
-      NAMROS_COMMUNITY_SBS_ADMIN_ENDPOINT: sbs-admin-lb:9443
+      NAMROS_COMMUNITY_SBS_SERVICE_ENDPOINT: sbs-service-lb:9443
       NAMROS_COMMUNITY_SBS_VOLUME_ID: ${NAMROS_COMMUNITY_SBS_VOLUME_ID:-18a00001}
       NAMROS_COMMUNITY_SBS_VOLUME_IDS: ${NAMROS_COMMUNITY_SBS_VOLUME_IDS:-18a00001,18a00002}
       NAMROS_COMMUNITY_SBS_VOLUME_SIZE: ${NAMROS_COMMUNITY_SBS_VOLUME_SIZE:-64M}
@@ -376,7 +376,7 @@ services:
       NAMROS_COMMUNITY_SBS_ALLOCATION_PAGE_SIZE: ${NAMROS_COMMUNITY_SBS_ALLOCATION_PAGE_SIZE:-4M}
       NAMROS_COMMUNITY_SBS_REPLICATION_FACTOR: ${NAMROS_COMMUNITY_SBS_REPLICATION_FACTOR:-2}
     depends_on:
-      sbs-admin-lb:
+      sbs-service-lb:
         condition: service_started
       sbs-data-lb:
         condition: service_started
@@ -410,7 +410,7 @@ services:
       NAMROS_COMMUNITY_SBS_VOLUME_IDS: ${NAMROS_COMMUNITY_SBS_VOLUME_IDS:-18a00001,18a00002}
       NAMROS_COMMUNITY_SBS_VOLUME_POOL_ID: ${NAMROS_COMMUNITY_SBS_VOLUME_POOL_ID:-object-pool}
       NAMROS_COMMUNITY_SBS_VOLUME_POOL_GENERATION: ${NAMROS_COMMUNITY_SBS_VOLUME_POOL_GENERATION:-0}
-      NAMROS_COMMUNITY_SBS_ADMIN_ENDPOINT: sbs-admin-lb:9443
+      NAMROS_COMMUNITY_SBS_SERVICE_ENDPOINT: sbs-service-lb:9443
       NAMROS_COMMUNITY_SBS_DATA_ENDPOINT: ${NAMROS_COMMUNITY_SBS_DATA_ENDPOINT:-sbs-data-1:9444}
       NAMROS_COMMUNITY_SBS_DATA_ENDPOINTS: ${NAMROS_COMMUNITY_SBS_DATA_ENDPOINTS:-sbs-data-1:9444,sbs-data-2:9444}
       NAMROS_COMMUNITY_SBS_CHUNK_SIZE_BYTES: ${NAMROS_COMMUNITY_SBS_CHUNK_SIZE_BYTES:-1048576}
@@ -451,7 +451,7 @@ services:
       NAMROS_TIKV_PD_ENDPOINTS: pd:2379
       NAMROS_STORAGE_BACKEND: sbs-cluster
       NAMROS_GC_CANDIDATE_QUEUE: metadata
-      NAMROS_SBS_SERVICE_ENDPOINT: sbs-admin-lb:9443
+      NAMROS_SBS_SERVICE_ENDPOINT: sbs-service-lb:9443
       NAMROS_SBS_DATA_ENDPOINT: ${NAMROS_COMMUNITY_SBS_DATA_ENDPOINT:-sbs-data-1:9444}
       NAMROS_SBS_VOLUME_ID: ${NAMROS_COMMUNITY_SBS_VOLUME_ID:-18a00001}
       NAMROS_SBS_VOLUME_POOL_ID: ${NAMROS_COMMUNITY_SBS_VOLUME_POOL_ID:-object-pool}
@@ -476,7 +476,7 @@ services:
         condition: service_started
       tikv:
         condition: service_started
-      sbs-admin-lb:
+      sbs-service-lb:
         condition: service_started
       sbs-data-lb:
         condition: service_started
@@ -518,7 +518,7 @@ services:
       NAMROS_TIKV_PD_ENDPOINTS: pd:2379
       NAMROS_STORAGE_BACKEND: sbs-cluster
       NAMROS_GC_CANDIDATE_QUEUE: metadata
-      NAMROS_SBS_SERVICE_ENDPOINT: sbs-admin-lb:9443
+      NAMROS_SBS_SERVICE_ENDPOINT: sbs-service-lb:9443
       NAMROS_SBS_DATA_ENDPOINT: ${NAMROS_COMMUNITY_SBS_DATA_ENDPOINT:-sbs-data-1:9444}
       NAMROS_SBS_VOLUME_ID: ${NAMROS_COMMUNITY_SBS_VOLUME_ID:-18a00001}
       NAMROS_SBS_VOLUME_POOL_ID: ${NAMROS_COMMUNITY_SBS_VOLUME_POOL_ID:-object-pool}
@@ -543,7 +543,7 @@ services:
         condition: service_started
       tikv:
         condition: service_started
-      sbs-admin-lb:
+      sbs-service-lb:
         condition: service_started
       sbs-data-lb:
         condition: service_started

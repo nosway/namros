@@ -188,7 +188,7 @@ wait_all_http_list() {
 
 cluster_id="${NAMROS_COMMUNITY_CLUSTER_ID:-namros-community}"
 sbs_cluster_id="${NAMROS_COMMUNITY_SBS_CLUSTER_ID:-namros-community-sbs}"
-admin_endpoint="${NAMROS_COMMUNITY_SBS_ADMIN_ENDPOINT:-sbs-admin-lb:9443}"
+service_endpoint="${NAMROS_COMMUNITY_SBS_SERVICE_ENDPOINT:-sbs-service-lb:9443}"
 volume_id="${NAMROS_COMMUNITY_SBS_VOLUME_ID:-18a00001}"
 volume_ids="${NAMROS_COMMUNITY_SBS_VOLUME_IDS:-}"
 volume_size="${NAMROS_COMMUNITY_SBS_VOLUME_SIZE:-64M}"
@@ -199,7 +199,7 @@ replication_factor="${NAMROS_COMMUNITY_SBS_REPLICATION_FACTOR:-2}"
 timeout="${NAMROS_COMMUNITY_SBS_TIMEOUT:-20s}"
 sbs_service_1_ready_url="${NAMROS_COMMUNITY_SBS_SERVICE_1_READY_URL:-http://sbs-service-1:9081/readyz}"
 sbs_service_2_ready_url="${NAMROS_COMMUNITY_SBS_SERVICE_2_READY_URL:-http://sbs-service-2:9081/readyz}"
-sbs_admin_lb_settle_seconds="${NAMROS_COMMUNITY_SBS_ADMIN_LB_SETTLE_SECONDS:-5}"
+sbs_service_lb_settle_seconds="${NAMROS_COMMUNITY_SBS_SERVICE_LB_SETTLE_SECONDS:-5}"
 sbs_data_1_ready_url="${NAMROS_COMMUNITY_SBS_DATA_1_READY_URL:-http://sbs-data-1:9082/readyz}"
 sbs_data_2_ready_url="${NAMROS_COMMUNITY_SBS_DATA_2_READY_URL:-http://sbs-data-2:9082/readyz}"
 sbs_data_3_ready_url="${NAMROS_COMMUNITY_SBS_DATA_3_READY_URL:-http://sbs-data-3:9082/readyz}"
@@ -212,10 +212,10 @@ sbs_data_1_grpc_endpoint="${NAMROS_COMMUNITY_SBS_DATA_1_GRPC_ENDPOINT:-sbs-data-
 sbs_data_2_grpc_endpoint="${NAMROS_COMMUNITY_SBS_DATA_2_GRPC_ENDPOINT:-sbs-data-2:9444}"
 sbs_data_3_grpc_endpoint="${NAMROS_COMMUNITY_SBS_DATA_3_GRPC_ENDPOINT:-sbs-data-3:9444}"
 sbs_data_4_grpc_endpoint="${NAMROS_COMMUNITY_SBS_DATA_4_GRPC_ENDPOINT:-sbs-data-4:9444}"
-sbs_data_1_admin_http_endpoint="${NAMROS_COMMUNITY_SBS_DATA_1_ADMIN_HTTP_ENDPOINT:-http://sbs-data-1:9082}"
-sbs_data_2_admin_http_endpoint="${NAMROS_COMMUNITY_SBS_DATA_2_ADMIN_HTTP_ENDPOINT:-http://sbs-data-2:9082}"
-sbs_data_3_admin_http_endpoint="${NAMROS_COMMUNITY_SBS_DATA_3_ADMIN_HTTP_ENDPOINT:-http://sbs-data-3:9082}"
-sbs_data_4_admin_http_endpoint="${NAMROS_COMMUNITY_SBS_DATA_4_ADMIN_HTTP_ENDPOINT:-http://sbs-data-4:9082}"
+sbs_data_1_service_http_endpoint="${NAMROS_COMMUNITY_SBS_DATA_1_SERVICE_HTTP_ENDPOINT:-http://sbs-data-1:9082}"
+sbs_data_2_service_http_endpoint="${NAMROS_COMMUNITY_SBS_DATA_2_SERVICE_HTTP_ENDPOINT:-http://sbs-data-2:9082}"
+sbs_data_3_service_http_endpoint="${NAMROS_COMMUNITY_SBS_DATA_3_SERVICE_HTTP_ENDPOINT:-http://sbs-data-3:9082}"
+sbs_data_4_service_http_endpoint="${NAMROS_COMMUNITY_SBS_DATA_4_SERVICE_HTTP_ENDPOINT:-http://sbs-data-4:9082}"
 sbs_data_1_zone="${NAMROS_COMMUNITY_SBS_DATA_1_ZONE:-zone-a}"
 sbs_data_2_zone="${NAMROS_COMMUNITY_SBS_DATA_2_ZONE:-zone-a}"
 sbs_data_3_zone="${NAMROS_COMMUNITY_SBS_DATA_3_ZONE:-zone-b}"
@@ -224,7 +224,7 @@ sbs_service_ready_urls="${NAMROS_COMMUNITY_SBS_SERVICE_READY_URLS:-}"
 sbs_data_ready_urls="${NAMROS_COMMUNITY_SBS_DATA_READY_URLS:-}"
 sbs_data_node_ids="${NAMROS_COMMUNITY_SBS_DATA_NODE_IDS:-}"
 sbs_data_grpc_endpoints="${NAMROS_COMMUNITY_SBS_DATA_GRPC_ENDPOINTS:-}"
-sbs_data_admin_http_endpoints="${NAMROS_COMMUNITY_SBS_DATA_ADMIN_HTTP_ENDPOINTS:-}"
+sbs_data_service_http_endpoints="${NAMROS_COMMUNITY_SBS_DATA_SERVICE_HTTP_ENDPOINTS:-}"
 sbs_data_zones="${NAMROS_COMMUNITY_SBS_DATA_ZONES:-}"
 volume_size_bytes="$(binary_size_bytes "$volume_size" volume_size)"
 block_size_bytes="$(binary_size_bytes "$block_size" block_size)"
@@ -243,30 +243,30 @@ fi
 if [ -z "$sbs_data_grpc_endpoints" ]; then
 	sbs_data_grpc_endpoints="$sbs_data_1_grpc_endpoint,$sbs_data_2_grpc_endpoint,$sbs_data_3_grpc_endpoint,$sbs_data_4_grpc_endpoint"
 fi
-if [ -z "$sbs_data_admin_http_endpoints" ]; then
-	sbs_data_admin_http_endpoints="$sbs_data_1_admin_http_endpoint,$sbs_data_2_admin_http_endpoint,$sbs_data_3_admin_http_endpoint,$sbs_data_4_admin_http_endpoint"
+if [ -z "$sbs_data_service_http_endpoints" ]; then
+	sbs_data_service_http_endpoints="$sbs_data_1_service_http_endpoint,$sbs_data_2_service_http_endpoint,$sbs_data_3_service_http_endpoint,$sbs_data_4_service_http_endpoint"
 fi
 if [ -z "$sbs_data_zones" ]; then
 	sbs_data_zones="$sbs_data_1_zone,$sbs_data_2_zone,$sbs_data_3_zone,$sbs_data_4_zone"
 fi
 
 wait_any_http_list "$sbs_service_ready_urls" sbs-service
-case "$sbs_admin_lb_settle_seconds" in
+case "$sbs_service_lb_settle_seconds" in
 	''|*[!0-9]*)
-		log "invalid NAMROS_COMMUNITY_SBS_ADMIN_LB_SETTLE_SECONDS=$sbs_admin_lb_settle_seconds"
+		log "invalid NAMROS_COMMUNITY_SBS_SERVICE_LB_SETTLE_SECONDS=$sbs_service_lb_settle_seconds"
 		exit 2
 		;;
 	0)
 		;;
 	*)
-		log "allow SBS admin load balancer health checks to converge: ${sbs_admin_lb_settle_seconds}s"
-		sleep "$sbs_admin_lb_settle_seconds"
+		log "allow SBS service load balancer health checks to converge: ${sbs_service_lb_settle_seconds}s"
+		sleep "$sbs_service_lb_settle_seconds"
 		;;
 esac
 wait_all_http_list "$sbs_data_ready_urls" sbs-data
 
 if sbsctl_run cluster status \
-	--admin-endpoint "$admin_endpoint" \
+	--sbs-service-endpoint "$service_endpoint" \
 	--cluster-id "$cluster_id" \
 	--sbs-cluster-id "$sbs_cluster_id" \
 	--timeout "$timeout" >/dev/null 2>&1; then
@@ -274,7 +274,7 @@ if sbsctl_run cluster status \
 else
 	log "initialize cluster: $cluster_id/$sbs_cluster_id"
 	sbsctl_run cluster init \
-		--admin-endpoint "$admin_endpoint" \
+		--sbs-service-endpoint "$service_endpoint" \
 		--cluster-id "$cluster_id" \
 		--sbs-cluster-id "$sbs_cluster_id" \
 		--actor container-bootstrap \
@@ -285,37 +285,37 @@ fi
 join_node() {
 	node_id="$1"
 	grpc_endpoint="$2"
-	admin_http="$3"
+	service_http="$3"
 	zone="$4"
 
 	status_json=""
 	if status_json="$(sbsctl_run node status \
-		--admin-endpoint "$admin_endpoint" \
+		--sbs-service-endpoint "$service_endpoint" \
 		--cluster-id "$cluster_id" \
 		--sbs-cluster-id "$sbs_cluster_id" \
 		--node-id "$node_id" \
 		--output json \
 		--timeout "$timeout" 2>/dev/null)"; then
 		current_grpc="$(printf '%s\n' "$status_json" | jq -r '.node.grpc_endpoint // ""')"
-		current_admin_http="$(printf '%s\n' "$status_json" | jq -r '.node.admin_http_endpoint // ""')"
+		current_service_http="$(printf '%s\n' "$status_json" | jq -r '.node.admin_http_endpoint // ""')"
 		current_zone="$(printf '%s\n' "$status_json" | jq -r '.node.zone // ""')"
 		if [ "$current_grpc" = "$grpc_endpoint" ] \
-			&& [ "$current_admin_http" = "$admin_http" ] \
+			&& [ "$current_service_http" = "$service_http" ] \
 			&& [ "$current_zone" = "$zone" ]; then
 			log "node already joined: $node_id"
 			return 0
 		fi
-		log "node metadata mismatch: $node_id grpc=${current_grpc:-unset}->${grpc_endpoint} admin_http=${current_admin_http:-unset}->${admin_http} zone=${current_zone:-unset}->${zone}; rejoining"
+		log "node metadata mismatch: $node_id grpc=${current_grpc:-unset}->${grpc_endpoint} service_http=${current_service_http:-unset}->${service_http} zone=${current_zone:-unset}->${zone}; rejoining"
 	fi
 
 	log "join node: $node_id grpc=$grpc_endpoint zone=$zone"
 	sbsctl_run node join \
-		--admin-endpoint "$admin_endpoint" \
+		--sbs-service-endpoint "$service_endpoint" \
 		--cluster-id "$cluster_id" \
 		--sbs-cluster-id "$sbs_cluster_id" \
 		--node-id "$node_id" \
 		--grpc-endpoint "$grpc_endpoint" \
-		--admin-http-endpoint "$admin_http" \
+		--sbs-service-http-endpoint "$service_http" \
 		--zone "$zone" \
 		--auto-create-zone \
 		--actor container-bootstrap \
@@ -336,9 +336,9 @@ join_data_nodes() {
 		node_id="$(trim_value "$raw_node_id")"
 		if [ -n "$node_id" ]; then
 			grpc_endpoint="$(csv_value_at "$sbs_data_grpc_endpoints" "$index" "$node_id:9444")"
-			admin_http="$(csv_value_at "$sbs_data_admin_http_endpoints" "$index" "http://$node_id:9082")"
+			service_http="$(csv_value_at "$sbs_data_service_http_endpoints" "$index" "http://$node_id:9082")"
 			zone="$(csv_value_at "$sbs_data_zones" "$index" zone-a)"
-			join_node "$node_id" "$grpc_endpoint" "$admin_http" "$zone"
+			join_node "$node_id" "$grpc_endpoint" "$service_http" "$zone"
 			index=$((index + 1))
 		fi
 		IFS=,
@@ -351,7 +351,7 @@ join_data_nodes
 create_volume() {
 	volume_id="$1"
 	if sbsctl_run volume status \
-		--admin-endpoint "$admin_endpoint" \
+		--sbs-service-endpoint "$service_endpoint" \
 		--cluster-id "$cluster_id" \
 		--sbs-cluster-id "$sbs_cluster_id" \
 		--volume-id "$volume_id" \
@@ -362,7 +362,7 @@ create_volume() {
 
 	log "create replicated volume: $volume_id"
 	sbsctl_run volume create \
-		--admin-endpoint "$admin_endpoint" \
+		--sbs-service-endpoint "$service_endpoint" \
 		--cluster-id "$cluster_id" \
 		--sbs-cluster-id "$sbs_cluster_id" \
 		--volume-id "$volume_id" \
@@ -380,8 +380,8 @@ create_volume() {
 materialize_volume_on_node() {
 	volume_id="$1"
 	node_id="$2"
-	admin_http="$3"
-	url="${admin_http%/}/debug/materialize-volume?volume_id=$volume_id&size_bytes=$volume_size_bytes&block_size=$block_size_bytes&prefix=sbs-$volume_id&allocation_chunk_size_bytes=$allocation_chunk_size_bytes&allocation_page_bytes=$allocation_page_size_bytes"
+	service_http="$3"
+	url="${service_http%/}/debug/materialize-volume?volume_id=$volume_id&size_bytes=$volume_size_bytes&block_size=$block_size_bytes&prefix=sbs-$volume_id&allocation_chunk_size_bytes=$allocation_chunk_size_bytes&allocation_page_bytes=$allocation_page_size_bytes"
 	log "materialize volume on $node_id: $volume_id"
 	curl -fsS -X POST "$url" >/dev/null
 }
@@ -395,8 +395,8 @@ materialize_volume() {
 		IFS="$old_ifs"
 		node_id="$(trim_value "$raw_node_id")"
 		if [ -n "$node_id" ]; then
-			admin_http="$(csv_value_at "$sbs_data_admin_http_endpoints" "$index" "http://$node_id:9082")"
-			materialize_volume_on_node "$volume_id" "$node_id" "$admin_http"
+			service_http="$(csv_value_at "$sbs_data_service_http_endpoints" "$index" "http://$node_id:9082")"
+			materialize_volume_on_node "$volume_id" "$node_id" "$service_http"
 			index=$((index + 1))
 		fi
 		IFS=,

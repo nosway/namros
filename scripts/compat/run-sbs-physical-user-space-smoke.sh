@@ -30,18 +30,14 @@ NAMROS_SBS_ATTACHMENT_ID="${NAMROS_SBS_ATTACHMENT_ID:-att-$NAMROS_SBS_GATEWAY_ID
 NAMROS_SBS_GENERATION="${NAMROS_SBS_GENERATION:-}"
 NAMROS_SBS_VERIFY_READBACK="${NAMROS_SBS_VERIFY_READBACK:-true}"
 NAMROS_GATEWAY_LOG="${NAMROS_GATEWAY_LOG:-}"
-if [ -n "${NAMROS_SBS_ADMIN_ENDPOINT:-}" ]; then
-	log "WARN: NAMROS_SBS_ADMIN_ENDPOINT is deprecated; use NAMROS_SBS_SERVICE_ENDPOINT instead"
-fi
-NAMROS_SBS_SERVICE_ENDPOINT="${NAMROS_SBS_SERVICE_ENDPOINT:-${NAMROS_SBS_ADMIN_ENDPOINT:-${NAMROS_18NODE_SBS_ADMIN_ENDPOINT:-}}}"
-unset NAMROS_SBS_ADMIN_ENDPOINT
+NAMROS_SBS_SERVICE_ENDPOINT="${NAMROS_SBS_SERVICE_ENDPOINT:-${NAMROS_18NODE_SBS_SERVICE_ENDPOINT:-}}"
 NAMROS_SBS_DATA_ENDPOINT="${NAMROS_SBS_DATA_ENDPOINT:-${NAMROS_18NODE_SBS_DATA_ENDPOINT:-}}"
 
 require_cmd "$GO"
 require_cmd curl
 
 if [ -z "$NAMROS_SBS_SERVICE_ENDPOINT" ] && compat_should_use_18node_sbs; then
-	NAMROS_SBS_SERVICE_ENDPOINT="$(compat_resolve_18node_sbs_admin_endpoint)"
+	NAMROS_SBS_SERVICE_ENDPOINT="$(compat_resolve_18node_sbs_service_endpoint)"
 fi
 
 require_env() {
@@ -95,7 +91,7 @@ dump_gateway_log() {
 gateway_bin="$tmpdir/namros-gateway"
 gateway_args=(
 	"$gateway_bin"
-	-listen "$NAMROS_GATEWAY_LISTEN"
+	-http-listen "$NAMROS_GATEWAY_LISTEN"
 	-region "$NAMROS_REGION"
 	-metadata-backend "$NAMROS_METADATA_BACKEND"
 	-storage-backend sbs-physical

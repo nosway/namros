@@ -106,31 +106,28 @@ func TestMetadataScaleBudgetCommand(t *testing.T) {
 	}
 }
 
-func TestMetadataRestoreValidateSBSServiceEndpointFlags(t *testing.T) {
-	for _, tc := range []struct {
-		name        string
-		flagName    string
-		wantWarning bool
-	}{
-		{name: "canonical", flagName: "--sbs-service-endpoint"},
-		{name: "deprecated alias", flagName: "--sbs-admin-endpoint", wantWarning: true},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			var stdout bytes.Buffer
-			var stderr bytes.Buffer
-			err := (testAdminCommand(&stdout, &stderr)).run(context.Background(), []string{
-				"metadata-restore-validate",
-				tc.flagName, "sbs.example:9443",
-				"-limit", "0",
-			})
-			if err == nil || !strings.Contains(err.Error(), "limit must be positive") {
-				t.Fatalf("run() error = %v, want limit validation error", err)
-			}
-			gotWarning := strings.Contains(stderr.String(), "--sbs-admin-endpoint is deprecated; use --sbs-service-endpoint instead")
-			if gotWarning != tc.wantWarning {
-				t.Fatalf("stderr = %q, deprecation warning = %t, want %t", stderr.String(), gotWarning, tc.wantWarning)
-			}
-		})
+func TestMetadataRestoreValidateSBSServiceEndpointFlag(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	err := (testAdminCommand(&stdout, &stderr)).run(context.Background(), []string{
+		"metadata-restore-validate",
+		"--sbs-service-endpoint", "sbs.example:9443",
+		"-limit", "0",
+	})
+	if err == nil || !strings.Contains(err.Error(), "limit must be positive") {
+		t.Fatalf("run() error = %v, want limit validation error", err)
+	}
+}
+
+func TestMetadataRestoreValidateRejectsSBSAdminEndpointFlag(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	err := (testAdminCommand(&stdout, &stderr)).run(context.Background(), []string{
+		"metadata-restore-validate",
+		"--sbs-admin-endpoint", "sbs.example:9443",
+	})
+	if err == nil || !strings.Contains(err.Error(), "sbs-admin-endpoint") {
+		t.Fatalf("run() error = %v, want removed flag error", err)
 	}
 }
 
@@ -800,8 +797,8 @@ func TestVolumePoolPutCommand(t *testing.T) {
 		"-generation", "5",
 		"-durability-class", "replicated",
 		"-storage-class", "STANDARD,ARCHIVE",
-		"-member", "volume_id=18a00001,admin_endpoint=sbs-admin-a:9443,data_endpoint=sbs-data-a:9460,state=active,weight=2,available_bytes=1048576,used_percent=25,high_watermark_percent=90,last_observed_at=2026-08-10T03:30:00Z",
-		"-member", "volume_id=18a00002,admin_endpoint=sbs-admin-a:9443,data_endpoint=sbs-data-a:9460,readonly=true",
+		"-member", "volume_id=18a00001,service_endpoint=sbs-service-a:9443,data_endpoint=sbs-data-a:9460,state=active,weight=2,available_bytes=1048576,used_percent=25,high_watermark_percent=90,last_observed_at=2026-08-10T03:30:00Z",
+		"-member", "volume_id=18a00002,service_endpoint=sbs-service-a:9443,data_endpoint=sbs-data-a:9460,readonly=true",
 	})
 	if err != nil {
 		t.Fatalf("run() error = %v stderr=%s", err, stderr.String())
@@ -815,6 +812,9 @@ func TestVolumePoolPutCommand(t *testing.T) {
 	}
 	if body.Members[0].State != "active" || body.Members[0].Weight != 2 || body.Members[1].State != "read_only" {
 		t.Fatalf("members = %+v", body.Members)
+	}
+	if body.Members[0].AdminEndpoint != "sbs-service-a:9443" || body.Members[1].AdminEndpoint != "sbs-service-a:9443" {
+		t.Fatalf("member service endpoints = %+v", body.Members)
 	}
 	if body.Members[0].LastObservedAt != "2026-08-10T03:30:00Z" {
 		t.Fatalf("member last observed = %q", body.Members[0].LastObservedAt)

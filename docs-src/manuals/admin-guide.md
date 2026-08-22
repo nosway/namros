@@ -25,13 +25,13 @@ Day-2 Operations
 | Local Community | gateway, Pebble, local segment path | development and user-space compatibility |
 | Compatibility Lab | gateway plus AWS CLI/mc/rclone/s3fs clients | external client validation |
 | Active-active Community | multiple gateways, TiKV, etcd, shared storage | availability and stateless gateway validation |
-| SBS EC Enterprise | TiKV, SBS admin/data, EC shard routes, gateway | EC storage class verification |
+| SBS EC Enterprise | TiKV, SBS service/data, EC shard routes, gateway | EC storage class verification |
 
 ## Gateway Configuration
 
 ```sh
 go run ./cmd/namros-gateway \
-  -listen 127.0.0.1:9000 \
+  -http-listen 127.0.0.1:9000 \
   -region us-east-1 \
   -metadata-backend pebble \
   -metadata-path .namros/meta \

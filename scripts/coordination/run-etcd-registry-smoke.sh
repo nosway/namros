@@ -66,7 +66,7 @@ etcdctl --endpoints "$NAMROS_ETCD_ENDPOINTS" del "$registry_key" >/dev/null
 
 log "start gateway with etcd registry: endpoint=$NAMROS_ETCD_ENDPOINTS key=$registry_key ttl=$NAMROS_GATEWAY_LEASE_TTL"
 "$gateway_bin" \
-	-listen "$NAMROS_GATEWAY_LISTEN" \
+	-http-listen "$NAMROS_GATEWAY_LISTEN" \
 	-region "$NAMROS_REGION" \
 	-metadata-backend memory \
 	-storage-backend memory \

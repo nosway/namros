@@ -45,7 +45,7 @@ make smoke-active-active
 make compat-sbs-cluster-ec
 ```
 
-`smoke-active-active` validates cross-gateway read/write and failover behavior. `compat-sbs-cluster-ec` additionally requires SBS admin/data endpoints and a materialized SBS volume with compatible shard routes.
+`smoke-active-active` validates cross-gateway read/write and failover behavior. `compat-sbs-cluster-ec` additionally requires SBS service/data endpoints and a materialized SBS volume with compatible shard routes.
 
 ## Troubleshooting
 

@@ -1,7 +1,7 @@
 NAMROS Community Source Export
 schema_version: 1
-generated_at: 2026-08-20T06:48:55Z
-git_commit: 666e5c8
+generated_at: 2026-08-22T10:39:47Z
+git_commit: ade7ce8
 git_dirty: false
 edition_identity: community
 allowlist_manifest: scripts/release/community-source-allowlist.txt
@@ -79,7 +79,7 @@ Included allowlist entries:
 Excluded tracked path count: 31
 
 Overlay paths:
+- Makefile
 - internal/dedupe/stub.go
 - internal/storage/sbs/enterprise_stub.go
-- Makefile
 - scripts/release/community-source-excludes.txt

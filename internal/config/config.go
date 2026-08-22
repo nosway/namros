@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nosway/namros/internal/cliflag"
 	"github.com/nosway/namros/internal/edition"
 )
 
@@ -32,8 +31,8 @@ const (
 	DefaultCoordinationBackend               = "none"
 	DefaultEtcdDialTimeout                   = 3 * time.Second
 	DefaultGatewayRegistryPrefix             = "/namros/gateways"
-	DefaultGatewayLeaseTTL                   = 10 * time.Second
-	DefaultGatewayHeartbeat                  = 3 * time.Second
+	DefaultGatewayLeaseTTL                   = 15 * time.Second
+	DefaultGatewayHeartbeat                  = 5 * time.Second
 	DefaultGatewayDataBudgetUnknownBytes     = 8 << 20
 	DefaultDedupeSchedulerInterval           = 5 * time.Minute
 	DefaultDedupeSchedulerLockTTL            = 30 * time.Minute
@@ -300,7 +299,7 @@ func parse(args []string, output io.Writer) (Config, error) {
 	}
 	fs := flag.NewFlagSet("namros-gateway", flag.ContinueOnError)
 	fs.SetOutput(output)
-	fs.StringVar(&cfg.ListenAddr, "listen", cfg.ListenAddr, "HTTP listen address")
+	fs.StringVar(&cfg.ListenAddr, "http-listen", cfg.ListenAddr, "HTTP listen address")
 	fs.StringVar(&cfg.DeploymentProfile, "deployment-profile", cfg.DeploymentProfile, "deployment profile: dev or production")
 	fs.BoolVar(&cfg.AllowUnsafeProductionShortcuts, "allow-unsafe-production-shortcuts", cfg.AllowUnsafeProductionShortcuts, "allow production profile to use development-only backends for lab validation")
 	fs.StringVar(&cfg.Region, "region", cfg.Region, "S3-compatible default region")
@@ -321,12 +320,12 @@ func parse(args []string, output io.Writer) (Config, error) {
 	fs.StringVar(&cfg.StorageBackend, "storage-backend", cfg.StorageBackend, "segment storage backend")
 	fs.StringVar(&cfg.StoragePath, "storage-path", cfg.StoragePath, "segment storage path for local or sbs-local backends")
 	fs.StringVar(&cfg.SBSStatePath, "sbs-state-path", cfg.SBSStatePath, "optional SBS adapter state path")
-	cliflag.StringVarWithDeprecatedAlias(fs, &cfg.SBSAdminEndpoint, "sbs-service-endpoint", cfg.SBSAdminEndpoint, "SBS service gRPC endpoint for sbs-physical chunk allocation", "sbs-admin-endpoint")
+	fs.StringVar(&cfg.SBSAdminEndpoint, "sbs-service-endpoint", cfg.SBSAdminEndpoint, "SBS service gRPC endpoint for sbs-physical chunk allocation")
 	fs.StringVar(&cfg.SBSDataEndpoint, "sbs-data-endpoint", cfg.SBSDataEndpoint, "SBS data gRPC endpoint for sbs-physical chunk IO or sbs-ec shard IO")
 	fs.StringVar(&cfg.SBSVolumeID, "sbs-volume-id", cfg.SBSVolumeID, "SBS volume id for sbs-physical or sbs-ec storage")
 	sbsVolumePool := ""
 	applyStringEnv(&sbsVolumePool, "NAMROS_SBS_VOLUME_POOL", "sbs-volume-pool", args)
-	fs.StringVar(&sbsVolumePool, "sbs-volume-pool", sbsVolumePool, "semicolon-separated SBS volume pool members; each member is volume_id=<id>,data_endpoint=<host:port>,attachment_id=<id>,writer_group_id=<id>,volume_epoch=<n>,state=<active|read_only|draining|degraded|full|offline>,weight=<n>,available_bytes=<n>,used_percent=<n>,high_watermark_percent=<n>,readonly=<bool>,shards=<id>|<id>")
+	fs.StringVar(&sbsVolumePool, "sbs-volume-pool", sbsVolumePool, "semicolon-separated SBS volume pool members; each member is volume_id=<id>,service_endpoint=<host:port>,data_endpoint=<host:port>,attachment_id=<id>,writer_group_id=<id>,volume_epoch=<n>,state=<active|read_only|draining|degraded|full|offline>,weight=<n>,available_bytes=<n>,used_percent=<n>,high_watermark_percent=<n>,readonly=<bool>,shards=<id>|<id>")
 	fs.StringVar(&cfg.SBSVolumePoolID, "sbs-volume-pool-id", cfg.SBSVolumePoolID, "metadata volume pool id to load for SBS-backed storage")
 	fs.DurationVar(&cfg.SBSVolumePoolRefreshInterval, "sbs-volume-pool-refresh-interval", cfg.SBSVolumePoolRefreshInterval, "metadata registry refresh interval for SBS volume pools; 0 disables runtime refresh")
 	fs.Uint64Var(&cfg.SBSChunkSizeBytes, "sbs-chunk-size-bytes", cfg.SBSChunkSizeBytes, "SBS physical allocation chunk size")
@@ -441,7 +440,7 @@ func parse(args []string, output io.Writer) (Config, error) {
 }
 
 func applyEnvironment(cfg *Config, args []string, output io.Writer) error {
-	applyStringEnv(&cfg.ListenAddr, "NAMROS_LISTEN", "listen", args)
+	applyStringEnv(&cfg.ListenAddr, "NAMROS_LISTEN", "http-listen", args)
 	applyStringEnv(&cfg.DeploymentProfile, "NAMROS_DEPLOYMENT_PROFILE", "deployment-profile", args)
 	if err := applyBoolEnv(&cfg.AllowUnsafeProductionShortcuts, "NAMROS_ALLOW_UNSAFE_PRODUCTION_SHORTCUTS", "allow-unsafe-production-shortcuts", args); err != nil {
 		return err
@@ -473,12 +472,11 @@ func applyEnvironment(cfg *Config, args []string, output io.Writer) error {
 	applyStringEnv(&cfg.StorageBackend, "NAMROS_STORAGE_BACKEND", "storage-backend", args)
 	applyStringEnv(&cfg.StoragePath, "NAMROS_STORAGE_PATH", "storage-path", args)
 	applyStringEnv(&cfg.SBSStatePath, "NAMROS_SBS_STATE_PATH", "sbs-state-path", args)
-	applyStringEnvWithDeprecatedAlias(
+	applyStringEnvWithDeprecatedEnvAlias(
 		&cfg.SBSAdminEndpoint,
 		"NAMROS_SBS_SERVICE_ENDPOINT",
 		"NAMROS_SBS_ADMIN_ENDPOINT",
 		"sbs-service-endpoint",
-		"sbs-admin-endpoint",
 		args,
 		output,
 	)
@@ -675,12 +673,12 @@ func applyStringEnv(dst *string, envName, flagName string, args []string) {
 	}
 }
 
-func applyStringEnvWithDeprecatedAlias(dst *string, envName, deprecatedEnvName, flagName, deprecatedFlagName string, args []string, output io.Writer) {
+func applyStringEnvWithDeprecatedEnvAlias(dst *string, envName, deprecatedEnvName, flagName string, args []string, output io.Writer) {
 	deprecatedValue, deprecatedSet := os.LookupEnv(deprecatedEnvName)
 	if deprecatedSet {
 		_, _ = fmt.Fprintf(output, "warning: %s is deprecated; use %s instead\n", deprecatedEnvName, envName)
 	}
-	if argHasFlag(args, flagName) || argHasFlag(args, deprecatedFlagName) {
+	if argHasFlag(args, flagName) {
 		return
 	}
 	if value, ok := os.LookupEnv(envName); ok {
@@ -972,7 +970,7 @@ func (c Config) Validate() error {
 			break
 		}
 		if strings.TrimSpace(c.SBSAdminEndpoint) == "" {
-			return errors.New("sbs admin endpoint is required for sbs-physical storage backend")
+			return errors.New("sbs service endpoint is required for sbs-physical storage backend")
 		}
 		if strings.TrimSpace(c.SBSDataEndpoint) == "" {
 			return errors.New("sbs data endpoint is required for sbs-physical storage backend")
@@ -1012,7 +1010,7 @@ func (c Config) Validate() error {
 			break
 		}
 		if strings.TrimSpace(c.SBSAdminEndpoint) == "" {
-			return errors.New("sbs admin endpoint is required for sbs-cluster storage backend")
+			return errors.New("sbs service endpoint is required for sbs-cluster storage backend")
 		}
 		if strings.TrimSpace(c.SBSDataEndpoint) == "" {
 			return errors.New("sbs data endpoint is required for sbs-cluster storage backend")
@@ -1313,7 +1311,7 @@ func ParseSBSVolumePoolSpec(raw string) ([]SBSVolumePoolMember, error) {
 			switch key {
 			case "volume_id", "volume":
 				member.VolumeID = value
-			case "admin_endpoint", "admin":
+			case "service_endpoint", "service", "admin_endpoint", "admin":
 				member.AdminEndpoint = value
 			case "data_endpoint", "data":
 				member.DataEndpoint = value
@@ -1414,7 +1412,7 @@ func validateSBSVolumePool(members []SBSVolumePoolMember, requireAdmin, requireD
 		}
 		seen[volumeID] = struct{}{}
 		if requireAdmin && strings.TrimSpace(member.AdminEndpoint) == "" && strings.TrimSpace(defaultAdmin) == "" {
-			return fmt.Errorf("sbs admin endpoint is required for volume pool member %q", volumeID)
+			return fmt.Errorf("sbs service endpoint is required for volume pool member %q", volumeID)
 		}
 		if requireData && strings.TrimSpace(member.DataEndpoint) == "" && strings.TrimSpace(defaultData) == "" {
 			return fmt.Errorf("sbs data endpoint is required for volume pool member %q", volumeID)

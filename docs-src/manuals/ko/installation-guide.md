@@ -168,7 +168,7 @@ SBS service 2개, SBS data node 5개, embedded TiKV 1개를 렌더합니다.
 
 | 플래그 | 일반 값 | 의미 |
 | --- | --- | --- |
-| `-listen` | `127.0.0.1:9000` | HTTP 수신 주소. |
+| `-http-listen` | `127.0.0.1:9000` | HTTP 수신 주소. |
 | `-deployment-profile` | `dev`, `production` | 검증 profile. Production은 명시적 lab override가 없으면 memory/Pebble/local/단일 volume 및 unfenced shared attachment shortcut을 거부합니다. |
 | `-region` | `us-east-1` | S3 호환 클라이언트가 사용하는 리전. |
 | `-metadata-backend` | `pebble` | 로컬 Community 실행의 정본 메타데이터 백엔드. |
@@ -221,14 +221,14 @@ namros-gateway \
 | --- | --- | --- |
 | etcd | 게이트웨이 레지스트리와 상태 임대 | [etcd HA 가이드](etcd-ha-cluster-install-operations-guide.md) |
 | TiKV/PD | 분산 정본 메타데이터 | [TiKV HA 가이드](tikv-ha-cluster-install-operations-guide.md) |
-| SBS admin/data | Community 복제 물리 스토리지, Enterprise EC 스토리지 | [컨테이너 배포](container-deployment-guide.md) |
+| SBS service/data | Community 복제 물리 스토리지, Enterprise EC 스토리지 | [컨테이너 배포](container-deployment-guide.md) |
 | KMS/컴플라이언스 서비스 | 키 상태와 증빙 워크플로 | [MCP 운영 가이드](mcp-operations-guide.md) |
 
 ## 설치 후 문제 해결
 
 | 신호 | 가능성 높은 원인 | 조치 |
 | --- | --- | --- |
-| 9000 포트가 이미 사용 중 | 기존 게이트웨이 또는 다른 서비스 | 프로세스를 중지하거나 다른 `-listen` 주소로 게이트웨이를 실행합니다. |
+| 9000 포트가 이미 사용 중 | 기존 게이트웨이 또는 다른 서비스 | 프로세스를 중지하거나 다른 `-http-listen` 주소로 게이트웨이를 실행합니다. |
 | AWS CLI 메타데이터 검증 실패 | 오래된 게이트웨이 바이너리 또는 메타데이터 동작 불일치 | 다시 빌드하고 게이트웨이를 재시작한 뒤 클라이언트 스모크를 재실행합니다. |
 | rclone 크기 불일치 | 페이로드 쓰기/읽기 경로 문제 | 임시 디렉터리를 보존하고 게이트웨이 로그와 오브젝트 HEAD를 점검합니다. |
 | s3fs 마운트 실패 | FUSE 권한 또는 Linux 패키지 누락 | Linux 호스트에서 실행하고 필요한 FUSE/xattr 패키지를 설치합니다. |
