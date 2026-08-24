@@ -1,5 +1,5 @@
-site_name: NAMROS Community
-site_description: NAMROS Community S3-compatible object storage documentation
+site_name: NAMROS
+site_description: Open-source S3-compatible object storage platform documentation
 site_url: https://nosway.github.io/namros/
 repo_url: https://github.com/nosway/namros
 docs_dir: docs-src
@@ -53,21 +53,24 @@ nav:
       - NAMROS Capacity Scaling & Maintenance Guide: manuals/capacity-scaling-maintenance-guide.md
       - NAMROS Community Container Deployment Guide: manuals/container-deployment-guide.md
       - etcd HA Installation & Operations Guide: manuals/etcd-ha-cluster-install-operations-guide.md
-      - NAMROS Event Notifications Guide: manuals/event-notification-guide.md
-      - NAMROS IAM Integration Guide: manuals/iam-integration-guide.md
       - NAMROS Installation Guide: manuals/installation-guide.md
-      - NAMROS Inventory & Batch Operations Guide: manuals/inventory-batch-operations-guide.md
-      - NAMROS KMS Encryption Guide: manuals/kms-encryption-guide.md
       - NAMROS MCP Operations Guide: manuals/mcp-operations-guide.md
       - NAMROS Performance/Chaos/Soak Guide: manuals/performance-chaos-soak-guide.md
       - NAMROS Quota and QoS Guide: manuals/quota-qos-guide.md
-      - NAMROS Replication & Disaster Recovery Guide: manuals/replication-disaster-recovery-guide.md
       - S3 Client Compatibility Guide: manuals/s3-client-compatibility-guide.md
       - S3 Object Browser Integration Guide: manuals/s3-object-browser-integration-guide.md
       - TiKV HA Installation & Operations Guide: manuals/tikv-ha-cluster-install-operations-guide.md
       - NAMROS Upgrade & Release Operations Guide: manuals/upgrade-release-operations-guide.md
       - NAMROS User Manual: manuals/user-manual.md
       - NAMROS Web Console & Monitoring Guide: manuals/web-console-monitoring-guide.md
+  - Advanced features:
+      - Development Status: manuals/advanced-features.md
+      - IAM Integration: manuals/iam-integration-guide.md
+      - KMS Encryption: manuals/kms-encryption-guide.md
+      - Replication & Disaster Recovery (planned): manuals/replication-disaster-recovery-guide.md
+      - Event Notifications (planned): manuals/event-notification-guide.md
+      - Inventory & Batch Operations (planned): manuals/inventory-batch-operations-guide.md
+      - Aggregate Quota & QoS (planned sections): manuals/quota-qos-guide.md
   - Architecture:
       - NAMROS Architecture Manual: manuals/architecture-manual/index.md
       - Reading Guide: manuals/architecture-manual/chapters/00-reading-guide.md
@@ -96,15 +99,10 @@ nav:
       - NAMROS 용량 확장 및 유지보수 가이드: manuals/ko/capacity-scaling-maintenance-guide.md
       - NAMROS Community 컨테이너 배포 가이드: manuals/ko/container-deployment-guide.md
       - etcd HA 설치 및 운영 가이드: manuals/ko/etcd-ha-cluster-install-operations-guide.md
-      - NAMROS 이벤트 알림 가이드: manuals/ko/event-notification-guide.md
-      - NAMROS IAM 연동 가이드: manuals/ko/iam-integration-guide.md
       - NAMROS 설치 가이드: manuals/ko/installation-guide.md
-      - NAMROS 인벤토리 및 배치 운영 가이드: manuals/ko/inventory-batch-operations-guide.md
-      - NAMROS KMS 암호화 가이드: manuals/ko/kms-encryption-guide.md
       - NAMROS MCP 운영 가이드: manuals/ko/mcp-operations-guide.md
       - NAMROS 성능/Chaos/Soak 가이드: manuals/ko/performance-chaos-soak-guide.md
       - NAMROS Quota/QoS 가이드: manuals/ko/quota-qos-guide.md
-      - NAMROS 복제 및 재해복구 가이드: manuals/ko/replication-disaster-recovery-guide.md
       - S3 클라이언트 호환성 가이드: manuals/ko/s3-client-compatibility-guide.md
       - S3 오브젝트 브라우저 연동 가이드: manuals/ko/s3-object-browser-integration-guide.md
       - TiKV HA 설치 및 운영 가이드: manuals/ko/tikv-ha-cluster-install-operations-guide.md
@@ -112,3 +110,11 @@ nav:
       - NAMROS 사용자 매뉴얼: manuals/ko/user-manual.md
       - NAMROS 웹 콘솔 및 모니터링 가이드: manuals/ko/web-console-monitoring-guide.md
       - NAMROS 아키텍처 매뉴얼: manuals/architecture-manual/ko/index.md
+      - 고급 기능:
+          - 개발 상태: manuals/ko/advanced-features.md
+          - IAM 연동: manuals/ko/iam-integration-guide.md
+          - KMS 암호화: manuals/ko/kms-encryption-guide.md
+          - 복제 및 재해복구 (계획): manuals/ko/replication-disaster-recovery-guide.md
+          - 이벤트 알림 (계획): manuals/ko/event-notification-guide.md
+          - 인벤토리 및 배치 운영 (계획): manuals/ko/inventory-batch-operations-guide.md
+          - Aggregate Quota/QoS (계획 섹션): manuals/ko/quota-qos-guide.md

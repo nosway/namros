@@ -1,16 +1,22 @@
-데이터 보호 <span class="badge enterprise">Enterprise edition only</span>
+데이터 보호 <span class="badge planned">계획/명세 단계</span>
 
 # NAMROS 복제 및 재해복구 가이드
 
 <div class="warning" markdown="1">
 
-**Enterprise edition only.** 이 페이지는 Enterprise 전용 cross-region replication과 disaster recovery 계약을 설명합니다. Community edition 동작은 local HA와 replication, failover, failback 표면을 분리해 설명하기 위해서만 포함합니다.
+**Enterprise 계획/명세 단계.** 이 페이지는 목표 cross-region replication과
+DR 계약을 설명합니다. 일반 공급 replication worker, promotion workflow 또는
+failback 자동화를 의미하지 않습니다. Community 동작은 현재 local HA와 이
+roadmap을 구분하기 위해 포함합니다.
 
 </div>
 
 <div class="summary" markdown="1">
 
-이 가이드는 리전 간(Cross-Region) 데이터 복제와 지리적 분산 재해 복구(DR)에 대한 Enterprise 계약과 운영 모델을 정의합니다. Community active-active 게이트웨이는 단일 로컬 클러스터 안의 가용성을 제공하며, 리전 간 복제, failover 승격, failback 자동화는 Enterprise 또는 roadmap 영역으로 공개 Community 관리자 명령에 노출되지 않습니다.
+이 가이드는 리전 간 데이터 복제와 지리적 분산 DR에 대한 계획된
+Enterprise 계약을 정의합니다. Community active-active gateway는 단일 local
+cluster 가용성을 제공하며 replication worker, failover promotion과 failback
+automation은 roadmap으로 남아 있습니다.
 
 </div>
 
@@ -19,8 +25,8 @@
 | 영역 | 현재 공개 Community 동작 | Enterprise/spec 상태 |
 | --- | --- | --- |
 | 로컬 HA | Active-active 게이트웨이가 하나의 클러스터 안에서 TiKV 메타데이터, etcd coordination, shared/SBS-backed storage를 공유할 수 있습니다. | Enterprise topology의 기반 요소로 동일하게 활용할 수 있습니다. |
-| 리전 간 복제 | 공개 Community에는 `namros-admin replication` 명령이나 replication worker가 없습니다. | 버킷, 사이트, 배치 복제를 위한 Enterprise 계약입니다. |
-| DR failover/failback | 공개 Community CLI 밖의 운영자 runbook으로 처리합니다. | 승인된 Enterprise 운영, DNS/load-balancer 전환, audit evidence의 목표 동작입니다. |
+| 리전 간 복제 | 공개 Community에는 `namros-admin replication` 명령이나 replication worker가 없습니다. | 버킷, site, batch replication을 위한 계획된 계약입니다. |
+| DR failover/failback | 공개 Community CLI 밖의 운영자 runbook으로 처리합니다. | 승인 작업, DNS/load-balancer 전환, audit evidence의 계획된 동작입니다. |
 
 ## 복제 범위
 

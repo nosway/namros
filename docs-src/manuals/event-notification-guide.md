@@ -1,25 +1,31 @@
-Integration <span class="badge enterprise">Enterprise edition only</span>
+Integration <span class="badge planned">Planned specification</span>
 
 # NAMROS Event Notifications Guide
 
 <div class="warning" markdown="1">
 
-**Enterprise edition only.** This page describes Enterprise-only event notification contracts. Community edition behavior is included only to document denial and edition-boundary expectations.
+**Planned Enterprise specification.** This page defines a proposed event
+notification contract. No generally available Enterprise delivery worker or
+broker integration is implied. Community behavior is included only to document
+the current absence of this feature and its edition boundary.
 
 </div>
 
 <div class="summary" markdown="1">
 
-This document defines the Enterprise contract and compatibility target for real-time S3 Event Notification. Community builds do not deliver event notifications; Enterprise builds are expected to detect object creation, deletion, and copy events and publish them to message brokers or Webhook endpoints with bounded latency and replayable failure handling.
+This document defines a planned Enterprise compatibility target for real-time
+S3 Event Notification. Community builds do not deliver event notifications.
+Detection, broker/Webhook delivery, buffering, and replay remain proposed
+behavior until an implementation-status update records otherwise.
 
 </div>
 
 ## Implementation Status
 
-| Area | Current public Community behavior | Enterprise/spec status |
+| Area | Current public Community behavior | Planned specification status |
 | --- | --- | --- |
-| Bucket notification APIs | Enterprise-only request paths must be denied by the edition boundary. | Private Enterprise contract for bucket notification configuration and retrieval. |
-| Event delivery | No broker, Webhook, DLQ, or replay worker is started by the public Community build. | Target behavior for Webhook, Kafka, NATS, buffering, and DLQ replay. |
+| Bucket notification APIs | Enterprise-only request paths must be denied by the edition boundary. | Planned contract; not currently available. |
+| Event delivery | No broker, Webhook, DLQ, or replay worker is started by the public Community build. | Planned Webhook, Kafka, NATS, buffering, and DLQ behavior. |
 | MinIO streaming API | Not implemented. | Future compatibility candidate, not a current guarantee. |
 
 ## Configuration Scope

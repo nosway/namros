@@ -228,15 +228,22 @@ for path in \
 	LICENSE \
 	NOTICE \
 	CHANGELOG.md \
+	CODEOWNERS \
 	CONTRIBUTING.md \
+	GOVERNANCE.md \
+	MAINTAINERS.md \
+	ROADMAP.md \
+	SUPPORT.md \
 	CODE_OF_CONDUCT.md \
 	SECURITY.md \
 	.github/workflows/community.yml \
 	.github/workflows/docs-pages.yml \
 	.github/workflows/release.yml \
+	.github/workflows/security.yml \
 	.github/dependabot.yml \
 	.github/pull_request_template.md \
 	.github/ISSUE_TEMPLATE/bug_report.md \
+	.github/ISSUE_TEMPLATE/config.yml \
 	.github/ISSUE_TEMPLATE/feature_request.md \
 	packaging/helm/namros-community/Chart.yaml \
 	packaging/helm/namros-community/values.yaml \
@@ -257,6 +264,23 @@ for path in \
 	scripts/release/write-release-artifact-metadata.sh; do
 	require_file "$path"
 done
+
+log "verify workflow actions are pinned to immutable revisions"
+if grep -R -n -E 'uses:[[:space:]]+[^[:space:]]+@v[0-9]' .github/workflows; then
+	error "GitHub Actions must use an immutable commit SHA with a version comment"
+fi
+if ! grep -q -F 'govulncheck ./...' .github/workflows/security.yml; then
+	error "Security workflow must run govulncheck"
+fi
+if ! grep -q -F 'github/codeql-action/analyze@' .github/workflows/security.yml; then
+	error "Security workflow must run CodeQL"
+fi
+if ! grep -q -F 'actions/dependency-review-action@' .github/workflows/security.yml; then
+	error "Security workflow must review pull-request dependency changes"
+fi
+if ! grep -q -F 'ossf/scorecard-action@' .github/workflows/security.yml; then
+	error "Security workflow must run OpenSSF Scorecard"
+fi
 
 if is_false "$require_readme"; then
 	log "skip README.md requirement by configuration"

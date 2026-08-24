@@ -4,7 +4,11 @@ Object Storage Product Docs
 
 <div class="note" markdown="1">
 
-**Edition scope.** This page includes Community edition behavior and Enterprise edition only sections. Treat any area marked <span class="badge enterprise">Enterprise edition only</span> as unavailable in public Community builds except for documented denial behavior.
+**Capability status.** The public Community distribution is the runnable
+open-source platform described first in this manual. Areas marked
+<span class="badge enterprise">Enterprise development</span> describe work being
+implemented or validated in NAMROS Enterprise. A roadmap/specification label
+means that the documented contract is not current product behavior.
 
 </div>
 
@@ -12,7 +16,11 @@ Object Storage Product Docs
 
 NAMROS expands to Network Attached Multipath Resilient Object Storage and is pronounced [nae-muh-ross].
 
-NAMROS is an S3-compatible object storage project. The Community edition includes normal S3 object workflows, external-client compatibility, active-active gateway operation, TiKV metadata, etcd coordination, and SBS replicated object storage. Enterprise capabilities add SBS-backed EC storage, WORM/Object Lock enforcement, dedupe, KMS posture, compliance evidence, and advanced MCP-assisted operations.
+NAMROS is an open-source, S3-compatible object storage platform. The public
+NAMROS Community distribution includes normal S3 object workflows,
+external-client compatibility, active-active gateway operation, TiKV metadata,
+etcd coordination, SBS replicated object storage, lifecycle/GC foundations,
+and read-only operations surfaces.
 
 </div>
 
@@ -31,7 +39,7 @@ NAMROS is not NAMRBD. NAMRBD is a network attached block-device product. NAMROS 
 | Local Community | Development, S3 API verification, user-space compatibility smoke | single `namros-gateway`, Pebble or memory metadata, local segment store | <span class="badge">Community</span> |
 | Compatibility Lab | AWS CLI, MinIO client, rclone, s3fs-fuse validation | local gateway plus client tools; Linux FUSE host when needed | <span class="badge">Community</span> |
 | Active-active Metadata Lab | multi-gateway availability and cache correctness | TiKV/PD, etcd, shared segment path | <span class="badge">Community</span> |
-| SBS EC Lab | EC multipart write/read path | TiKV/PD, SBS service/data, prepared volume and shard routes | <span class="badge enterprise">Enterprise edition only</span> |
+| SBS EC Development Lab | Enterprise EC multipart and degraded-read validation | TiKV/PD, SBS service/data, prepared volume and shard routes | <span class="badge enterprise">Enterprise development</span> |
 
 ## 5-Minute Community Quick Start
 
@@ -62,20 +70,23 @@ aws --endpoint-url "$NAMROS_ENDPOINT" s3api list-objects-v2 --bucket quickstart
 
 Expected result: the final list includes `hello.txt`, and `/tmp/namros-readback.txt` matches the original payload.
 
-## Community And Enterprise Summary
+## Current Platform And Advanced Feature Status
 
-| Capability | Community | Enterprise |
+| Capability | Status | Meaning |
 | --- | --- | --- |
-| S3 bucket/object API | Included | Included |
-| AWS CLI/mc/rclone smoke | Included | Included |
-| s3fs-fuse default profile | Compatibility target | Compatibility target |
-| TiKV metadata and etcd gateway registry | Included | Included |
-| SBS replicated object storage | Included; source export needs NAMRBD Community module packaging | Included |
-| SBS EC/classroute | Enterprise-required error | Available |
-| WORM/Object Lock enforcement, dedupe, KMS, compliance evidence | Enterprise-required error | Available |
-| Web console and monitoring | Read-only dashboard and report viewer | Approved operations and Enterprise feature panels |
-| S3 object browser integration | Object Explorer Lite plus external S3 browser recipes | Approved object operations after policy controls |
-| Private overlay and advanced release gates | Not present | Private distribution |
+| S3 bucket/object API, multipart, versioning, tags, metadata, CORS | <span class="badge">Community included</span> | Implemented in the public source distribution and covered by compatibility checks. |
+| TiKV metadata, etcd gateway registry, active-active gateways | <span class="badge">Community included</span> | Distributed Community platform foundation. |
+| SBS replicated object storage | <span class="badge">Community included</span> | Uses the public NAMRBD Community module. |
+| Lifecycle/GC, quota records and local request controls | <span class="badge">Community included</span> | Current public foundations; aggregate cluster-wide controls remain follow-on work. |
+| Read-only console, metrics, reports, MCP diagnostics | <span class="badge">Community included</span> | Current public operational and troubleshooting surfaces. |
+| EC storage classes, Object Lock/WORM, verified dedupe, SSE-KMS | <span class="badge enterprise">Enterprise development</span> | Implementation foundations exist and are being hardened or validated in Enterprise. |
+| Compliance evidence, external IAM, approved operations | <span class="badge enterprise">Enterprise development</span> | Partial foundations exist; provider integration, action bodies, and production hardening continue. |
+| Cross-region replication/DR, event delivery, inventory/batch | <span class="badge planned">Planned specification</span> | Design targets, not currently available behavior. |
+
+See [Advanced features](advanced-features.md) for feature-by-feature scope and
+status. Community builds explicitly reject requests that require unsupported
+advanced semantics; the rejection behavior is not an Enterprise availability
+claim.
 
 ## Persona-Based Navigation
 
@@ -113,7 +124,8 @@ Configure preflight OS kernel parameter tuning, manage etcd/TiKV clusters, execu
 
 System Architect & Security Path
 
-Analyze stateless active-active architecture, Erasure Coding (EC_4_2) layouts, OIDC IAM evaluation rules, and HashiCorp Vault SSE-KMS fail-closed models.
+Analyze the current stateless active-active Community architecture, then review
+the separately labeled EC, IAM, and KMS Enterprise development contracts.
 
 [Open Architecture Manual →](architecture-manual/index.md)
 
@@ -123,11 +135,12 @@ Analyze stateless active-active architecture, Erasure Coding (EC_4_2) layouts, O
 
 ### Operations Planner
 
-Product & Enterprise Path
+Advanced Feature Path
 
-Review Enterprise contracts for Cross-Region replication, event notifications, tenant quotas/QoS, and approved operations without assuming those surfaces are enabled in Community builds.
+Review which Enterprise capabilities have implementation foundations under
+validation and which remain roadmap or specification-stage work.
 
-[Open Operations Guides →](web-console-monitoring-guide.md)
+[Open Advanced Features →](advanced-features.md)
 
 </div>
 

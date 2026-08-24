@@ -1,10 +1,13 @@
-Identity And Access <span class="badge">Community</span> <span class="badge enterprise">Enterprise edition only sections</span>
+Identity And Access <span class="badge">Community</span> <span class="badge enterprise">Enterprise development sections</span>
 
 # NAMROS IAM Integration Guide
 
 <div class="note" markdown="1">
 
-**Edition scope.** This page includes Community edition local access-key behavior and Enterprise edition only external IAM federation sections. External IdP mappings, STS-style sessions, and session evidence are unavailable in public Community builds except for documented denial behavior.
+**Capability status.** Community includes local access keys and basic policy
+evaluation. External IAM mapping models and dry-run tools have Enterprise
+development foundations, while production provider validation, token/session
+issuance, and complete decision evidence remain in progress.
 
 </div>
 
@@ -20,9 +23,9 @@ This document defines the interface specifications for NAMROS IAM federation and
 | --- | --- | --- |
 | Bootstrap/root access key | Supported (Local Config) | Supported (Local & Secret Storage) |
 | Basic bucket/prefix policy | Supported (Local Evaluator) | Supported (Distributed Engine) |
-| OIDC/LDAP/AD/SAML mapping | Enterprise-required error | <span class="badge enterprise">Enterprise edition only</span> Active Mapping Provider |
-| STS-style session | Enterprise-required error | <span class="badge enterprise">Enterprise edition only</span> Temporary Credentials (JWT Session) |
-| Principal/session evidence | Limited local audit | <span class="badge enterprise">Enterprise edition only</span> Evidence Cryptographic Chain |
+| OIDC/LDAP/AD/SAML mapping | Enterprise-required error; mapping schema validation may be used as a dry run. | <span class="badge enterprise">Enterprise development</span> Provider validation and production claim mapping remain in progress. |
+| STS-style session | Enterprise-required error | <span class="badge enterprise">Enterprise development</span> Credential envelope exists; token exchange, issuance, and session lifecycle remain in progress. |
+| Principal/session evidence | Limited local audit | <span class="badge enterprise">Enterprise development</span> Request/audit context foundation exists; complete compliance evidence integration remains in progress. |
 
 ## Principal And Session Model
 

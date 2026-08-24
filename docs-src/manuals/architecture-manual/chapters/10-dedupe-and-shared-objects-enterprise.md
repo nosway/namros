@@ -1,6 +1,6 @@
-Chapter 10 <span class="badge enterprise">Enterprise edition only</span>
+Chapter 10 <span class="badge enterprise">Enterprise development</span>
 
-# Dedupe And Shared Objects <span class="badge enterprise">Enterprise edition only</span>
+# Dedupe And Shared Objects <span class="badge enterprise">Enterprise development</span>
 
 ## Dedupe
 
@@ -11,9 +11,21 @@ Chapter 10 <span class="badge enterprise">Enterprise edition only</span>
 
 <div class="warning" markdown="1">
 
-**Enterprise edition only.** This chapter describes Enterprise-only dedupe and shared-object contracts. Community edition behavior is included only to document stub and Enterprise-required denial expectations.
+**Enterprise development and validation.** The private development line
+contains a scoped post-process dedupe foundation. Community includes only the
+explicit edition boundary. Do not read this chapter as a generally available
+dedupe service.
 
 </div>
+
+## Implementation Status
+
+The implemented foundation covers byte-verified, replicated-storage,
+same-tenant/same-key candidates, shared-object publication and attachment,
+reference repair/scrub, and one-shot background acknowledgement. Long-running
+scheduling, SBS-native shared-object optimization, cross-key or cross-tenant
+scope, EC live dedupe, and verified inline dedupe remain follow-on Enterprise
+development.
 
 ## External Contract
 

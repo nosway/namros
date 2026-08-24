@@ -1,4 +1,4 @@
-Chapter 01 <span class="badge">Community</span> <span class="badge enterprise">Enterprise edition only sections</span>
+Chapter 01 <span class="badge">Community</span> <span class="badge enterprise">Enterprise development sections</span>
 
 # Product Overview
 
@@ -11,7 +11,10 @@ Chapter 01 <span class="badge">Community</span> <span class="badge enterprise">E
 
 <div class="note" markdown="1">
 
-**Edition scope.** This chapter describes the Community edition product baseline and the Enterprise edition only feature path. Enterprise EC, dedupe, WORM, KMS, and compliance references are private-distribution capabilities unless the text explicitly describes Community denial behavior.
+**Capability status.** This chapter describes the runnable Community platform
+baseline first. EC, dedupe, WORM, KMS, identity, and compliance references are
+Enterprise development or specification-stage capabilities unless explicitly
+labeled otherwise.
 
 </div>
 
@@ -19,7 +22,12 @@ Chapter 01 <span class="badge">Community</span> <span class="badge enterprise">E
 
 ## Goal
 
-NAMROS expands to Network Attached Multipath Resilient Object Storage and is pronounced [nae-muh-ross]. It presents an S3-compatible object storage API. The product goal is a dependable object gateway with normal client compatibility, metadata-first correctness, Community active-active operation, and a clearly marked path to Enterprise EC, dedupe, WORM, KMS, and compliance evidence features.
+NAMROS expands to Network Attached Multipath Resilient Object Storage and is
+pronounced [nae-muh-ross]. It is an open-source S3-compatible object storage
+platform with metadata-first correctness, stateless active-active gateways,
+distributed metadata, replicated storage, and operator-facing observability.
+Advanced Enterprise development is labeled separately from this public
+baseline.
 
 <div class="summary" markdown="1">
 

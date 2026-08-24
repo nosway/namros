@@ -1,10 +1,13 @@
-Chapter 08 <span class="badge enterprise">Enterprise edition only</span>
+Chapter 08 <span class="badge enterprise">Enterprise development</span>
 
 # SBS EC Backend Enterprise
 
 <div class="warning" markdown="1">
 
-**Enterprise edition only.** This chapter describes the Enterprise-only SBS EC and classroute storage contract. Community edition behavior is included only to document denial and edition-boundary expectations.
+**Enterprise development and validation.** SBS EC and classroute implementation
+foundations exist in the Enterprise development line. They are not present in
+the public Community distribution and should not be treated as generally
+available Enterprise functionality.
 
 </div>
 
@@ -12,17 +15,19 @@ Chapter 08 <span class="badge enterprise">Enterprise edition only</span>
 
 <div class="summary" markdown="1">
 
-This chapter defines the Enterprise SBS Erasure Coding backend contract. The public Community build must deny SBS EC and classroute activation through the standard Enterprise-required boundary, while Enterprise builds may use this path to combine storage efficiency with degraded-read recovery.
+This chapter describes the Enterprise SBS Erasure Coding implementation and
+validation contract. The public Community build denies EC activation through
+the standard Enterprise-required boundary.
 
 </div>
 
 ## Implementation Status
 
-| Area | Current public Community behavior | Enterprise/spec status |
+| Area | Current public Community behavior | Enterprise development status |
 | --- | --- | --- |
-| SBS physical replicated path | Community SBS-backed storage can be validated with prepared SBS service/data endpoints and a volume id. | Also available as the replicated class in Enterprise deployments. |
-| SBS EC/classroute path | Edition-gated. Public Community builds must not expose an EC unlock flag or build tag. | Enterprise contract for EC shard placement, reads, repair, and audit evidence. |
-| Healing commands | `dedupe-scrub` and `dedupe-repair` return Enterprise-required responses in Community builds. | Private Enterprise overlay owns EC healing and repair execution. |
+| SBS physical replicated path | Community SBS-backed storage can be validated with prepared SBS service/data endpoints and a volume id. | Community baseline reused by Enterprise development. |
+| SBS EC/classroute path | Edition-gated. Public Community builds do not expose an EC unlock flag or build tag. | Multipart, multi-stripe, checksum, routing, and degraded-read foundations implemented; performance and cluster validation continue. |
+| Healing and repair | Enterprise-required in Community builds. | Recovery, repair execution, failure-domain behavior, and operational evidence remain under Enterprise validation. |
 
 ## Storage Class Selection And Routing
 

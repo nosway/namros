@@ -1,10 +1,14 @@
-AI-assisted Operations <span class="badge">Community</span> <span class="badge enterprise">Enterprise edition only sections</span>
+AI-assisted Operations <span class="badge">Community</span> <span class="badge enterprise">Enterprise development sections</span>
 
 # NAMROS MCP Operations Guide
 
 <div class="note" markdown="1">
 
-**Edition scope.** This page includes Community edition observe/probe resources and Enterprise edition only MCP tools. Enterprise-only tools return standard Enterprise-required responses in public Community builds.
+**Capability status.** Community includes observe/probe resources and read-only
+diagnostics. Enterprise tool contracts and approval envelopes exist, while the
+private collector/action bodies, approval capture, and production hardening are
+still under Enterprise development. Community returns standard
+Enterprise-required responses for those operations.
 
 </div>
 

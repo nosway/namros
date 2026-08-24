@@ -4,7 +4,10 @@
 
 <div class="note" markdown="1">
 
-**Edition scope.** 이 페이지는 Community edition 동작과 Enterprise edition only 섹션을 함께 다룹니다. <span class="badge enterprise">Enterprise edition only</span>로 표시된 영역은 명시된 거부 동작을 제외하고 공개 Community 빌드에서 사용할 수 없습니다.
+**기능 상태.** 이 매뉴얼은 실행 가능한 오픈소스 Community 플랫폼을 먼저
+설명합니다. <span class="badge enterprise">Enterprise 개발 중</span> 표시는
+NAMROS Enterprise에서 구현 또는 검증 중인 기능을 뜻합니다. 계획/명세 단계
+표시는 현재 제품 동작이 아닙니다.
 
 </div>
 
@@ -12,7 +15,10 @@
 
 NAMROS는 Network Attached Multipath Resilient Object Storage의 약자이며 [nae-muh-ross]로 발음합니다.
 
-NAMROS는 S3 호환 오브젝트 스토리지 프로젝트입니다. Community 에디션은 일반 S3 오브젝트 워크플로, 외부 클라이언트 호환성, active-active 게이트웨이 운영, TiKV 메타데이터, etcd coordination, SBS 복제 오브젝트 스토리지를 포함합니다. Enterprise 기능은 SBS 기반 EC 스토리지, WORM/Object Lock enforcement, 중복 제거, KMS 상태 관리, 컴플라이언스 증빙, 고급 MCP 보조 운영을 추가합니다.
+NAMROS는 오픈소스 S3 호환 오브젝트 스토리지 플랫폼입니다. 공개 NAMROS
+Community 배포판은 일반 S3 오브젝트 워크플로, 외부 클라이언트 호환성,
+active-active 게이트웨이, TiKV 메타데이터, etcd coordination, SBS 복제
+스토리지, lifecycle/GC 기반과 읽기 전용 운영 화면을 포함합니다.
 
 </div>
 
@@ -31,7 +37,7 @@ NAMROS는 NAMRBD가 아닙니다. NAMRBD는 네트워크 연결 블록 디바이
 | Local Community | 개발, S3 API 검증, 사용자 공간 호환성 스모크 | 단일 `namros-gateway`, Pebble 또는 메모리 메타데이터, 로컬 세그먼트 저장소 | <span class="badge">Community</span> |
 | 호환성 실험실 | AWS CLI, MinIO client, rclone, s3fs-fuse 검증 | 로컬 게이트웨이와 클라이언트 도구, 필요 시 Linux FUSE 호스트 | <span class="badge">Community</span> |
 | Active-active 메타데이터 실험실 | 다중 게이트웨이 가용성과 캐시 정확성 | TiKV/PD, etcd, 공유 세그먼트 경로 | <span class="badge">Community</span> |
-| SBS EC 실험실 | EC 멀티파트 쓰기/읽기 경로 | TiKV/PD, SBS service/data, 준비된 볼륨과 샤드 경로 | <span class="badge enterprise">Enterprise edition only</span> |
+| SBS EC 개발 실험실 | Enterprise EC multipart와 degraded-read 검증 | TiKV/PD, SBS service/data, 준비된 볼륨과 shard 경로 | <span class="badge enterprise">Enterprise 개발 중</span> |
 
 ## 5분 Community 빠른 시작
 
@@ -62,20 +68,21 @@ aws --endpoint-url "$NAMROS_ENDPOINT" s3api list-objects-v2 --bucket quickstart
 
 기대 결과: 마지막 list에 `hello.txt`가 포함되고, `/tmp/namros-readback.txt`가 원본 payload와 일치합니다.
 
-## Community 및 Enterprise 요약
+## 현재 플랫폼과 고급 기능 상태
 
-| 기능 | Community | Enterprise |
+| 기능 | 상태 | 의미 |
 | --- | --- | --- |
-| S3 버킷/오브젝트 API | 포함 | 포함 |
-| AWS CLI/mc/rclone 스모크 | 포함 | 포함 |
-| s3fs-fuse 기본 프로파일 | 호환성 대상 | 호환성 대상 |
-| TiKV 메타데이터와 etcd 게이트웨이 레지스트리 | 포함 | 포함 |
-| SBS 복제 오브젝트 스토리지 | 포함, 소스 내보내기에는 NAMRBD Community 모듈 패키징 필요 | 포함 |
-| SBS EC/classroute | Enterprise 필요 오류 | 사용 가능 |
-| WORM/Object Lock enforcement, 중복 제거, KMS, 컴플라이언스 증빙 | Enterprise 필요 오류 | 사용 가능 |
-| 웹 콘솔 및 모니터링 | 읽기 전용 대시보드와 리포트 뷰어 | 승인된 작업과 Enterprise 기능 패널 |
-| S3 오브젝트 브라우저 연동 | Object Explorer Lite와 외부 S3 browser recipe | 정책 제어 이후 승인된 오브젝트 작업 |
-| 사설 overlay와 고급 릴리스 게이트 | 없음 | 사설 배포 |
+| S3 API, multipart, versioning, tag, metadata, CORS | <span class="badge">Community 포함</span> | 공개 소스와 호환성 검사에 포함됩니다. |
+| TiKV metadata, etcd registry, active-active gateway | <span class="badge">Community 포함</span> | 분산 Community 플랫폼 기반입니다. |
+| SBS replicated object storage | <span class="badge">Community 포함</span> | 공개 NAMRBD Community 모듈을 사용합니다. |
+| lifecycle/GC, quota record, gateway-local request control | <span class="badge">Community 포함</span> | 공개 기반 기능이며 cluster-wide aggregate 제어는 후속 항목입니다. |
+| read-only console, metric, report, MCP diagnostics | <span class="badge">Community 포함</span> | 현재 공개 운영 및 진단 화면입니다. |
+| EC, Object Lock/WORM, verified dedupe, SSE-KMS | <span class="badge enterprise">Enterprise 개발 중</span> | 구현 기반을 Enterprise에서 강화·검증하고 있습니다. |
+| compliance evidence, external IAM, approved operations | <span class="badge enterprise">Enterprise 개발 중</span> | 부분 기반이 있으며 provider 연동과 운영 강화가 진행 중입니다. |
+| cross-region replication/DR, event, inventory/batch | <span class="badge planned">계획/명세 단계</span> | 현재 사용할 수 있는 기능이 아닌 설계 목표입니다. |
+
+기능별 범위는 [고급 기능](advanced-features.md)을 참고하십시오. Community
+빌드의 명시적 거부 동작은 Enterprise 기능의 공급 상태를 의미하지 않습니다.
 
 ## 역할 맞춤형 시작점
 
@@ -113,7 +120,8 @@ NAMROS 클러스터 프리플라이트 OS 커널 파라미터 최적화, TiKV/et
 
 시스템 설계 및 보안 아키텍트 경로
 
-무상태 active-active 게이트웨이 구조, Erasure Coding 4+2 쿼럼 모델, OIDC IAM 접근 정책, HashiCorp Vault SSE-KMS 같은 핵심 설계 사양을 분석합니다.
+현재 Community의 stateless active-active 구조를 먼저 확인한 뒤 EC, IAM,
+KMS Enterprise 개발 계약을 구분하여 검토합니다.
 
 [아키텍처 매뉴얼 열기 →](../architecture-manual/ko/index.md)
 
@@ -123,11 +131,12 @@ NAMROS 클러스터 프리플라이트 OS 커널 파라미터 최적화, TiKV/et
 
 ### 운영 기획자
 
-비즈니스 기획 및 엔터프라이즈 설계자 경로
+고급 기능 검토 경로
 
-Community 빌드에서 활성화되어 있다고 가정하지 않고, Cross-Region replication, event notification, tenant quota/QoS, approved operation에 대한 Enterprise 계약을 검토합니다.
+Enterprise 기능 중 구현 기반을 검증 중인 항목과 계획/명세 단계에 머문 항목을
+구분하여 검토합니다.
 
-[운영 가이드 열기 →](web-console-monitoring-guide.md)
+[고급 기능 열기 →](advanced-features.md)
 
 </div>
 

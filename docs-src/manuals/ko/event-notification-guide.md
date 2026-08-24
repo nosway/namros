@@ -1,16 +1,22 @@
-연동 <span class="badge enterprise">Enterprise edition only</span>
+연동 <span class="badge planned">계획/명세 단계</span>
 
 # NAMROS 이벤트 알림 가이드
 
 <div class="warning" markdown="1">
 
-**Enterprise edition only.** 이 페이지는 Enterprise 전용 이벤트 알림 계약을 설명합니다. Community edition 동작은 거부 응답과 에디션 경계를 설명하기 위해서만 포함합니다.
+**Enterprise 계획/명세 단계.** 이 페이지는 제안된 event notification 계약을
+설명합니다. 일반 공급 Enterprise delivery worker나 broker integration이
+구현되었다는 의미가 아닙니다. Community 동작은 현재 기능 부재와 edition
+경계를 설명하기 위해 포함합니다.
 
 </div>
 
 <div class="summary" markdown="1">
 
-이 문서는 실시간 S3 이벤트 알림(Event Notification)에 대한 Enterprise 계약과 호환성 목표를 정의합니다. Community 빌드는 이벤트 알림을 전달하지 않으며, Enterprise 빌드는 오브젝트 생성, 삭제, 복사 이벤트를 감지해 메시지 브로커나 Webhook 엔드포인트로 제한된 지연 시간 안에 전달하고 실패 시 재처리할 수 있어야 합니다.
+이 문서는 실시간 S3 Event Notification에 대한 계획된 Enterprise 호환성
+목표를 정의합니다. Community는 이벤트를 전달하지 않으며 감지, broker 또는
+Webhook 전달, buffering과 replay는 구현 상태가 갱신되기 전까지 제안된
+동작입니다.
 
 </div>
 
@@ -18,8 +24,8 @@
 
 | 영역 | 현재 공개 Community 동작 | Enterprise/spec 상태 |
 | --- | --- | --- |
-| 버킷 알림 API | Enterprise 전용 요청 경로는 에디션 경계에서 거부되어야 합니다. | 버킷 알림 설정과 조회를 위한 private Enterprise 계약입니다. |
-| 이벤트 전달 | 공개 Community 빌드는 broker, Webhook, DLQ, replay worker를 시작하지 않습니다. | Webhook, Kafka, NATS, buffering, DLQ replay에 대한 목표 동작입니다. |
+| 버킷 알림 API | Enterprise 전용 요청 경로는 에디션 경계에서 거부되어야 합니다. | 계획된 계약이며 현재 사용할 수 없습니다. |
+| 이벤트 전달 | 공개 Community 빌드는 broker, Webhook, DLQ, replay worker를 시작하지 않습니다. | Webhook, Kafka, NATS, buffering, DLQ에 대한 계획된 동작입니다. |
 | MinIO streaming API | 구현되어 있지 않습니다. | 향후 호환성 후보이며 현재 보장 기능은 아닙니다. |
 
 ## 기능 지원 범위

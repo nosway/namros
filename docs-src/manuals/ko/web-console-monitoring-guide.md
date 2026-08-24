@@ -1,10 +1,14 @@
-M23 운영 <span class="badge">Community</span> <span class="badge enterprise">Enterprise edition only sections</span>
+M23 운영 <span class="badge">Community</span> <span class="badge enterprise">Enterprise 개발 섹션</span>
 
 # NAMROS 웹 콘솔 및 모니터링 가이드
 
 <div class="note" markdown="1">
 
-**Edition scope.** 이 페이지는 Community edition read-only dashboard 동작과 Enterprise edition only approved operations, compliance, chaos/soak, feature-panel 섹션을 함께 다룹니다. Enterprise-only panel은 공개 Community 빌드에서 edition-boundary message를 표시해야 합니다.
+**기능 상태.** Community는 read-only dashboard, report, metric, alert summary와
+Object Explorer Lite metadata를 포함합니다. Enterprise feature panel과 승인
+작업 schema의 개발 기반은 있지만 approval capture, mutation action, external
+identity와 운영 강화는 진행 중입니다. Community는 해당 작업에 edition
+boundary message를 표시합니다.
 
 </div>
 

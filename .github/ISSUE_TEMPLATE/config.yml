@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://nosway.github.io/namros/
+    about: Check installation, client, architecture, and operations guidance first.
+  - name: Security vulnerability
+    url: https://github.com/nosway/namros/security/policy
+    about: Follow the private reporting instructions; do not open a public issue.

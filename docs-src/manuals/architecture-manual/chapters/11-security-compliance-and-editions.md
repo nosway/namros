@@ -1,4 +1,4 @@
-Chapter 11 <span class="badge enterprise">Enterprise edition only</span>
+Chapter 11 <span class="badge enterprise">Enterprise development</span>
 
 # Security Compliance And Editions
 
@@ -11,7 +11,11 @@ Chapter 11 <span class="badge enterprise">Enterprise edition only</span>
 
 <div class="warning" markdown="1">
 
-**Enterprise edition only.** This chapter describes Enterprise-only compliance, KMS, evidence, and governance contracts. Community edition behavior is included only to document required denial and edition-boundary expectations.
+**Enterprise development and validation.** This chapter describes compliance,
+KMS, evidence, and governance foundations being developed in Enterprise.
+Several evidence sections are partial and external provider/export integration
+remains in progress. The public Community build includes only the documented
+edition boundary for these advanced semantics.
 
 </div>
 

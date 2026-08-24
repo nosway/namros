@@ -11,7 +11,10 @@ Chapter 09 <span class="badge">Community</span> <span class="badge enterprise">E
 
 <div class="note" markdown="1">
 
-**Edition scope.** This chapter mixes Community edition versioning/lifecycle behavior with Enterprise edition only Object Lock/WORM enforcement. Community builds must reject Object Lock, WORM, and related compliance surfaces with Enterprise-required responses rather than partially enforcing them.
+**Capability status.** Versioning and lifecycle behavior are included in
+Community. Object Lock/WORM metadata, admission, protected-reference, and audit
+foundations are being developed and validated in Enterprise. Community builds
+reject those advanced semantics rather than partially enforcing them.
 
 </div>
 

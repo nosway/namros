@@ -1,10 +1,14 @@
-M23 Operations <span class="badge">Community</span> <span class="badge enterprise">Enterprise edition only sections</span>
+M23 Operations <span class="badge">Community</span> <span class="badge enterprise">Enterprise development sections</span>
 
 # NAMROS Web Console & Monitoring Guide
 
 <div class="note" markdown="1">
 
-**Edition scope.** This page includes Community edition read-only dashboard behavior and Enterprise edition only approved operations, compliance, chaos/soak, and feature-panel sections. Enterprise-only panels should render edition-boundary messages in public Community builds.
+**Capability status.** Community includes the read-only dashboard, reports,
+metrics, alert summaries, and Object Explorer Lite metadata. Enterprise feature
+panels and approved-operation schemas have development foundations; approval
+capture, mutation actions, external identity, and production hardening remain
+in progress. Community renders edition-boundary messages for those operations.
 
 </div>
 

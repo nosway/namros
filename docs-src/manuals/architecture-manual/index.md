@@ -1,4 +1,4 @@
-Architecture <span class="badge">Community</span> <span class="badge enterprise">Enterprise edition only sections</span>
+Architecture <span class="badge">Community</span> <span class="badge enterprise">Enterprise development sections</span>
 
 # NAMROS Architecture Manual
 
@@ -12,9 +12,9 @@ Architecture <span class="badge">Community</span> <span class="badge enterprise"
 6. [Object And Segment Model](chapters/05-object-and-segment-model.md)
 7. [Multipart Write Visibility](chapters/06-multipart-write-visibility.md)
 8. [Backends](chapters/07-replicated-and-local-backends.md)
-9. [SBS EC Enterprise](chapters/08-sbs-ec-backend-enterprise.md)
+9. [SBS EC Enterprise Development](chapters/08-sbs-ec-backend-enterprise.md)
 10. [Versioning Lifecycle Object Lock](chapters/09-versioning-lifecycle-object-lock.md)
-11. [Dedupe Enterprise](chapters/10-dedupe-and-shared-objects-enterprise.md)
+11. [Dedupe Enterprise Development](chapters/10-dedupe-and-shared-objects-enterprise.md)
 12. [Security Compliance Editions](chapters/11-security-compliance-and-editions.md)
 13. [Observability Operations](chapters/12-observability-and-operations.md)
 14. [MCP Operations Provider](chapters/13-mcp-operations-provider.md)
@@ -29,7 +29,10 @@ Architecture <span class="badge">Community</span> <span class="badge enterprise"
 
 <div class="note" markdown="1">
 
-**Edition scope.** This manual includes Community edition architecture and Enterprise edition only chapters/sections. Treat content marked <span class="badge enterprise">Enterprise edition only</span> as private-distribution behavior; Community behavior is included only when explicitly labeled or when denial semantics are described.
+**Capability status.** This manual explains the runnable Community architecture
+first. Sections marked <span class="badge enterprise">Enterprise development</span>
+describe private implementation or validation work, while specification-stage
+content describes targets rather than currently available behavior.
 
 </div>
 
@@ -37,7 +40,10 @@ Architecture <span class="badge">Community</span> <span class="badge enterprise"
 
 NAMROS expands to Network Attached Multipath Resilient Object Storage and is pronounced [nae-muh-ross].
 
-This manual explains NAMROS as an S3-compatible object storage system with stateless gateways, authoritative metadata, object manifests, segment refs, local/SBS replicated storage, Enterprise-only EC/dedupe/WORM/KMS capabilities, and explicit Community/Enterprise boundaries.
+This manual explains the public S3-compatible platform with stateless gateways,
+authoritative metadata, object manifests, segment refs, and local/SBS replicated
+storage. Advanced EC, dedupe, WORM, KMS, identity, and compliance sections are
+labeled by their Enterprise development status.
 
 </div>
 

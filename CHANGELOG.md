@@ -4,8 +4,8 @@ All notable changes to the public NAMROS Community edition are documented in
 this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and NAMROS product versioning follows the policy in
-[docs/release-versioning-changelog-policy.md](docs/release-versioning-changelog-policy.md).
+and public release and upgrade procedures are documented in the
+[upgrade and release operations guide](docs-src/manuals/upgrade-release-operations-guide.md).
 
 Enterprise-only behavior is listed only under `Edition: Enterprise only`.
 Private Enterprise bundles may ship additional operator notes, but public
@@ -37,7 +37,37 @@ release history stays in this file.
 
 ### Known Limits
 
-## [1.0.0] - 2026-08-18
+## [1.0.3] - 2026-08-21
+
+### Changed
+
+- Updated the NAMRBD module dependency and SBS integration paths for the
+  NAMRBD v1.0.0 public release.
+- Updated SBS service naming, flags, container bootstrap wiring, Helm
+  templates, and related English/Korean operations documentation.
+- Restored the etcd-backed gateway coordination implementation and tests used
+  by active-active Community deployments.
+
+### Compatibility
+
+- NAMRBD v1.0.0 is the expected SBS module version for this release.
+- Deprecated compatibility flags removed by the NAMRBD v1.0.0 transition are
+  no longer accepted.
+
+## [1.0.2] - 2026-08-20
+
+### Fixed
+
+- Fixed the rclone compatibility smoke so endpoint configuration is passed in
+  the form expected by the public test environment.
+- Included the preceding public CI build fixes that removed an unpublished
+  module dependency and restored a self-contained Community coordination path.
+
+### Known Limits
+
+- No `v1.0.1` tag was published; its CI hotfix commit is included in v1.0.2.
+
+## [1.0.0] - 2026-08-20
 
 Initial formal semver release. This version marks the current Community
 publication baseline as the starting point for NAMRBD-independent NAMROS product
@@ -58,13 +88,13 @@ versioning.
 
 ### Changed
 
-- Formal release, versioning, and changelog policy added in
-  `docs/release-versioning-changelog-policy.md`.
+- Formal release, versioning, and changelog policy established; public
+  procedures are summarized in the upgrade and release operations guide.
 
 ### Edition: Community
 
-- Community builds expose the production-capable S3 baseline without Enterprise
-  unlock paths.
+- Community builds expose the S3-compatible distributed platform baseline
+  without Enterprise unlock paths.
 - Enterprise-only requests return explicit Enterprise edition requirement
   errors.
 
@@ -93,5 +123,6 @@ versioning.
 
 - Enterprise features are visible only as documented denial stubs in Community
   builds.
-- SBOM generation is optional until `NAMROS_RELEASE_GENERATE_SBOM=1` and syft
-  are enabled in the release pipeline.
+- Deployment suitability depends on external persistence, failure-domain,
+  security, monitoring, backup, and upgrade design; the bundled kind topology
+  is an ephemeral evaluation environment.

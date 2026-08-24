@@ -1,10 +1,13 @@
-AI 보조 운영 <span class="badge">Community</span> <span class="badge enterprise">Enterprise edition only sections</span>
+AI 보조 운영 <span class="badge">Community</span> <span class="badge enterprise">Enterprise 개발 섹션</span>
 
 # NAMROS MCP 운영 가이드
 
 <div class="note" markdown="1">
 
-**Edition scope.** 이 페이지는 Community edition observe/probe resource와 Enterprise edition only MCP tool을 함께 다룹니다. Enterprise-only tool은 공개 Community 빌드에서 표준 Enterprise-required 응답을 반환합니다.
+**기능 상태.** Community는 observe/probe resource와 읽기 전용 진단을
+포함합니다. Enterprise tool 계약과 approval envelope 기반은 있지만 private
+collector/action, approval capture와 운영 강화는 개발 중입니다. Community는
+해당 작업에 표준 Enterprise-required 응답을 반환합니다.
 
 </div>
 

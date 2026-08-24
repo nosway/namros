@@ -1,10 +1,13 @@
-Tenant Controls <span class="badge">Community</span> <span class="badge enterprise">Enterprise edition only sections</span>
+Tenant Controls <span class="badge">Community</span> <span class="badge planned">Planned Enterprise sections</span>
 
 # NAMROS Quota and QoS Guide
 
 <div class="note" markdown="1">
 
-**Edition scope.** This page includes the Community edition bucket max-object-size quota and Enterprise edition only capacity, tenant quota, QoS, and alerting sections. Do not read Enterprise-only quota/QoS contracts as public Community behavior.
+**Capability status.** This page separates implemented Community primitives
+from planned Enterprise aggregate capacity, cluster-wide QoS, and alerting
+contracts. Specification examples are not current runtime behavior unless the
+implementation-status table says otherwise.
 
 </div>
 
@@ -16,9 +19,9 @@ This document defines the current Community quota metadata surface and the Enter
 
 ## Implementation Status
 
-| Area | Current public Community behavior | Enterprise/spec status |
+| Area | Current public Community behavior | Advanced feature status |
 | --- | --- | --- |
-| Bucket max-object-size quota | Supported through `namros-admin bucket-quota-put`, `bucket-quota-get`, and `bucket-quota-delete`. | Available as the baseline quota primitive. |
+| Bucket max-object-size quota | Supported through `namros-admin bucket-quota-put`, `bucket-quota-get`, and `bucket-quota-delete`. | Community baseline primitive. |
 | Bucket capacity/object-count quota | Not implemented as an aggregate usage limiter in public Community builds. | Enterprise contract for usage counters, admission, and alerts. |
 | Tenant quota records | Supported as metadata records through `namros-admin tenant-quota-put`, `tenant-quota-get`, and `tenant-quota-delete`. `max_active_uploads` is enforced on CreateMultipartUpload; bytes/object admission follows later. | Enterprise contract for tenant isolation, bandwidth/TPS shaping, and telemetry. |
 | Tenant usage records | Supported as a reconciliation foundation that records tenant bytes, committed object-version count, active MPU count, reconciliation timestamp, and reconciliation id. | Admission enforcement follows later. |

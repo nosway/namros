@@ -1,13 +1,16 @@
-# NAMROS Community
+# NAMROS
 
-NAMROS is Network Attached Multipath Resilient Object Storage: an
-S3-compatible object storage gateway with a metadata-first design, stateless
-gateway operation, and explicit Community/Enterprise feature boundaries.
+NAMROS is an open-source, S3-compatible object storage platform with a
+metadata-first design and stateless gateways. The public NAMROS Community
+distribution includes the S3 data path, distributed metadata, active-active
+gateway coordination, replicated SBS storage, deployment assets, and
+operator-facing observability.
 
-This site is built from `docs-src/` in the public source tree. Pages marked
-<span class="badge enterprise">Enterprise edition only</span> describe
-capabilities that are not available in Community builds except for documented
-denial behavior.
+This site is built from `docs-src/` in the public source tree. It describes
+what can be run from the open-source distribution first. Pages marked
+<span class="badge enterprise">Enterprise development</span> document advanced
+capabilities being developed or validated in NAMROS Enterprise; they do not
+mean that a generally available Enterprise release exists.
 
 ## Start Here
 
@@ -19,6 +22,8 @@ denial behavior.
 - [Admin guide](manuals/admin-guide.md) — day-2 operations and troubleshooting.
 - [Architecture manual](manuals/architecture-manual/index.md) — component
   ownership, metadata authority, and storage contracts.
+- [Advanced features](manuals/advanced-features.md) — Enterprise development
+  status and specification-stage roadmap items.
 
 Korean translations of the manual set are available under
 [`manuals/ko/`](manuals/ko/index.md).

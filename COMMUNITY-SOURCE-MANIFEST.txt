@@ -1,7 +1,7 @@
 NAMROS Community Source Export
 schema_version: 1
-generated_at: 2026-08-22T10:39:47Z
-git_commit: ade7ce8
+generated_at: 2026-08-24T00:59:28Z
+git_commit: 42a130d
 git_dirty: false
 edition_identity: community
 allowlist_manifest: scripts/release/community-source-allowlist.txt
@@ -15,13 +15,18 @@ Included allowlist entries:
 - .github/
 - .gitignore
 - CODE_OF_CONDUCT.md
+- CODEOWNERS
 - CHANGELOG.md
 - CONTRIBUTING.md
+- GOVERNANCE.md
 - LICENSE
+- MAINTAINERS.md
 - Makefile
 - NOTICE
 - README.md
+- ROADMAP.md
 - SECURITY.md
+- SUPPORT.md
 - cmd/
 - deploy/observability/
 - docs-src/

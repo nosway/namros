@@ -125,19 +125,34 @@ func TestGatewayFleetPageAndWatchCarryRevision(t *testing.T) {
 	if page.Revision != 41 || page.NextCursor != prefix+"gw-a/status" || page.Records[0].RegistryRevision != 40 {
 		t.Fatalf("page = %+v", page)
 	}
-	events, err := decodeGatewayFleetWatch(prefix, clientv3.WatchResponse{
-		Header: etcdserverpb.ResponseHeader{Revision: 42},
-		Events: []*clientv3.Event{
+	events, err := decodeGatewayFleetWatch(prefix, watchResponseWithRevision(42,
+		[]*clientv3.Event{
 			{Type: clientv3.EventTypePut, Kv: kv},
 			{Type: clientv3.EventTypeDelete, Kv: &mvccpb.KeyValue{Key: []byte(prefix + "gw-b/status"), ModRevision: 42}},
 		},
-	})
+	))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(events) != 2 || events[0].Type != "put" || events[0].Revision != 40 || events[1].Type != "delete" || events[1].Revision != 42 {
 		t.Fatalf("events = %+v", events)
 	}
+}
+
+// etcd v3.6 stores WatchResponse.Header by value, while v3.7 stores it as a
+// pointer. Keep this test compatible with both independently managed module
+// versions without selecting a representation at compile time.
+func watchResponseWithRevision(revision int64, events []*clientv3.Event) clientv3.WatchResponse {
+	response := clientv3.WatchResponse{Events: events}
+	switch header := any(&response.Header).(type) {
+	case *etcdserverpb.ResponseHeader:
+		header.Revision = revision
+	case **etcdserverpb.ResponseHeader:
+		*header = &etcdserverpb.ResponseHeader{Revision: revision}
+	default:
+		panic("unsupported etcd WatchResponse.Header representation")
+	}
+	return response
 }
 
 func TestLeaseTTLSecondsRoundsUp(t *testing.T) {

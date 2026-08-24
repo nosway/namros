@@ -1,10 +1,13 @@
-ID 및 접근 제어 <span class="badge">Community</span> <span class="badge enterprise">Enterprise edition only sections</span>
+ID 및 접근 제어 <span class="badge">Community</span> <span class="badge enterprise">Enterprise 개발 섹션</span>
 
 # NAMROS IAM 연동 가이드
 
 <div class="note" markdown="1">
 
-**Edition scope.** 이 페이지는 Community edition local access-key 동작과 Enterprise edition only 외부 IAM federation 섹션을 함께 다룹니다. 외부 IdP mapping, STS-style session, session evidence는 명시된 거부 동작을 제외하고 공개 Community 빌드에서 사용할 수 없습니다.
+**기능 상태.** Community는 local access key와 기본 policy evaluation을
+포함합니다. 외부 IAM mapping model과 dry-run tool은 Enterprise 개발 기반이
+있으며 실제 provider 검증, token/session 발급과 완전한 decision evidence는
+개발 중입니다.
 
 </div>
 
@@ -20,9 +23,9 @@ ID 및 접근 제어 <span class="badge">Community</span> <span class="badge ent
 | --- | --- | --- |
 | 부트스트랩/root 접근 키 | 지원 (로컬 설정) | 지원 (로컬 및 비밀 저장소) |
 | 기본 버킷/접두사 정책 | 지원 (로컬 평가기) | 지원 (분산 엔진) |
-| OIDC/LDAP/AD/SAML 매핑 | Enterprise 필요 오류 | <span class="badge enterprise">Enterprise edition only</span> 활성 매핑 제공자 |
-| STS 스타일 세션 | Enterprise 필요 오류 | <span class="badge enterprise">Enterprise edition only</span> 임시 자격 증명 (JWT 세션) |
-| 주체/세션 증빙 | 제한적 로컬 감사 | <span class="badge enterprise">Enterprise edition only</span> 암호학적 증빙 체인 |
+| OIDC/LDAP/AD/SAML 매핑 | Enterprise 필요 오류, mapping schema dry-run 검증 가능 | <span class="badge enterprise">Enterprise 개발 중</span> 실제 provider 검증과 claim mapping이 진행 중입니다. |
+| STS 스타일 세션 | Enterprise 필요 오류 | <span class="badge enterprise">Enterprise 개발 중</span> credential envelope 기반이 있으며 token 발급과 session lifecycle이 남았습니다. |
+| 주체/세션 증빙 | 제한적 로컬 감사 | <span class="badge enterprise">Enterprise 개발 중</span> request/audit 기반이 있으며 compliance evidence 통합이 남았습니다. |
 
 ## 주체 및 세션 모델
 

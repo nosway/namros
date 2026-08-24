@@ -1,26 +1,32 @@
-Security <span class="badge enterprise">Enterprise edition only</span>
+Security <span class="badge enterprise">Enterprise development</span>
 
 # NAMROS KMS Encryption Guide
 
 <div class="warning" markdown="1">
 
-**Enterprise edition only.** This page describes Enterprise-only SSE-KMS, SSE-S3, key lifecycle, and fail-closed encryption contracts. Community edition behavior is included only to document denial and edition-boundary expectations.
+**Enterprise development and validation.** SSE-KMS payload encryption and
+key-state admission foundations exist in the Enterprise development line.
+Streaming range optimization, production external-provider integration, and
+broader operational validation remain in progress. Community builds retain the
+explicit Enterprise-required boundary.
 
 </div>
 
 <div class="summary" markdown="1">
 
-This guide explains the server-side encryption (SSE-KMS, SSE-S3) architecture and emergency procedures in NAMROS. In the Community edition, S3 requests containing SSE-KMS headers and KMS admin commands are rejected by the Enterprise edition boundary.
+This guide explains the server-side encryption architecture and target
+operational procedures. In Community, requests containing SSE-KMS headers and
+KMS admin commands are rejected by the Enterprise edition boundary.
 
 </div>
 
 ## Implementation Status
 
-| Area | Current public Community behavior | Enterprise/spec status |
+| Area | Current public Community behavior | Advanced feature status |
 | --- | --- | --- |
-| SSE-KMS request admission | Denied by the Enterprise-required boundary; no KMS unlock switch is exposed. | Enterprise payload encryption contract with key-state admission and audit evidence. |
-| KMS admin CLI | `kms-key-put` and `kms-key-list` are reserved flat command names and return Enterprise-required responses in Community builds. | Private Enterprise overlay owns key lifecycle implementation. |
-| Fail-closed payload behavior | Not active because public Community does not process SSE-KMS payloads. | Required Enterprise behavior when KMS keys or providers are unavailable. |
+| SSE-KMS request admission | Denied by the Enterprise-required boundary; no KMS unlock switch is exposed. | Gateway write/read, multipart/copy, bucket default encryption, and key-state admission foundations implemented in Enterprise development. |
+| KMS provider and admin lifecycle | KMS commands return Enterprise-required responses. | Local AES-GCM provider and lifecycle foundations exist; production external-provider integration and operational hardening continue. |
+| Encrypted range reads | Not active because Community does not process SSE-KMS payloads. | Correctness path exists by decrypting the full encrypted segment before slicing; bounded streaming optimization remains in development. |
 
 ## Encryption Scope
 

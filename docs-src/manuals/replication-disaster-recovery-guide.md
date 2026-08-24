@@ -1,26 +1,33 @@
-Data Protection <span class="badge enterprise">Enterprise edition only</span>
+Data Protection <span class="badge planned">Planned specification</span>
 
 # NAMROS Replication & Disaster Recovery Guide
 
 <div class="warning" markdown="1">
 
-**Enterprise edition only.** This page describes Enterprise-only cross-region replication and disaster recovery contracts. Community edition behavior is included only to separate local HA from replication, failover, and failback surfaces.
+**Planned Enterprise specification.** This page describes target cross-region
+replication and disaster-recovery contracts. No generally available replication
+worker, promotion workflow, or failback automation is implied. Community
+behavior is included to distinguish current local HA from this roadmap.
 
 </div>
 
 <div class="summary" markdown="1">
 
-This guide defines the Enterprise contract and operational model for Cross-Region bucket/site replication and geo-distributed disaster recovery (DR). Community active-active gateways provide availability within one local cluster; cross-region replication, failover promotion, and failback automation are Enterprise or roadmap surfaces and are not exposed as public Community admin commands.
+This guide defines a planned Enterprise contract and operating model for
+cross-region bucket/site replication and geo-distributed disaster recovery.
+Community active-active gateways provide availability within one local cluster;
+replication workers, failover promotion, and failback automation remain roadmap
+surfaces and are not exposed as public Community admin commands.
 
 </div>
 
 ## Implementation Status
 
-| Area | Current public Community behavior | Enterprise/spec status |
+| Area | Current public Community behavior | Planned specification status |
 | --- | --- | --- |
 | Local HA | Active-active gateways can share TiKV metadata, etcd coordination, and shared/SBS-backed storage inside one cluster. | Same base behavior can be used as a building block for Enterprise topologies. |
-| Cross-region replication | No public Community `namros-admin replication` command or replication worker is available. | Enterprise contract for bucket, site, and batch replication. |
-| DR failover/failback | Handled outside the public Community CLI with operator runbooks. | Target behavior for approved Enterprise operations, DNS/load-balancer cutover, and audit evidence. |
+| Cross-region replication | No public Community `namros-admin replication` command or replication worker is available. | Planned bucket, site, and batch replication contract. |
+| DR failover/failback | Handled outside the public Community CLI with operator runbooks. | Planned approved-operation, DNS/load-balancer cutover, and audit-evidence behavior. |
 
 ## Replication Scope
 

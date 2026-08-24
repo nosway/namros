@@ -1,10 +1,12 @@
-테넌트 제어 <span class="badge">Community</span> <span class="badge enterprise">Enterprise edition only sections</span>
+테넌트 제어 <span class="badge">Community</span> <span class="badge planned">Enterprise 계획 섹션</span>
 
 # NAMROS Quota/QoS 가이드
 
 <div class="note" markdown="1">
 
-**Edition scope.** 이 페이지는 Community edition 버킷 최대 오브젝트 크기 quota와 Enterprise edition only capacity, tenant quota, QoS, alerting 섹션을 함께 다룹니다. Enterprise-only quota/QoS 계약을 공개 Community 동작으로 읽지 마세요.
+**기능 상태.** 이 페이지는 구현된 Community primitive와 계획된 Enterprise
+aggregate capacity, cluster-wide QoS, alerting 계약을 구분합니다. 구현 상태
+표가 달리 명시하지 않는 한 명세 예시는 현재 runtime 동작이 아닙니다.
 
 </div>
 
@@ -18,7 +20,7 @@
 
 | 영역 | 현재 공개 Community 동작 | Enterprise/spec 상태 |
 | --- | --- | --- |
-| 버킷 최대 오브젝트 크기 quota | `namros-admin bucket-quota-put`, `bucket-quota-get`, `bucket-quota-delete`로 지원합니다. | 기본 quota primitive로 사용할 수 있습니다. |
+| 버킷 최대 오브젝트 크기 quota | `namros-admin bucket-quota-put`, `bucket-quota-get`, `bucket-quota-delete`로 지원합니다. | Community 기본 primitive입니다. |
 | 버킷 용량/object-count quota | 공개 Community 빌드에는 aggregate usage limiter로 구현되어 있지 않습니다. | 사용량 counter, admission, alert를 위한 Enterprise 계약입니다. |
 | Tenant quota records | `namros-admin tenant-quota-put`, `tenant-quota-get`, `tenant-quota-delete`를 통해 metadata record로 지원합니다. `max_active_uploads`는 CreateMultipartUpload에서 적용하며, bytes/object admission은 후속 단계입니다. | tenant isolation, bandwidth/TPS shaping, telemetry를 위한 Enterprise 계약입니다. |
 | Tenant usage records | tenant bytes, committed object-version count, active MPU count, reconciliation timestamp/id를 기록하는 reconciliation foundation으로 지원합니다. | Admission enforcement는 후속 단계입니다. |

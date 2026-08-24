@@ -1,22 +1,28 @@
-Large Namespace Operations <span class="badge enterprise">Enterprise edition only</span>
+Large Namespace Operations <span class="badge planned">Planned specification</span>
 
 # NAMROS Inventory & Batch Operations Guide
 
 <div class="warning" markdown="1">
 
-**Enterprise edition only.** This page describes Enterprise-only inventory and batch operation contracts. Community edition behavior is included only to document the currently available metadata export building block and the absence of scheduled inventory or batch workers.
+**Planned Enterprise specification.** This page describes proposed inventory
+and batch-operation contracts. The current Community metadata export is a
+building block, but no generally available scheduled inventory or approved
+batch mutation service is implied.
 
 </div>
 
-In bucket environments with hundreds of millions of objects, standard S3 List APIs are insufficient to perform efficient full-asset inspection or state lifecycle reconciliation. To solve this, NAMROS Enterprise Edition defines automatic metadata auditing via S3 Object Inventory specifications, coupled with an S3 Batch Operations framework for large-scale bulk asset mutations.
+For large namespaces, this document proposes periodic inventory materialization
+and approved batch-operation workflows as an Enterprise direction. The schemas
+below are design candidates unless the implementation-status table explicitly
+marks a Community foundation.
 
 ## Implementation Status
 
-| Area | Current public Community behavior | Enterprise/spec status |
+| Area | Current public Community behavior | Planned specification status |
 | --- | --- | --- |
 | Metadata export | `namros-admin metadata-export` exports product metadata collections for backup, migration, and audit workflows. | Used as a building block for inventory evidence. |
-| S3 Object Inventory | No scheduled public Community inventory worker is enabled. | Enterprise contract for periodic inventory materialization and report storage. |
-| S3 Batch Operations | No public Community bulk mutation framework is enabled. | Enterprise contract for approved large-scale mutation jobs and audit envelopes. |
+| S3 Object Inventory | No scheduled public Community inventory worker is enabled. | Planned contract for periodic inventory materialization and report storage. |
+| S3 Batch Operations | No public Community bulk mutation framework is enabled. | Planned contract for approved large-scale mutation jobs and audit envelopes. |
 
 ## Inventory Schema Candidate
 

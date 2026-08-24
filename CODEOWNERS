@@ -1,0 +1,9 @@
+# Default review ownership for the public source distribution.
+* @nosway
+
+# Changes to release, security, and source-boundary controls require an owner
+# review even when a more specific ownership rule is added later.
+/.github/ @nosway
+/scripts/release/ @nosway
+/internal/edition/ @nosway
+/SECURITY.md @nosway

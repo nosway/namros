@@ -1,6 +1,18 @@
 # Contributing to NAMROS
 
-Thank you for helping improve NAMROS Community Edition.
+Thank you for helping improve the open-source NAMROS platform.
+
+## Ways To Contribute
+
+Bug fixes, S3 compatibility improvements, tests, deployment hardening,
+observability, documentation, client recipes, and reproducible performance or
+failure evidence are welcome. New contributors can start with issues labeled
+`good first issue` or `help wanted`.
+
+Before starting a new public API, metadata schema, deployment default, or large
+architectural change, open an issue and describe the user problem, alternatives,
+compatibility and migration effects, operational risks, and verification plan.
+Small fixes can go directly to a focused pull request.
 
 ## Development Setup
 
@@ -41,6 +53,9 @@ Public contributions must preserve the Community Edition boundary:
   errors.
 - Enterprise implementation bodies belong in private source overlays, not in
   the public Community tree.
+- Public documentation may describe advanced work, but it must distinguish
+  `Enterprise development` from `Planned specification` and must not claim
+  general availability without a supported release.
 
 Run this check when touching edition-sensitive code:
 
@@ -54,6 +69,19 @@ make check-community-export
 - Keep changes focused and avoid unrelated refactors.
 - Prefer small tests that cover the behavior changed by the pull request.
 - Use clear error messages for user-visible or operator-visible failures.
+
+## Pull Request Process
+
+- Link the issue for larger changes and keep the pull request focused.
+- Explain user-visible behavior, compatibility, metadata, deployment, and
+  upgrade effects.
+- List the exact verification commands run and identify skipped
+  environment-dependent checks.
+- Add or update tests before requesting review.
+- Respond to review comments with a follow-up commit or a short technical
+  rationale.
+- Maintainers may ask to split unrelated changes or to revise a proposal before
+  implementation proceeds.
 
 ## Documentation
 
@@ -77,3 +105,13 @@ make docs-render-check
 By contributing, you certify that you have the right to submit the contribution
 under the Apache License, Version 2.0. Unless explicitly stated otherwise, your
 contributions are submitted under the same license as this project.
+
+Add a `Signed-off-by` trailer to each commit with:
+
+```sh
+git commit --signoff
+```
+
+The trailer records agreement with the
+[Developer Certificate of Origin](https://developercertificate.org/); it is not
+a copyright assignment.

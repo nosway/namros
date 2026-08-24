@@ -13,9 +13,11 @@ assignees: ""
 
 - NAMROS version or commit:
 - OS:
+- Deployment shape (local, Compose, Helm/kind, other):
 - Go version:
 - Metadata backend:
 - Storage backend:
+- S3 client and version:
 
 ## Steps to Reproduce
 
@@ -30,3 +32,10 @@ assignees: ""
 
 
 ## Logs or Artifacts
+
+Remove credentials, authorization headers, presigned URLs, object payloads, and
+private endpoint names before attaching logs or reports.
+
+## Regression
+
+- Did this work in an earlier NAMROS release or commit? If yes, which one?

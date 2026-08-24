@@ -77,6 +77,10 @@
   color: var(--namros-danger);
 }
 
+.badge.planned {
+  color: var(--namros-warn);
+}
+
 /* Card grids -------------------------------------------------------------- */
 
 .cards {

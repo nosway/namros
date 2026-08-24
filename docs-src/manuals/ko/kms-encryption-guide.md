@@ -1,10 +1,13 @@
-보안 <span class="badge enterprise">Enterprise edition only</span>
+보안 <span class="badge enterprise">Enterprise 개발 중</span>
 
 # NAMROS KMS 암호화 가이드
 
 <div class="warning" markdown="1">
 
-**Enterprise edition only.** 이 페이지는 Enterprise 전용 SSE-KMS, SSE-S3, key lifecycle, fail-closed encryption 계약을 설명합니다. Community edition 동작은 거부 응답과 에디션 경계를 설명하기 위해서만 포함합니다.
+**Enterprise 개발 및 검증 중.** SSE-KMS payload 암호화와 key-state admission
+기반이 Enterprise 개발선에 있습니다. Streaming range 최적화, 외부 provider
+운영 통합과 확장 검증은 진행 중이며, Community는 명시적 Enterprise-required
+경계를 유지합니다.
 
 </div>
 
@@ -18,9 +21,9 @@
 
 | 영역 | 현재 공개 Community 동작 | Enterprise/spec 상태 |
 | --- | --- | --- |
-| SSE-KMS 요청 admission | Enterprise-required 경계에서 거부되며 KMS unlock switch를 노출하지 않습니다. | 키 상태 admission과 audit evidence를 포함하는 Enterprise payload encryption 계약입니다. |
-| KMS 관리자 CLI | `kms-key-put`과 `kms-key-list`는 예약된 flat command 이름이며 Community 빌드에서는 Enterprise-required 응답을 반환합니다. | private Enterprise overlay가 key lifecycle 구현을 소유합니다. |
-| Fail-closed payload 동작 | 공개 Community는 SSE-KMS payload를 처리하지 않으므로 활성화되지 않습니다. | KMS key 또는 provider 사용 불가 시 요구되는 Enterprise 동작입니다. |
+| SSE-KMS 요청 admission | Enterprise-required 경계에서 거부되며 KMS unlock switch를 노출하지 않습니다. | Gateway write/read, multipart/copy, bucket default encryption과 key-state admission 기반을 Enterprise에서 개발 중입니다. |
+| KMS provider와 관리자 lifecycle | Community 명령은 Enterprise-required 응답을 반환합니다. | Local AES-GCM provider와 lifecycle 기반이 있으며 외부 provider 통합과 운영 강화가 진행 중입니다. |
+| 암호화된 range read | Community에서는 활성화되지 않습니다. | 전체 segment 복호화 후 range를 선택하는 정확성 경로가 있으며 bounded streaming 최적화가 남았습니다. |
 
 ## 암호화 범위
 

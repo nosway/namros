@@ -2,8 +2,8 @@
 
 ## Our Pledge
 
-We pledge to make participation in the NAMROS Community Edition project a
-welcoming and respectful experience for everyone.
+We pledge to make participation in the NAMROS open-source project a welcoming
+and respectful experience for everyone.
 
 ## Expected Behavior
 

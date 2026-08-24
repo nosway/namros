@@ -1,4 +1,4 @@
-아키텍처 매뉴얼 <span class="badge">Community</span> <span class="badge enterprise">Enterprise edition only sections</span>
+아키텍처 매뉴얼 <span class="badge">Community</span> <span class="badge enterprise">Enterprise 개발 섹션</span>
 
 # NAMROS 아키텍처 매뉴얼
 
@@ -12,9 +12,9 @@
 6. [오브젝트와 세그먼트 모델](../chapters/05-object-and-segment-model.md)
 7. [멀티파트 쓰기 가시성](../chapters/06-multipart-write-visibility.md)
 8. [복제 및 로컬 백엔드](../chapters/07-replicated-and-local-backends.md)
-9. [SBS EC 백엔드 Enterprise](../chapters/08-sbs-ec-backend-enterprise.md)
+9. [SBS EC 백엔드 Enterprise 개발](../chapters/08-sbs-ec-backend-enterprise.md)
 10. [버저닝, 라이프사이클, Object Lock](../chapters/09-versioning-lifecycle-object-lock.md)
-11. [중복제거 Enterprise](../chapters/10-dedupe-and-shared-objects-enterprise.md)
+11. [중복제거 Enterprise 개발](../chapters/10-dedupe-and-shared-objects-enterprise.md)
 12. [보안, 컴플라이언스, 에디션](../chapters/11-security-compliance-and-editions.md)
 13. [관측성과 운영](../chapters/12-observability-and-operations.md)
 14. [MCP 운영 Provider](../chapters/13-mcp-operations-provider.md)
@@ -29,7 +29,10 @@
 
 <div class="note" markdown="1">
 
-**Edition scope.** 이 매뉴얼은 Community edition 아키텍처와 Enterprise edition only 장/섹션을 함께 다룹니다. <span class="badge enterprise">Enterprise edition only</span>로 표시된 내용은 private distribution 동작이며, Community 동작은 명시적으로 표시되었거나 거부 semantics를 설명하는 경우에만 해당합니다.
+**기능 상태.** 이 매뉴얼은 실행 가능한 Community architecture를 먼저
+설명합니다. <span class="badge enterprise">Enterprise 개발 중</span> 표시는
+private 구현 또는 검증 작업을, 계획/명세 표시는 현재 공급 기능이 아닌
+설계 목표를 뜻합니다.
 
 </div>
 
