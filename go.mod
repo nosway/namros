@@ -14,7 +14,7 @@ require (
 	github.com/pingcap/kvproto v0.0.0-20230403051650-e166ae588106
 	github.com/prometheus/client_golang v1.20.5
 	github.com/tikv/client-go/v2 v2.0.7
-	go.etcd.io/etcd/api/v3 v3.6.8
+	go.etcd.io/etcd/api/v3 v3.7.1
 	golang.org/x/crypto v0.55.0
 	google.golang.org/grpc v1.82.1
 )
@@ -51,7 +51,7 @@ require (
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.3 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
