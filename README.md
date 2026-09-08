@@ -11,6 +11,8 @@ metadata-first architecture and stateless gateways. It separates authoritative
 object metadata from payload storage so gateway instances can be replaced or
 scaled horizontally without becoming the namespace authority.
 
+**Pronunciation:** NAMROS is pronounced `[nae-muh-ross]`.
+
 The public NAMROS Community distribution includes core S3 object workflows,
 multipart uploads, versioning, lifecycle processing, distributed metadata,
 active-active gateway coordination, replicated SBS object storage, and
