@@ -37,6 +37,56 @@ release history stays in this file.
 
 ### Known Limits
 
+## [1.0.4] - 2026-09-08
+
+### Added
+
+- Added a machine-readable OpenAPI contract, Swagger entry point, and English
+  and Korean S3 API compatibility references for the public gateway surface.
+- Added public governance, maintainer, roadmap, support, issue-template, and
+  security workflow material for the Community project.
+
+### Changed
+
+- Upgraded the NAMRBD module dependency and all default container build
+  contexts to NAMRBD v1.1.1.
+- Hardened S3 request routing for query-subresource and header-selected
+  operations, with compatibility coverage for the documented public surface.
+- Updated the public dependency and CI baseline, including current S3 gateway,
+  transport security, erasure-coding, and GitHub Actions dependencies.
+- Updated the Helm chart and application metadata to version 1.0.4.
+
+### Fixed
+
+- Enabled the NAMRBD lab store debug endpoint on SBS quickstart data nodes so
+  the bootstrap can materialize replicated volumes before starting the gateway.
+- Kept public Community source export, documentation rendering, and release
+  workflow checks aligned with the exported source tree.
+
+### Security
+
+- Added dedicated public security automation for vulnerability scanning,
+  CodeQL analysis, and pull-request dependency review.
+
+### Edition: Community
+
+- Preserved the Community-only runtime boundary and explicit Enterprise feature
+  denial behavior across the expanded public API and documentation surface.
+
+### Upgrade & Migration
+
+- Gateway listener configuration now uses `-http-listen`; deployments using the
+  former `-listen` flag must update their command-line arguments.
+- Existing NAMROS metadata and object data do not require a release-specific
+  migration for this patch release.
+
+### Compatibility
+
+- NAMRBD v1.1.1 is the expected SBS module and container build-context version
+  for this release.
+- The Community release gate, direct-module test suite, strict documentation
+  render, and SBS service/data/S3 quickstart path pass with the v1.1.1 runtime.
+
 ## [1.0.3] - 2026-08-21
 
 ### Changed
