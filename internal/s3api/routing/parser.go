@@ -212,24 +212,40 @@ func first(values []string) string {
 
 func isS3ControlQuery(name string) bool {
 	switch name {
-	case "acl", "cors", "delete", "encryption", "legal-hold", "lifecycle", "notification", "object-lock", "policy", "retention", "tagging", "torrent", "versioning", "versions", "website":
+	case "accelerate", "acl", "analytics", "annotation", "attributes", "cors", "delete", "encryption", "intelligent-tiering", "inventory", "legal-hold", "lifecycle", "logging", "metadataAnnotationTable", "metadataConfiguration", "metadataInventoryTable", "metadataJournalTable", "metadataTable", "metrics", "notification", "object-lock", "ownershipControls", "policy", "policyStatus", "publicAccessBlock", "renameObject", "replication", "requestPayment", "restore", "retention", "select", "select-type", "session", "tagging", "torrent", "versioning", "versions", "website":
 		return true
 	default:
 		return false
 	}
 }
 
+func hasOnlySubresources(subresources map[Subresource]string, allowed ...Subresource) bool {
+	if len(subresources) == 0 {
+		return true
+	}
+	allowedSet := make(map[Subresource]struct{}, len(allowed))
+	for _, subresource := range allowed {
+		allowedSet[subresource] = struct{}{}
+	}
+	for subresource := range subresources {
+		if _, ok := allowedSet[subresource]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
 func classify(req Request, httpReq *http.Request) Operation {
 	if req.Bucket == "" {
-		if req.Method == http.MethodGet && !req.HasKey {
+		if req.Method == http.MethodGet && !req.HasKey && len(req.Subresources) == 0 {
 			return OperationListBuckets
 		}
 		return OperationUnsupported
 	}
-	if _, ok := req.Subresources[SubresourceLocation]; ok && !req.HasKey && req.Method == http.MethodGet {
+	if _, ok := req.Subresources[SubresourceLocation]; ok && !req.HasKey && req.Method == http.MethodGet && hasOnlySubresources(req.Subresources, SubresourceLocation) {
 		return OperationGetBucketLocation
 	}
-	if _, ok := req.Subresources[SubresourceVersioning]; ok && !req.HasKey {
+	if _, ok := req.Subresources[SubresourceVersioning]; ok && !req.HasKey && hasOnlySubresources(req.Subresources, SubresourceVersioning) {
 		switch req.Method {
 		case http.MethodGet:
 			return OperationGetBucketVersioning
@@ -237,7 +253,7 @@ func classify(req Request, httpReq *http.Request) Operation {
 			return OperationPutBucketVersioning
 		}
 	}
-	if _, ok := req.Subresources[SubresourceCORS]; ok && !req.HasKey {
+	if _, ok := req.Subresources[SubresourceCORS]; ok && !req.HasKey && hasOnlySubresources(req.Subresources, SubresourceCORS) {
 		switch req.Method {
 		case http.MethodGet:
 			return OperationGetBucketCORS
@@ -247,7 +263,7 @@ func classify(req Request, httpReq *http.Request) Operation {
 			return OperationDeleteBucketCORS
 		}
 	}
-	if _, ok := req.Subresources[SubresourceLifecycle]; ok && !req.HasKey {
+	if _, ok := req.Subresources[SubresourceLifecycle]; ok && !req.HasKey && hasOnlySubresources(req.Subresources, SubresourceLifecycle) {
 		switch req.Method {
 		case http.MethodGet:
 			return OperationGetBucketLifecycle
@@ -257,7 +273,7 @@ func classify(req Request, httpReq *http.Request) Operation {
 			return OperationDeleteBucketLifecycle
 		}
 	}
-	if _, ok := req.Subresources[SubresourceObjectLock]; ok && !req.HasKey {
+	if _, ok := req.Subresources[SubresourceObjectLock]; ok && !req.HasKey && hasOnlySubresources(req.Subresources, SubresourceObjectLock) {
 		switch req.Method {
 		case http.MethodGet:
 			return OperationGetBucketObjectLock
@@ -265,7 +281,7 @@ func classify(req Request, httpReq *http.Request) Operation {
 			return OperationPutBucketObjectLock
 		}
 	}
-	if _, ok := req.Subresources[SubresourcePolicy]; ok && !req.HasKey {
+	if _, ok := req.Subresources[SubresourcePolicy]; ok && !req.HasKey && hasOnlySubresources(req.Subresources, SubresourcePolicy) {
 		switch req.Method {
 		case http.MethodGet:
 			return OperationGetBucketPolicy
@@ -275,7 +291,7 @@ func classify(req Request, httpReq *http.Request) Operation {
 			return OperationDeleteBucketPolicy
 		}
 	}
-	if _, ok := req.Subresources[SubresourceEncryption]; ok && !req.HasKey {
+	if _, ok := req.Subresources[SubresourceEncryption]; ok && !req.HasKey && hasOnlySubresources(req.Subresources, SubresourceEncryption) {
 		switch req.Method {
 		case http.MethodGet:
 			return OperationGetBucketEncryption
@@ -285,7 +301,7 @@ func classify(req Request, httpReq *http.Request) Operation {
 			return OperationDeleteBucketEncryption
 		}
 	}
-	if _, ok := req.Subresources[SubresourceACL]; ok && !req.HasKey {
+	if _, ok := req.Subresources[SubresourceACL]; ok && !req.HasKey && hasOnlySubresources(req.Subresources, SubresourceACL) {
 		switch req.Method {
 		case http.MethodGet:
 			return OperationGetBucketACL
@@ -293,35 +309,35 @@ func classify(req Request, httpReq *http.Request) Operation {
 			return OperationPutBucketACL
 		}
 	}
-	if _, ok := req.Subresources[SubresourceDelete]; ok && !req.HasKey && req.Method == http.MethodPost {
+	if _, ok := req.Subresources[SubresourceDelete]; ok && !req.HasKey && req.Method == http.MethodPost && hasOnlySubresources(req.Subresources, SubresourceDelete) {
 		return OperationDeleteObjects
 	}
-	if _, ok := req.Subresources[SubresourceVersions]; ok && !req.HasKey && req.Method == http.MethodGet {
+	if _, ok := req.Subresources[SubresourceVersions]; ok && !req.HasKey && req.Method == http.MethodGet && hasOnlySubresources(req.Subresources, SubresourceVersions) {
 		return OperationListObjectVersions
 	}
-	if _, ok := req.Subresources[SubresourceListType]; ok && !req.HasKey && req.Method == http.MethodGet {
+	if value, ok := req.Subresources[SubresourceListType]; ok && value == "2" && !req.HasKey && req.Method == http.MethodGet && hasOnlySubresources(req.Subresources, SubresourceListType) {
 		return OperationListObjectsV2
 	}
-	if _, ok := req.Subresources[SubresourceUploads]; ok && !req.HasKey && req.Method == http.MethodGet {
+	if _, ok := req.Subresources[SubresourceUploads]; ok && !req.HasKey && req.Method == http.MethodGet && hasOnlySubresources(req.Subresources, SubresourceUploads) {
 		return OperationListMultipartUploads
 	}
-	if _, ok := req.Subresources[SubresourceUploads]; ok && req.HasKey && req.Method == http.MethodPost {
+	if _, ok := req.Subresources[SubresourceUploads]; ok && req.HasKey && req.Method == http.MethodPost && hasOnlySubresources(req.Subresources, SubresourceUploads) {
 		return OperationCreateMultipartUpload
 	}
 	if _, hasUploadID := req.Subresources[SubresourceUploadID]; hasUploadID && req.HasKey {
 		_, hasPartNumber := req.Subresources[SubresourcePartNumber]
 		switch {
-		case hasPartNumber && req.Method == http.MethodPut:
+		case hasPartNumber && req.Method == http.MethodPut && hasOnlySubresources(req.Subresources, SubresourceUploadID, SubresourcePartNumber):
 			return OperationUploadPart
-		case req.Method == http.MethodGet:
+		case !hasPartNumber && req.Method == http.MethodGet && hasOnlySubresources(req.Subresources, SubresourceUploadID):
 			return OperationListParts
-		case req.Method == http.MethodPost:
+		case !hasPartNumber && req.Method == http.MethodPost && hasOnlySubresources(req.Subresources, SubresourceUploadID):
 			return OperationCompleteMultipart
-		case req.Method == http.MethodDelete:
+		case !hasPartNumber && req.Method == http.MethodDelete && hasOnlySubresources(req.Subresources, SubresourceUploadID):
 			return OperationAbortMultipart
 		}
 	}
-	if _, ok := req.Subresources[SubresourceTagging]; ok && req.HasKey {
+	if _, ok := req.Subresources[SubresourceTagging]; ok && req.HasKey && hasOnlySubresources(req.Subresources, SubresourceTagging, SubresourceVersionID) {
 		switch req.Method {
 		case http.MethodGet:
 			return OperationGetObjectTagging
@@ -331,7 +347,7 @@ func classify(req Request, httpReq *http.Request) Operation {
 			return OperationDeleteObjectTagging
 		}
 	}
-	if _, ok := req.Subresources[SubresourceRetention]; ok && req.HasKey {
+	if _, ok := req.Subresources[SubresourceRetention]; ok && req.HasKey && hasOnlySubresources(req.Subresources, SubresourceRetention, SubresourceVersionID) {
 		switch req.Method {
 		case http.MethodGet:
 			return OperationGetObjectRetention
@@ -339,7 +355,7 @@ func classify(req Request, httpReq *http.Request) Operation {
 			return OperationPutObjectRetention
 		}
 	}
-	if _, ok := req.Subresources[SubresourceLegalHold]; ok && req.HasKey {
+	if _, ok := req.Subresources[SubresourceLegalHold]; ok && req.HasKey && hasOnlySubresources(req.Subresources, SubresourceLegalHold, SubresourceVersionID) {
 		switch req.Method {
 		case http.MethodGet:
 			return OperationGetObjectLegalHold
@@ -347,7 +363,7 @@ func classify(req Request, httpReq *http.Request) Operation {
 			return OperationPutObjectLegalHold
 		}
 	}
-	if _, ok := req.Subresources[SubresourceACL]; ok && req.HasKey {
+	if _, ok := req.Subresources[SubresourceACL]; ok && req.HasKey && hasOnlySubresources(req.Subresources, SubresourceACL, SubresourceVersionID) {
 		switch req.Method {
 		case http.MethodGet:
 			return OperationGetObjectACL
@@ -356,8 +372,14 @@ func classify(req Request, httpReq *http.Request) Operation {
 		}
 	}
 	if req.HasKey {
+		if !hasOnlySubresources(req.Subresources, SubresourceVersionID) {
+			return OperationUnsupported
+		}
 		switch req.Method {
 		case http.MethodPut:
+			if len(req.Subresources) != 0 {
+				return OperationUnsupported
+			}
 			if httpReq != nil && httpReq.Header.Get("x-amz-copy-source") != "" {
 				return OperationCopyObject
 			}
@@ -371,6 +393,9 @@ func classify(req Request, httpReq *http.Request) Operation {
 		default:
 			return OperationUnsupported
 		}
+	}
+	if len(req.Subresources) != 0 {
+		return OperationUnsupported
 	}
 	switch req.Method {
 	case http.MethodPut:

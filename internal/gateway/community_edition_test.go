@@ -59,6 +59,84 @@ func TestCommunityEditionRejectsEnterpriseS3Features(t *testing.T) {
 	communityAssertEnterpriseFeatureBlocked(t, putEC)
 }
 
+func TestCommunityEditionRejectsUnsupportedSSECWithoutPublishingObject(t *testing.T) {
+	skipEnterpriseOverlayCommunityAssertion(t)
+	cfg := config.Default()
+	segmentStore, err := local.New(t.TempDir())
+	if err != nil {
+		t.Fatalf("local.New() error = %v", err)
+	}
+	handler := NewHandlerWithDeps(cfg, Dependencies{
+		Metadata: memory.New(),
+		Storage:  segmentStore,
+		Orphans:  segmentStore,
+	})
+
+	createBucket := communityPerformSigned(t, handler, cfg, http.MethodPut, "/community-sse-c", nil, nil)
+	if createBucket.Code != http.StatusOK {
+		t.Fatalf("CreateBucket status = %d body = %s", createBucket.Code, createBucket.Body.String())
+	}
+
+	putObject := communityPerformSigned(t, handler, cfg, http.MethodPut, "/community-sse-c/object.txt", strings.NewReader("must not be stored"), map[string]string{
+		"X-Amz-Server-Side-Encryption-Customer-Algorithm": "AES256",
+		"X-Amz-Server-Side-Encryption-Customer-Key":       "test-only-key",
+		"X-Amz-Server-Side-Encryption-Customer-Key-Md5":   "test-only-md5",
+	})
+	if putObject.Code != http.StatusNotImplemented {
+		t.Fatalf("PutObject(SSE-C) status = %d body = %s, want 501", putObject.Code, putObject.Body.String())
+	}
+	if code := communityS3ErrorCode(t, putObject); code != "NotImplemented" {
+		t.Fatalf("PutObject(SSE-C) error code = %q, want NotImplemented", code)
+	}
+
+	getObject := communityPerformSigned(t, handler, cfg, http.MethodGet, "/community-sse-c/object.txt", nil, nil)
+	if getObject.Code != http.StatusNotFound {
+		t.Fatalf("GetObject(after rejected SSE-C) status = %d body = %s, want 404", getObject.Code, getObject.Body.String())
+	}
+}
+
+func TestCommunityEditionRejectsRenameObjectWithoutPublishingDestination(t *testing.T) {
+	skipEnterpriseOverlayCommunityAssertion(t)
+	cfg := config.Default()
+	segmentStore, err := local.New(t.TempDir())
+	if err != nil {
+		t.Fatalf("local.New() error = %v", err)
+	}
+	handler := NewHandlerWithDeps(cfg, Dependencies{
+		Metadata: memory.New(),
+		Storage:  segmentStore,
+		Orphans:  segmentStore,
+	})
+
+	createBucket := communityPerformSigned(t, handler, cfg, http.MethodPut, "/community-rename", nil, nil)
+	if createBucket.Code != http.StatusOK {
+		t.Fatalf("CreateBucket status = %d body = %s", createBucket.Code, createBucket.Body.String())
+	}
+	putSource := communityPerformSigned(t, handler, cfg, http.MethodPut, "/community-rename/source.txt", strings.NewReader("source"), nil)
+	if putSource.Code != http.StatusOK {
+		t.Fatalf("PutObject(source) status = %d body = %s", putSource.Code, putSource.Body.String())
+	}
+
+	rename := communityPerformSigned(t, handler, cfg, http.MethodPut, "/community-rename/destination.txt", nil, map[string]string{
+		"X-Amz-Rename-Source": "/community-rename/source.txt",
+	})
+	if rename.Code != http.StatusNotImplemented {
+		t.Fatalf("RenameObject status = %d body = %s, want 501", rename.Code, rename.Body.String())
+	}
+	if code := communityS3ErrorCode(t, rename); code != "NotImplemented" {
+		t.Fatalf("RenameObject error code = %q, want NotImplemented", code)
+	}
+
+	getDestination := communityPerformSigned(t, handler, cfg, http.MethodGet, "/community-rename/destination.txt", nil, nil)
+	if getDestination.Code != http.StatusNotFound {
+		t.Fatalf("GetObject(destination after rejected rename) status = %d body = %s, want 404", getDestination.Code, getDestination.Body.String())
+	}
+	getSource := communityPerformSigned(t, handler, cfg, http.MethodGet, "/community-rename/source.txt", nil, nil)
+	if getSource.Code != http.StatusOK {
+		t.Fatalf("GetObject(source after rejected rename) status = %d body = %s, want 200", getSource.Code, getSource.Body.String())
+	}
+}
+
 func communityPerformSigned(t *testing.T, handler http.Handler, cfg config.Config, method, target string, body io.Reader, headers map[string]string) *httptest.ResponseRecorder {
 	t.Helper()
 	if body == nil {

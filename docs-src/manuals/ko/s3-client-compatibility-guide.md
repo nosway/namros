@@ -12,6 +12,10 @@
 
 이 클라이언트 점검은 `make run-dev`로 시작한 로컬 게이트웨이 또는 컨테이너 배포 가이드의 컨테이너 스택을 대상으로 실행합니다. s3fs-fuse는 FUSE 마운트 권한이 필요하므로 Linux 호스트에서 별도로 검증합니다.
 
+클라이언트 스모크 범위가 API 전체 지원을 의미하지는 않습니다. 현재 operation
+matrix와 의미론 제약은 [S3 API 호환성 레퍼런스](s3-api-compatibility-reference.md)를
+기준으로 확인하십시오.
+
 | 클라이언트 | 검증 범위 | 예시 |
 | --- | --- | --- |
 | AWS CLI | put/get/head/range/list, 메타데이터, 복사, 버전 관리, CORS, 사전 서명, MPU 목록/중단 | `aws s3api list-buckets` |
@@ -46,7 +50,7 @@ aws --endpoint-url "$NAMROS_ENDPOINT" s3api list-buckets
 
 기대 결과는 구성한 엔드포인트에서 정상 S3 list-buckets 응답을 반환하는 것입니다.
 
-## MinIO 클라이언트 스모크
+## MinIO 클라이언트 스모크 { #mc }
 
 ```sh
 mc alias set namros "$NAMROS_ENDPOINT" "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY"

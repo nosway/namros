@@ -8,3 +8,5 @@
 #
 # mkdocs-material pulls in mkdocs, pymdown-extensions, and the search plugin.
 mkdocs-material>=9.7,<10
+# Validate the machine-readable S3 contract during the documentation build.
+openapi-spec-validator>=0.9,<0.10

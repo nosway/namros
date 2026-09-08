@@ -48,6 +48,8 @@ nav:
   - Home: index.md
   - Manuals:
       - NAMROS: manuals/index.md
+      - S3 API Compatibility Reference: manuals/s3-api-compatibility-reference.md
+      - S3 API Swagger View: manuals/s3-api-swagger.md
       - NAMROS Integrated CLI Command Reference: manuals/admin-cli-reference.md
       - NAMROS Administrator Guide: manuals/admin-guide.md
       - NAMROS Capacity Scaling & Maintenance Guide: manuals/capacity-scaling-maintenance-guide.md
@@ -94,6 +96,7 @@ nav:
       - Revision History: manuals/architecture-manual/chapters/appendix-revision-history.md
   - 한국어:
       - NAMROS: manuals/ko/index.md
+      - S3 API 호환성 레퍼런스: manuals/ko/s3-api-compatibility-reference.md
       - NAMROS 통합 CLI 명령어 레퍼런스: manuals/ko/admin-cli-reference.md
       - NAMROS 관리자 가이드: manuals/ko/admin-guide.md
       - NAMROS 용량 확장 및 유지보수 가이드: manuals/ko/capacity-scaling-maintenance-guide.md

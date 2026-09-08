@@ -119,8 +119,8 @@ With the gateway running, verify an S3 round trip from another shell:
 
 ```sh
 export NAMROS_ENDPOINT=http://127.0.0.1:9000
-export AWS_ACCESS_KEY_ID=namros
-export AWS_SECRET_ACCESS_KEY=namros-secret
+export AWS_ACCESS_KEY_ID=namrosroot
+export AWS_SECRET_ACCESS_KEY=namrosrootsecret
 export AWS_DEFAULT_REGION=us-east-1
 
 aws --endpoint-url "$NAMROS_ENDPOINT" s3api create-bucket --bucket quickstart

@@ -3598,6 +3598,12 @@ func validateObjectTags(tags map[string]string) (map[string]string, error) {
 }
 
 func validateCompatibilityHeaders(r *http.Request, operation routing.Operation) (s3err.Error, bool) {
+	if sseCustomerHeadersPresent(r) {
+		return s3err.NotImplemented("SSE-C is not implemented"), true
+	}
+	if headerPresent(r, "x-amz-rename-source") {
+		return s3err.NotImplemented("RenameObject is not implemented"), true
+	}
 	if payer := strings.TrimSpace(r.Header.Get("x-amz-request-payer")); payer != "" && !strings.EqualFold(payer, "requester") {
 		return s3err.InvalidArgument("x-amz-request-payer must be requester"), true
 	}
@@ -3614,6 +3620,30 @@ func validateCompatibilityHeaders(r *http.Request, operation routing.Operation) 
 	default:
 		return s3err.InvalidArgument("x-amz-acl is not valid for this operation"), true
 	}
+}
+
+func sseCustomerHeadersPresent(r *http.Request) bool {
+	for name := range r.Header {
+		switch strings.ToLower(name) {
+		case "x-amz-server-side-encryption-customer-algorithm",
+			"x-amz-server-side-encryption-customer-key",
+			"x-amz-server-side-encryption-customer-key-md5",
+			"x-amz-copy-source-server-side-encryption-customer-algorithm",
+			"x-amz-copy-source-server-side-encryption-customer-key",
+			"x-amz-copy-source-server-side-encryption-customer-key-md5":
+			return true
+		}
+	}
+	return false
+}
+
+func headerPresent(r *http.Request, target string) bool {
+	for name := range r.Header {
+		if strings.EqualFold(name, target) {
+			return true
+		}
+	}
+	return false
 }
 
 func (h s3Handler) validateEditionFeature(r *http.Request, operation routing.Operation) (s3err.Error, bool) {

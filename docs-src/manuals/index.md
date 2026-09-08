@@ -57,8 +57,8 @@ Keep the gateway running, then use a second terminal for a basic S3 round trip:
 
 ```sh
 export NAMROS_ENDPOINT=http://127.0.0.1:9000
-export AWS_ACCESS_KEY_ID=namros
-export AWS_SECRET_ACCESS_KEY=namros-secret
+export AWS_ACCESS_KEY_ID=namrosroot
+export AWS_SECRET_ACCESS_KEY=namrosrootsecret
 export AWS_DEFAULT_REGION=us-east-1
 
 aws --endpoint-url "$NAMROS_ENDPOINT" s3api create-bucket --bucket quickstart
@@ -101,6 +101,8 @@ We recommend starting paths tailored to your specific organizational persona and
 Application Developer Path
 
 Learn S3-compatible endpoints, credential authorization, multipart upload APIs, and integration runbooks using SDKs (Go, Python, Java) and AWS CLI.
+
+[Open the S3 API compatibility reference →](s3-api-compatibility-reference.md)
 
 [Open User Manual →](user-manual.md)
 

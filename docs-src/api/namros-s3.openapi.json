@@ -1,0 +1,413 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NAMROS S3 Compatibility API",
+    "version": "2026-08-24",
+    "summary": "Implemented NAMROS S3-compatible request surface",
+    "description": "This document describes the S3-compatible request surface implemented by the NAMROS gateway. It is not a claim of complete AWS S3 API compatibility. S3 overloads a method and resource path with query subresources and dispatch headers; OpenAPI permits only one operation for each path and method. The paths below therefore model the HTTP dispatchers, while x-namros-operation-matrix and x-namros-dispatches enumerate the actual S3 operations. Swagger UI does not generate AWS Signature Version 4 signatures; use an already signed request, a presigned URL, or an S3 client for execution."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:9000",
+      "description": "Default local development gateway"
+    }
+  ],
+  "security": [
+    {
+      "SigV4Authorization": []
+    }
+  ],
+  "tags": [
+    {"name": "Service"},
+    {"name": "Bucket dispatcher"},
+    {"name": "Object dispatcher"}
+  ],
+  "x-namros-status-values": {
+    "community": "Implemented in the Community gateway, subject to the documented subset.",
+    "community-partial": "The route exists in Community, but important AWS semantics are not yet complete.",
+    "compatibility-only": "Accepted or returned for client compatibility; it is not an authorization or billing authority.",
+    "enterprise-gated": "The route exists, but a Community build returns the NAMROS Enterprise Edition NotImplemented response."
+  },
+  "x-namros-operation-matrix": [
+    {"operationId":"ListBuckets","method":"GET","resource":"/","selector":"none","status":"community","notes":"Lists buckets visible to the authenticated tenant."},
+
+    {"operationId":"CreateBucket","method":"PUT","resource":"/{bucket}","selector":"no subresource","status":"community-partial","notes":"Object Lock creation header is Enterprise-gated; the location body and complete AWS DNS name validation are not implemented."},
+    {"operationId":"HeadBucket","method":"HEAD","resource":"/{bucket}","selector":"no subresource","status":"community","notes":"Existence check for an authenticated request."},
+    {"operationId":"DeleteBucket","method":"DELETE","resource":"/{bucket}","selector":"no subresource","status":"community","notes":"Only an empty bucket can be deleted."},
+    {"operationId":"GetBucketLocation","method":"GET","resource":"/{bucket}","selector":"?location","status":"community","notes":"Returns the configured region."},
+    {"operationId":"GetBucketVersioning","method":"GET","resource":"/{bucket}","selector":"?versioning","status":"community-partial","notes":"Returns Enabled, Suspended, or an empty state; Suspended null-version semantics are incomplete."},
+    {"operationId":"PutBucketVersioning","method":"PUT","resource":"/{bucket}","selector":"?versioning","status":"community-partial","notes":"Accepts Enabled or Suspended; Suspended null-version semantics are incomplete and Object Lock rules apply in Enterprise."},
+    {"operationId":"GetBucketCORS","method":"GET","resource":"/{bucket}","selector":"?cors","status":"community","notes":"Returns the stored CORS rules."},
+    {"operationId":"PutBucketCORS","method":"PUT","resource":"/{bucket}","selector":"?cors","status":"community","notes":"Supports up to 100 rules and GET, PUT, POST, DELETE, HEAD methods."},
+    {"operationId":"DeleteBucketCORS","method":"DELETE","resource":"/{bucket}","selector":"?cors","status":"community","notes":"Deletes the stored CORS configuration."},
+    {"operationId":"GetBucketLifecycleConfiguration","routingOperation":"GetBucketLifecycle","method":"GET","resource":"/{bucket}","selector":"?lifecycle","status":"community-partial","notes":"Lifecycle subset: prefix, expiration, noncurrent expiration, and abort-incomplete-MPU."},
+    {"operationId":"PutBucketLifecycleConfiguration","routingOperation":"PutBucketLifecycle","method":"PUT","resource":"/{bucket}","selector":"?lifecycle","status":"community-partial","notes":"Transitions, tag filters, and the full AWS lifecycle grammar are not implemented."},
+    {"operationId":"DeleteBucketLifecycle","method":"DELETE","resource":"/{bucket}","selector":"?lifecycle","status":"community","notes":"Deletes the stored lifecycle configuration."},
+    {"operationId":"GetBucketObjectLockConfiguration","method":"GET","resource":"/{bucket}","selector":"?object-lock","status":"enterprise-gated","notes":"Community returns 501 NotImplemented with an Enterprise requirement message."},
+    {"operationId":"PutBucketObjectLockConfiguration","method":"PUT","resource":"/{bucket}","selector":"?object-lock","status":"enterprise-gated","notes":"Community returns 501 NotImplemented with an Enterprise requirement message."},
+    {"operationId":"GetBucketPolicy","method":"GET","resource":"/{bucket}","selector":"?policy","status":"community-partial","notes":"Policy documents are stored; general S3 data-plane policy enforcement is not yet implemented."},
+    {"operationId":"PutBucketPolicy","method":"PUT","resource":"/{bucket}","selector":"?policy","status":"community-partial","notes":"Allow/Deny, Principal, Action, and Resource matching; no Condition support."},
+    {"operationId":"DeleteBucketPolicy","method":"DELETE","resource":"/{bucket}","selector":"?policy","status":"community-partial","notes":"Policy is currently consulted for governance-bypass authorization only."},
+    {"operationId":"GetBucketEncryption","method":"GET","resource":"/{bucket}","selector":"?encryption","status":"community-partial","notes":"AES256 configuration is compatibility metadata; Community payload encryption is not performed."},
+    {"operationId":"PutBucketEncryption","method":"PUT","resource":"/{bucket}","selector":"?encryption","status":"community-partial","notes":"AES256 metadata is accepted; aws:kms is Enterprise-gated."},
+    {"operationId":"DeleteBucketEncryption","method":"DELETE","resource":"/{bucket}","selector":"?encryption","status":"community-partial","notes":"Deletes the stored default encryption metadata."},
+    {"operationId":"GetBucketAcl","routingOperation":"GetBucketACL","method":"GET","resource":"/{bucket}","selector":"?acl","status":"compatibility-only","notes":"Returns a fixed owner FULL_CONTROL grant."},
+    {"operationId":"PutBucketAcl","routingOperation":"PutBucketACL","method":"PUT","resource":"/{bucket}","selector":"?acl","status":"compatibility-only","notes":"private and bucket-owner-full-control are accepted as no-ops; non-private canned ACLs are rejected. ACL XML and x-amz-grant-* are ignored."},
+    {"operationId":"ListObjects","method":"GET","resource":"/{bucket}","selector":"no recognized subresource","status":"community","notes":"V1 prefix, delimiter, marker, and max-keys; max-keys is capped at 1000."},
+    {"operationId":"ListObjectsV2","method":"GET","resource":"/{bucket}","selector":"?list-type=2","status":"community-partial","notes":"prefix, delimiter, continuation-token, max-keys; start-after, fetch-owner, and encoding-type are not implemented."},
+    {"operationId":"ListObjectVersions","method":"GET","resource":"/{bucket}","selector":"?versions","status":"community","notes":"prefix, delimiter, key-marker, version-id-marker, and max-keys."},
+    {"operationId":"DeleteObjects","method":"POST","resource":"/{bucket}","selector":"?delete","status":"community-partial","notes":"Up to 1000 keys, quiet mode, and version IDs; Content-MD5 is not validated and surrounding whitespace in XML keys is trimmed."},
+    {"operationId":"ListMultipartUploads","method":"GET","resource":"/{bucket}","selector":"?uploads","status":"community","notes":"prefix, delimiter, key-marker, upload-id-marker, and max-uploads."},
+
+    {"operationId":"PutObject","method":"PUT","resource":"/{bucket}/{key}","selector":"no recognized subresource and no x-amz-copy-source","status":"community-partial","notes":"Binary body, zero-byte objects, user metadata, tags, storage class, and If-None-Match: *; other conditions and Content-MD5/checksum validation are absent."},
+    {"operationId":"CopyObject","method":"PUT","resource":"/{bucket}/{key}","selector":"x-amz-copy-source","status":"community-partial","notes":"Self-copy, metadata REPLACE, and tagging COPY/REPLACE; copy conditions and source versionId are not implemented."},
+    {"operationId":"GetObject","method":"GET","resource":"/{bucket}/{key}","selector":"optional ?versionId","status":"community-partial","notes":"Full read or one byte range. Conditional reads, response overrides, checksum mode, and multi-range are not implemented."},
+    {"operationId":"HeadObject","method":"HEAD","resource":"/{bucket}/{key}","selector":"optional ?versionId","status":"community-partial","notes":"Returns content, ETag, user metadata, storage class, and version headers; conditional and checksum headers are not implemented."},
+    {"operationId":"DeleteObject","method":"DELETE","resource":"/{bucket}/{key}","selector":"optional ?versionId","status":"community","notes":"Supports unversioned delete, delete markers, and explicit version deletion."},
+    {"operationId":"GetObjectTagging","method":"GET","resource":"/{bucket}/{key}","selector":"?tagging and optional versionId","status":"community","notes":"Up to 10 object tags."},
+    {"operationId":"PutObjectTagging","method":"PUT","resource":"/{bucket}/{key}","selector":"?tagging and optional versionId","status":"community","notes":"Replaces the tag set on the selected version."},
+    {"operationId":"DeleteObjectTagging","method":"DELETE","resource":"/{bucket}/{key}","selector":"?tagging and optional versionId","status":"community","notes":"Clears the tag set on the selected version."},
+    {"operationId":"GetObjectRetention","method":"GET","resource":"/{bucket}/{key}","selector":"?retention and optional versionId","status":"enterprise-gated","notes":"Community returns 501 NotImplemented."},
+    {"operationId":"PutObjectRetention","method":"PUT","resource":"/{bucket}/{key}","selector":"?retention and optional versionId","status":"enterprise-gated","notes":"Community returns 501 NotImplemented."},
+    {"operationId":"GetObjectLegalHold","method":"GET","resource":"/{bucket}/{key}","selector":"?legal-hold and optional versionId","status":"enterprise-gated","notes":"Community returns 501 NotImplemented."},
+    {"operationId":"PutObjectLegalHold","method":"PUT","resource":"/{bucket}/{key}","selector":"?legal-hold and optional versionId","status":"enterprise-gated","notes":"Community returns 501 NotImplemented."},
+    {"operationId":"GetObjectAcl","routingOperation":"GetObjectACL","method":"GET","resource":"/{bucket}/{key}","selector":"?acl and optional versionId","status":"compatibility-only","notes":"Returns a fixed owner FULL_CONTROL grant."},
+    {"operationId":"PutObjectAcl","routingOperation":"PutObjectACL","method":"PUT","resource":"/{bucket}/{key}","selector":"?acl and optional versionId","status":"compatibility-only","notes":"private and bucket-owner-full-control are no-ops; non-private canned ACLs are rejected. ACL XML and x-amz-grant-* are ignored."},
+    {"operationId":"CreateMultipartUpload","method":"POST","resource":"/{bucket}/{key}","selector":"?uploads","status":"community","notes":"Captures content type, metadata, tags, storage class, and default encryption metadata."},
+    {"operationId":"UploadPart","method":"PUT","resource":"/{bucket}/{key}","selector":"?partNumber=N&uploadId=ID without copy header","status":"community-partial","notes":"Part numbers 1 through 10000. Content-MD5/checksum values are not validated."},
+    {"operationId":"UploadPartCopy","routingOperation":"UploadPart","method":"PUT","resource":"/{bucket}/{key}","selector":"?partNumber=N&uploadId=ID plus x-amz-copy-source","status":"community-partial","notes":"Supports a single x-amz-copy-source-range; copy conditions and source versionId are not implemented."},
+    {"operationId":"ListParts","method":"GET","resource":"/{bucket}/{key}","selector":"?uploadId=ID","status":"community-partial","notes":"Returns all recorded parts; max-parts and part-number-marker pagination are not implemented."},
+    {"operationId":"CompleteMultipartUpload","method":"POST","resource":"/{bucket}/{key}","selector":"?uploadId=ID","status":"community-partial","notes":"Validates ordered part numbers and optional ETags; does not enforce the AWS minimum non-final part size or checksums."},
+    {"operationId":"AbortMultipartUpload","method":"DELETE","resource":"/{bucket}/{key}","selector":"?uploadId=ID","status":"community","notes":"Aborts the upload and reclaims or queues part segments for cleanup."}
+  ],
+  "x-namros-known-unsupported-operation-families": [
+    "bucket tagging",
+    "bucket notification",
+    "bucket replication",
+    "bucket policy status and public-access controls",
+    "bucket website and logging",
+    "bucket request payment",
+    "bucket inventory and analytics",
+    "POST policy and browser upload",
+    "S3 Select",
+    "GetObjectAttributes",
+    "RestoreObject, Object Lambda, torrent, and object annotations",
+    "S3 Express CreateSession and RenameObject",
+    "S3 metadata table/configuration APIs, including inventory, journal, and annotation tables",
+    "SSE-C",
+    "SigV2",
+    "anonymous/public bucket access",
+    "STS and general IAM/bucket-policy S3 data-plane authorization",
+    "complete conditional-request and checksum families"
+  ],
+  "x-namros-known-unsupported-note": "Representative, non-exhaustive list. An operation is supported only when it appears in x-namros-operation-matrix.",
+  "paths": {
+    "/": {
+      "get": {
+        "tags": ["Service"],
+        "operationId": "dispatchServiceGet",
+        "summary": "ListBuckets",
+        "x-namros-dispatches": ["ListBuckets"],
+        "responses": {
+          "200": {"$ref": "#/components/responses/S3XMLSuccess"},
+          "default": {"$ref": "#/components/responses/S3Error"}
+        }
+      }
+    },
+    "/{bucket}": {
+      "parameters": [
+        {"$ref": "#/components/parameters/Bucket"}
+      ],
+      "get": {
+        "tags": ["Bucket dispatcher"],
+        "operationId": "dispatchBucketGet",
+        "summary": "Dispatch a bucket GET by query subresource",
+        "description": "No recognized subresource selects ListObjects (V1). Query selectors choose the other listed operations.",
+        "x-namros-dispatches": ["GetBucketLocation","GetBucketVersioning","GetBucketCORS","GetBucketLifecycleConfiguration","GetBucketObjectLockConfiguration","GetBucketPolicy","GetBucketEncryption","GetBucketAcl","ListObjects","ListObjectsV2","ListObjectVersions","ListMultipartUploads"],
+        "parameters": [
+          {"$ref":"#/components/parameters/Location"},
+          {"$ref":"#/components/parameters/Versioning"},
+          {"$ref":"#/components/parameters/Cors"},
+          {"$ref":"#/components/parameters/Lifecycle"},
+          {"$ref":"#/components/parameters/ObjectLock"},
+          {"$ref":"#/components/parameters/Policy"},
+          {"$ref":"#/components/parameters/Encryption"},
+          {"$ref":"#/components/parameters/Acl"},
+          {"$ref":"#/components/parameters/Versions"},
+          {"$ref":"#/components/parameters/Uploads"},
+          {"$ref":"#/components/parameters/ListType"},
+          {"$ref":"#/components/parameters/Prefix"},
+          {"$ref":"#/components/parameters/Delimiter"},
+          {"$ref":"#/components/parameters/MaxKeys"},
+          {"$ref":"#/components/parameters/ContinuationToken"},
+          {"$ref":"#/components/parameters/Marker"},
+          {"$ref":"#/components/parameters/KeyMarker"},
+          {"$ref":"#/components/parameters/VersionIdMarker"},
+          {"$ref":"#/components/parameters/UploadIdMarker"},
+          {"$ref":"#/components/parameters/MaxUploads"}
+        ],
+        "responses": {
+          "200": {"$ref": "#/components/responses/S3XMLSuccess"},
+          "default": {"$ref": "#/components/responses/S3Error"}
+        }
+      },
+      "head": {
+        "tags": ["Bucket dispatcher"],
+        "operationId": "dispatchBucketHead",
+        "summary": "HeadBucket",
+        "x-namros-dispatches": ["HeadBucket"],
+        "responses": {
+          "200": {"description": "Bucket exists."},
+          "default": {"$ref": "#/components/responses/S3Error"}
+        }
+      },
+      "put": {
+        "tags": ["Bucket dispatcher"],
+        "operationId": "dispatchBucketPut",
+        "summary": "Dispatch a bucket PUT by query subresource",
+        "x-namros-dispatches": ["CreateBucket","PutBucketVersioning","PutBucketCORS","PutBucketLifecycleConfiguration","PutBucketObjectLockConfiguration","PutBucketPolicy","PutBucketEncryption","PutBucketAcl"],
+        "parameters": [
+          {"$ref":"#/components/parameters/Versioning"},
+          {"$ref":"#/components/parameters/Cors"},
+          {"$ref":"#/components/parameters/Lifecycle"},
+          {"$ref":"#/components/parameters/ObjectLock"},
+          {"$ref":"#/components/parameters/Policy"},
+          {"$ref":"#/components/parameters/Encryption"},
+          {"$ref":"#/components/parameters/Acl"}
+        ],
+        "requestBody": {"$ref":"#/components/requestBodies/S3Payload"},
+        "responses": {
+          "200": {"$ref": "#/components/responses/S3XMLSuccess"},
+          "204": {"description": "Configuration stored."},
+          "default": {"$ref": "#/components/responses/S3Error"}
+        }
+      },
+      "post": {
+        "tags": ["Bucket dispatcher"],
+        "operationId": "dispatchBucketPost",
+        "summary": "DeleteObjects",
+        "x-namros-dispatches": ["DeleteObjects"],
+        "parameters": [{"$ref":"#/components/parameters/Delete"}],
+        "requestBody": {"$ref":"#/components/requestBodies/S3Payload"},
+        "responses": {
+          "200": {"$ref": "#/components/responses/S3XMLSuccess"},
+          "default": {"$ref": "#/components/responses/S3Error"}
+        }
+      },
+      "delete": {
+        "tags": ["Bucket dispatcher"],
+        "operationId": "dispatchBucketDelete",
+        "summary": "Dispatch a bucket DELETE by query subresource",
+        "x-namros-dispatches": ["DeleteBucket","DeleteBucketCORS","DeleteBucketLifecycle","DeleteBucketPolicy","DeleteBucketEncryption"],
+        "parameters": [
+          {"$ref":"#/components/parameters/Cors"},
+          {"$ref":"#/components/parameters/Lifecycle"},
+          {"$ref":"#/components/parameters/Policy"},
+          {"$ref":"#/components/parameters/Encryption"}
+        ],
+        "responses": {
+          "204": {"description": "Delete accepted."},
+          "default": {"$ref": "#/components/responses/S3Error"}
+        }
+      },
+      "options": {
+        "tags": ["Bucket dispatcher"],
+        "operationId": "bucketCorsPreflight",
+        "summary": "CORS preflight",
+        "security": [],
+        "responses": {
+          "200": {"description": "A configured CORS rule matched."},
+          "default": {"$ref": "#/components/responses/S3Error"}
+        }
+      }
+    },
+    "/{bucket}/{key}": {
+      "description": "Conceptual object resource. NAMROS preserves slash characters and empty path segments in keys; OpenAPI has no portable greedy path parameter syntax, so Swagger-generated clients may need to construct such URLs directly.",
+      "parameters": [
+        {"$ref": "#/components/parameters/Bucket"},
+        {"$ref": "#/components/parameters/Key"}
+      ],
+      "get": {
+        "tags": ["Object dispatcher"],
+        "operationId": "dispatchObjectGet",
+        "summary": "Dispatch an object GET by query subresource",
+        "x-namros-dispatches": ["GetObject","GetObjectTagging","GetObjectRetention","GetObjectLegalHold","GetObjectAcl","ListParts"],
+        "parameters": [
+          {"$ref":"#/components/parameters/VersionId"},
+          {"$ref":"#/components/parameters/Tagging"},
+          {"$ref":"#/components/parameters/Retention"},
+          {"$ref":"#/components/parameters/LegalHold"},
+          {"$ref":"#/components/parameters/Acl"},
+          {"$ref":"#/components/parameters/UploadId"},
+          {"$ref":"#/components/parameters/Range"}
+        ],
+        "responses": {
+          "200": {"$ref": "#/components/responses/S3BinaryOrXMLSuccess"},
+          "206": {"description": "A single object byte range.","content":{"application/octet-stream":{"schema":{"type":"string","format":"binary"}}}},
+          "default": {"$ref": "#/components/responses/S3Error"}
+        }
+      },
+      "head": {
+        "tags": ["Object dispatcher"],
+        "operationId": "dispatchObjectHead",
+        "summary": "HeadObject",
+        "x-namros-dispatches": ["HeadObject"],
+        "parameters": [{"$ref":"#/components/parameters/VersionId"}],
+        "responses": {
+          "200": {"description": "Object headers."},
+          "default": {"$ref": "#/components/responses/S3Error"}
+        }
+      },
+      "put": {
+        "tags": ["Object dispatcher"],
+        "operationId": "dispatchObjectPut",
+        "summary": "Dispatch an object PUT by query parameters and headers",
+        "x-namros-dispatches": ["PutObject","CopyObject","PutObjectTagging","PutObjectRetention","PutObjectLegalHold","PutObjectAcl","UploadPart","UploadPartCopy"],
+        "parameters": [
+          {"$ref":"#/components/parameters/VersionId"},
+          {"$ref":"#/components/parameters/Tagging"},
+          {"$ref":"#/components/parameters/Retention"},
+          {"$ref":"#/components/parameters/LegalHold"},
+          {"$ref":"#/components/parameters/Acl"},
+          {"$ref":"#/components/parameters/UploadId"},
+          {"$ref":"#/components/parameters/PartNumber"},
+          {"$ref":"#/components/parameters/CopySource"},
+          {"$ref":"#/components/parameters/CopySourceRange"}
+        ],
+        "requestBody": {"$ref":"#/components/requestBodies/S3Payload"},
+        "responses": {
+          "200": {"$ref": "#/components/responses/S3XMLSuccess"},
+          "default": {"$ref": "#/components/responses/S3Error"}
+        }
+      },
+      "post": {
+        "tags": ["Object dispatcher"],
+        "operationId": "dispatchObjectPost",
+        "summary": "Create or complete a multipart upload",
+        "x-namros-dispatches": ["CreateMultipartUpload","CompleteMultipartUpload"],
+        "parameters": [
+          {"$ref":"#/components/parameters/Uploads"},
+          {"$ref":"#/components/parameters/UploadId"}
+        ],
+        "requestBody": {"$ref":"#/components/requestBodies/S3Payload"},
+        "responses": {
+          "200": {"$ref": "#/components/responses/S3XMLSuccess"},
+          "default": {"$ref": "#/components/responses/S3Error"}
+        }
+      },
+      "delete": {
+        "tags": ["Object dispatcher"],
+        "operationId": "dispatchObjectDelete",
+        "summary": "Delete an object, tags, or multipart upload",
+        "x-namros-dispatches": ["DeleteObject","DeleteObjectTagging","AbortMultipartUpload"],
+        "parameters": [
+          {"$ref":"#/components/parameters/VersionId"},
+          {"$ref":"#/components/parameters/Tagging"},
+          {"$ref":"#/components/parameters/UploadId"}
+        ],
+        "responses": {
+          "204": {"description": "Delete or abort accepted."},
+          "default": {"$ref": "#/components/responses/S3Error"}
+        }
+      },
+      "options": {
+        "tags": ["Object dispatcher"],
+        "operationId": "objectCorsPreflight",
+        "summary": "CORS preflight",
+        "security": [],
+        "responses": {
+          "200": {"description": "A configured CORS rule matched."},
+          "default": {"$ref": "#/components/responses/S3Error"}
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "SigV4Authorization": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "A complete AWS4-HMAC-SHA256 Authorization header. Swagger UI does not calculate SigV4 or the companion X-Amz-Date and X-Amz-Content-Sha256 headers. Prefer AWS CLI/SDK or a presigned URL for live calls."
+      }
+    },
+    "parameters": {
+      "Bucket": {"name":"bucket","in":"path","required":true,"schema":{"type":"string"}},
+      "Key": {"name":"key","in":"path","required":true,"schema":{"type":"string"},"description":"Opaque object key. NAMROS also accepts slash-containing keys even though this OpenAPI template cannot express a greedy capture."},
+      "Location": {"name":"location","in":"query","allowEmptyValue":true,"schema":{"type":"string"}},
+      "Versioning": {"name":"versioning","in":"query","allowEmptyValue":true,"schema":{"type":"string"}},
+      "Cors": {"name":"cors","in":"query","allowEmptyValue":true,"schema":{"type":"string"}},
+      "Lifecycle": {"name":"lifecycle","in":"query","allowEmptyValue":true,"schema":{"type":"string"}},
+      "ObjectLock": {"name":"object-lock","in":"query","allowEmptyValue":true,"schema":{"type":"string"}},
+      "Policy": {"name":"policy","in":"query","allowEmptyValue":true,"schema":{"type":"string"}},
+      "Encryption": {"name":"encryption","in":"query","allowEmptyValue":true,"schema":{"type":"string"}},
+      "Acl": {"name":"acl","in":"query","allowEmptyValue":true,"schema":{"type":"string"}},
+      "Versions": {"name":"versions","in":"query","allowEmptyValue":true,"schema":{"type":"string"}},
+      "Uploads": {"name":"uploads","in":"query","allowEmptyValue":true,"schema":{"type":"string"}},
+      "Delete": {"name":"delete","in":"query","required":true,"allowEmptyValue":true,"schema":{"type":"string"}},
+      "Tagging": {"name":"tagging","in":"query","allowEmptyValue":true,"schema":{"type":"string"}},
+      "Retention": {"name":"retention","in":"query","allowEmptyValue":true,"schema":{"type":"string"}},
+      "LegalHold": {"name":"legal-hold","in":"query","allowEmptyValue":true,"schema":{"type":"string"}},
+      "ListType": {"name":"list-type","in":"query","schema":{"type":"integer","enum":[2]}},
+      "Prefix": {"name":"prefix","in":"query","schema":{"type":"string"}},
+      "Delimiter": {"name":"delimiter","in":"query","schema":{"type":"string"}},
+      "MaxKeys": {"name":"max-keys","in":"query","schema":{"type":"integer","minimum":0,"maximum":1000,"default":1000}},
+      "ContinuationToken": {"name":"continuation-token","in":"query","schema":{"type":"string"}},
+      "Marker": {"name":"marker","in":"query","schema":{"type":"string"}},
+      "KeyMarker": {"name":"key-marker","in":"query","schema":{"type":"string"}},
+      "VersionIdMarker": {"name":"version-id-marker","in":"query","schema":{"type":"string"}},
+      "UploadIdMarker": {"name":"upload-id-marker","in":"query","schema":{"type":"string"}},
+      "MaxUploads": {"name":"max-uploads","in":"query","schema":{"type":"integer","minimum":0,"maximum":1000,"default":1000}},
+      "VersionId": {"name":"versionId","in":"query","schema":{"type":"string"}},
+      "UploadId": {"name":"uploadId","in":"query","schema":{"type":"string"}},
+      "PartNumber": {"name":"partNumber","in":"query","schema":{"type":"integer","minimum":1,"maximum":10000}},
+      "Range": {"name":"Range","in":"header","schema":{"type":"string","pattern":"^bytes="},"description":"One byte range only."},
+      "CopySource": {"name":"x-amz-copy-source","in":"header","schema":{"type":"string"}},
+      "CopySourceRange": {"name":"x-amz-copy-source-range","in":"header","schema":{"type":"string","pattern":"^bytes="}}
+    },
+    "requestBodies": {
+      "S3Payload": {
+        "required": false,
+        "content": {
+          "application/octet-stream": {"schema":{"type":"string","format":"binary"}},
+          "application/xml": {"schema":{"type":"string"}},
+          "application/json": {"schema":{}}
+        }
+      }
+    },
+    "responses": {
+      "S3XMLSuccess": {
+        "description": "S3-compatible success. Some operations return an empty body.",
+        "content": {"application/xml":{"schema":{"type":"string"}}}
+      },
+      "S3BinaryOrXMLSuccess": {
+        "description": "Object bytes or an S3 XML subresource response.",
+        "content": {
+          "application/octet-stream":{"schema":{"type":"string","format":"binary"}},
+          "application/xml":{"schema":{"type":"string"}}
+        }
+      },
+      "S3Error": {
+        "description": "S3-compatible XML error with Code, Message, Resource, RequestId, and HostId.",
+        "content": {
+          "application/xml": {
+            "schema": {"$ref":"#/components/schemas/S3Error"}
+          }
+        }
+      }
+    },
+    "schemas": {
+      "S3Error": {
+        "type": "object",
+        "xml": {"name":"Error"},
+        "properties": {
+          "Code": {"type":"string"},
+          "Message": {"type":"string"},
+          "Resource": {"type":"string"},
+          "RequestId": {"type":"string"},
+          "HostId": {"type":"string"}
+        }
+      }
+    }
+  }
+}

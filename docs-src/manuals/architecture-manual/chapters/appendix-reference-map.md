@@ -16,7 +16,7 @@ Appendix <span class="badge">Community</span> <span class="badge enterprise">Ent
 
 | HTML Topic | Public Guide | Code Surface |
 | --- | --- | --- |
-| S3 API scope | [S3 client compatibility](../../s3-client-compatibility-guide.md) | `internal/gateway`, `internal/s3api` |
+| S3 API scope | [S3 API compatibility reference](../../s3-api-compatibility-reference.md), [Swagger view](../../s3-api-swagger.md) | `internal/gateway`, `internal/s3api` |
 | Compatibility | [compatibility guide](../../s3-client-compatibility-guide.md) | external S3 clients and `namros-s3bench` |
 | s3fs-fuse | [FUSE compatibility notes](../../s3-client-compatibility-guide.md) | Linux FUSE host procedure |
 | Metadata | [TiKV operations guide](../../tikv-ha-cluster-install-operations-guide.md) | `internal/meta` |

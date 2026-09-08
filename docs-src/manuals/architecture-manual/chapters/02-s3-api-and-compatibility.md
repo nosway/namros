@@ -2,6 +2,11 @@ Chapter 02 <span class="badge">Community</span> <span class="badge enterprise">E
 
 # S3 API And Compatibility
 
+The operation-by-operation current contract is maintained in the
+[S3 API compatibility reference](../../s3-api-compatibility-reference.md).
+This architecture chapter explains design intent and invariants; its target
+language must not be read as evidence that every AWS S3 API is implemented.
+
 ## S3 Scope
 
 - bucket/object
@@ -72,4 +77,5 @@ S3 clients expect XML error bodies and stable error codes. Internal metadata/sto
 
 Some S3 surfaces are accepted for client compatibility even when they do not become core authority. Canned ACL headers, requester-pays headers, or legacy client hints can be parsed and stored or ignored according to the compatibility guide. That is different from Object Lock, retention, encryption, lifecycle, storage class, and versioning, which affect object correctness and must be represented in metadata when enabled.
 
-Reference: [S3 client compatibility guide](../../s3-client-compatibility-guide.md).
+References: [S3 API compatibility reference](../../s3-api-compatibility-reference.md)
+and [S3 client compatibility guide](../../s3-client-compatibility-guide.md).

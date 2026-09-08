@@ -18,6 +18,17 @@ require_pattern() {
 	fi
 }
 
+require_pattern_count() {
+	file="$1"
+	pattern="$2"
+	expected="$3"
+	description="$4"
+	actual="$(grep -Ec "$pattern" "$repo_root/$file" || true)"
+	if [ "$actual" -ne "$expected" ]; then
+		fail "$description count=$actual want=$expected in $file"
+	fi
+}
+
 require_exact_line() {
 	file="$1"
 	line="$2"
@@ -95,6 +106,7 @@ require_pattern packaging/docker/compose.sbs-quickstart.yml '^  sbs-quickstart-g
 require_pattern packaging/docker/compose.sbs-quickstart.yml '^  sbs-quickstart-service:' 'SBS quickstart service'
 require_pattern packaging/docker/compose.sbs-quickstart.yml '^  sbs-quickstart-data-1:' 'SBS quickstart first data node'
 require_pattern packaging/docker/compose.sbs-quickstart.yml '^  sbs-quickstart-data-2:' 'SBS quickstart second data node'
+require_pattern_count packaging/docker/compose.sbs-quickstart.yml '^[[:space:]]+NAMRBD_SBS_ENABLE_LAB_STORE_DEBUG:[[:space:]]+"true"$' 2 'SBS quickstart data nodes enable required lab materialization endpoint'
 require_pattern packaging/docker/compose.sbs-quickstart.yml 'sbs-quickstart-pool-bootstrap' 'SBS quickstart volume-pool bootstrap service'
 require_pattern packaging/docker/compose.sbs-quickstart.yml 'namros-container-sbs-quickstart-bootstrap:/usr/local/bin/namros-container-sbs-quickstart-bootstrap:ro' 'SBS quickstart mounts its own bootstrap helper'
 require_pattern packaging/docker/compose.sbs-quickstart.yml 'NAMROS_DEPLOYMENT_PROFILE: dev' 'SBS quickstart uses dev deployment profile'

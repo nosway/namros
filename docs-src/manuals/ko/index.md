@@ -55,8 +55,8 @@ make run-dev
 
 ```sh
 export NAMROS_ENDPOINT=http://127.0.0.1:9000
-export AWS_ACCESS_KEY_ID=namros
-export AWS_SECRET_ACCESS_KEY=namros-secret
+export AWS_ACCESS_KEY_ID=namrosroot
+export AWS_SECRET_ACCESS_KEY=namrosrootsecret
 export AWS_DEFAULT_REGION=us-east-1
 
 aws --endpoint-url "$NAMROS_ENDPOINT" s3api create-bucket --bucket quickstart
@@ -97,6 +97,8 @@ aws --endpoint-url "$NAMROS_ENDPOINT" s3api list-objects-v2 --bucket quickstart
 애플리케이션 개발자 경로
 
 표준 S3 호환 클라이언트와 SDK(Go, Python, Java)를 사용해 엔드포인트 인증, 버킷 작업, 대용량 멀티파트 업로드 연동 방식을 파악합니다.
+
+[S3 API 호환성 레퍼런스 열기 →](s3-api-compatibility-reference.md)
 
 [사용자 매뉴얼 열기 →](user-manual.md)
 

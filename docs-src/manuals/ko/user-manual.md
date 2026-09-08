@@ -12,13 +12,17 @@
 
 NAMROS는 S3 호환 버킷/오브젝트 API를 제공합니다. Community 기준 사용자는 일반 S3 클라이언트로 버킷 생성, 오브젝트 put/get/head/range/list/delete, 멀티파트 업로드, 복사, 태깅, 버전 관리 흐름을 사용할 수 있습니다.
 
+NAMROS는 AWS S3 API 전체를 구현하지 않습니다. SDK나 애플리케이션을 연동하기
+전에 [S3 API 호환성 레퍼런스](s3-api-compatibility-reference.md)에서 정확한
+operation, parameter 부분집합, 알려진 의미론 차이를 확인하십시오.
+
 게이트웨이는 오브젝트 페이로드와 메타데이터를 분리해서 다룹니다. 메타데이터 백엔드는 버킷/오브젝트/버전 상태의 정본 저장소이고, 스토리지 백엔드는 페이로드 세그먼트 바이트를 보관합니다.
 
 ## 엔드포인트, 자격 증명, 리전
 
 ```sh
-export AWS_ACCESS_KEY_ID=namros
-export AWS_SECRET_ACCESS_KEY=namros-secret
+export AWS_ACCESS_KEY_ID=namrosroot
+export AWS_SECRET_ACCESS_KEY=namrosrootsecret
 export AWS_DEFAULT_REGION=us-east-1
 export NAMROS_ENDPOINT=http://127.0.0.1:9000
 ```
@@ -112,7 +116,7 @@ aws --endpoint-url "$NAMROS_ENDPOINT" s3api put-bucket-versioning \
 | 클라이언트 | 예시 | 비고 |
 | --- | --- | --- |
 | AWS CLI | `aws --endpoint-url "$NAMROS_ENDPOINT" s3 ls` | 주요 호환성 기준. |
-| MinIO client | `mc alias set namros "$NAMROS_ENDPOINT" namros namros-secret` | 복사/cat/stat/목록 스모크에 사용. |
+| MinIO client | `mc alias set namros "$NAMROS_ENDPOINT" namrosroot namrosrootsecret` | 복사/cat/stat/목록 스모크에 사용. |
 | rclone | `rclone lsd namros:` | 복사/목록/읽기/이동/삭제 스모크에 사용. |
 | s3fs-fuse | Linux FUSE 호스트 절차 | FUSE 마운트 권한 필요. |
 

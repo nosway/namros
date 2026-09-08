@@ -361,9 +361,90 @@ func TestParseRequestVirtualHostedStyle(t *testing.T) {
 }
 
 func TestParseRequestRejectsUnsupportedSubresource(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/photos?website", nil)
-	if _, err := ParseRequest(req); err == nil {
-		t.Fatal("ParseRequest() error = nil, want error")
+	for _, subresource := range []string{
+		"annotation",
+		"attributes",
+		"metadataAnnotationTable",
+		"metadataConfiguration",
+		"metadataInventoryTable",
+		"metadataJournalTable",
+		"metadataTable",
+		"notification",
+		"renameObject",
+		"replication",
+		"requestPayment",
+		"session",
+		"website",
+	} {
+		t.Run(subresource, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "/photos?"+subresource, nil)
+			if _, err := ParseRequest(req); err == nil {
+				t.Fatal("ParseRequest() error = nil, want error")
+			}
+		})
+	}
+}
+
+func TestParseRequestRejectsUnsupportedControlRequestsBeforeCRUD(t *testing.T) {
+	tests := []struct {
+		name   string
+		method string
+		target string
+	}{
+		{name: "put object annotation", method: http.MethodPut, target: "/photos/object.txt?annotation&annotationName=label"},
+		{name: "delete object annotation", method: http.MethodDelete, target: "/photos/object.txt?annotation&annotationName=label"},
+		{name: "rename object", method: http.MethodPut, target: "/photos/object.txt?renameObject"},
+		{name: "create session", method: http.MethodGet, target: "/photos?session"},
+		{name: "delete metadata configuration", method: http.MethodDelete, target: "/photos?metadataConfiguration"},
+		{name: "delete metadata table", method: http.MethodDelete, target: "/photos?metadataTable"},
+		{name: "update metadata inventory table", method: http.MethodPut, target: "/photos?metadataInventoryTable"},
+		{name: "update metadata journal table", method: http.MethodPut, target: "/photos?metadataJournalTable"},
+		{name: "update metadata annotation table", method: http.MethodPut, target: "/photos?metadataAnnotationTable"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(tt.method, tt.target, nil)
+			if _, err := ParseRequest(req); err == nil {
+				t.Fatal("ParseRequest() error = nil, want unsupported subresource error")
+			}
+		})
+	}
+}
+
+func TestParseRequestDoesNotFallThroughInvalidSubresourcesToCRUD(t *testing.T) {
+	tests := []struct {
+		name   string
+		method string
+		target string
+	}{
+		{name: "bucket tagging get", method: http.MethodGet, target: "/photos?tagging"},
+		{name: "bucket tagging put", method: http.MethodPut, target: "/photos?tagging"},
+		{name: "bucket tagging delete", method: http.MethodDelete, target: "/photos?tagging"},
+		{name: "service root with bucket subresource", method: http.MethodGet, target: "/?tagging"},
+		{name: "unsupported list type value", method: http.MethodGet, target: "/photos?list-type=1"},
+		{name: "wrong method for bucket ACL", method: http.MethodDelete, target: "/photos?acl"},
+		{name: "wrong method for object ACL", method: http.MethodDelete, target: "/photos/object.txt?acl"},
+		{name: "part number without upload ID", method: http.MethodPut, target: "/photos/object.txt?partNumber=1"},
+		{name: "upload ID without part number on PUT", method: http.MethodPut, target: "/photos/object.txt?uploadId=u1"},
+		{name: "part number on list parts", method: http.MethodGet, target: "/photos/object.txt?uploadId=u1&partNumber=1"},
+		{name: "part number on complete multipart", method: http.MethodPost, target: "/photos/object.txt?uploadId=u1&partNumber=1"},
+		{name: "part number on abort multipart", method: http.MethodDelete, target: "/photos/object.txt?uploadId=u1&partNumber=1"},
+		{name: "conflicting object subresources", method: http.MethodDelete, target: "/photos/object.txt?tagging&uploadId=u1"},
+		{name: "version ID on put object", method: http.MethodPut, target: "/photos/object.txt?versionId=v1"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(tt.method, tt.target, nil)
+			got, err := ParseRequest(req)
+			if err != nil {
+				t.Fatalf("ParseRequest() error = %v", err)
+			}
+			if got.Operation != OperationUnsupported {
+				t.Fatalf("operation = %q, want %q", got.Operation, OperationUnsupported)
+			}
+		})
 	}
 }
 

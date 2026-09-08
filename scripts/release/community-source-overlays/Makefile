@@ -1,10 +1,11 @@
 .DEFAULT_GOAL := help
 
-.PHONY: test test-community test-enterprise lint build-all build-community build-enterprise build-gateway build-admin build-mcp build-sbs-exporter build-notification-adapter build-ops-report build-s3bench check-enterprise-build-source run-dev run-compat compat-user-space compat-public-s3 compat-sbs-physical-user-space compat-sbs-cluster-ec compat-awscli compat-mc compat-rclone compat-report container-packaging-check container-build container-local-up container-local-smoke container-local-down container-local-reset container-sbs-quickstart-up container-sbs-quickstart-smoke container-sbs-quickstart-down container-sbs-quickstart-reset container-community-up container-community-smoke container-community-failover-smoke container-community-down container-community-reset release-readiness production-scale-check release-artifact-metadata helm-chart-check community-source-check community-source-export community-release-check enterprise-release-check publication-readiness smoke-etcd-registry smoke-active-active smoke-metadata-backup-restore docs-source-check docs-build docs-render-check html-docs-check
+.PHONY: test test-community test-enterprise lint build-all build-community build-enterprise build-gateway build-admin build-mcp build-sbs-exporter build-notification-adapter build-ops-report build-s3bench check-enterprise-build-source run-dev run-compat compat-user-space compat-public-s3 compat-sbs-physical-user-space compat-sbs-cluster-ec compat-awscli compat-mc compat-rclone compat-report container-packaging-check container-build container-local-up container-local-smoke container-local-down container-local-reset container-sbs-quickstart-up container-sbs-quickstart-smoke container-sbs-quickstart-down container-sbs-quickstart-reset container-community-up container-community-smoke container-community-failover-smoke container-community-down container-community-reset release-readiness production-scale-check release-artifact-metadata helm-chart-check community-source-check community-source-export community-release-check enterprise-release-check publication-readiness smoke-etcd-registry smoke-active-active smoke-metadata-backup-restore docs-source-check docs-build docs-render-check html-docs-check s3-api-spec-check s3-api-openapi-check
 .PHONY: k8s-production-values k8s-production-render k8s-production-deploy k8s-production-delete k8s-production-status kind-production-up kind-production-build-images kind-production-load-images kind-production-deploy kind-production-start kind-production-stop kind-production-down kind-production-delete
 .PHONY: help build check-edition-boundary check-community-export export-community test-community-export check-publication-readiness smoke-sbs-session-refcount-open smoke-sbs-session-close-guard smoke-sbs-session-fence
 
 GO ?= go
+PYTHON ?= python3
 GOFLAGS_BASE ?= -buildvcs=false
 GOFLAGS ?= $(GOFLAGS_BASE)
 GOFLAGS_COMMUNITY ?= $(GOFLAGS_BASE)
@@ -387,9 +388,13 @@ docs-source-check:
 	test -f "$(DOCS_MANUAL_SOURCE_DIR)/index.md"
 	test -f "$(DOCS_MANUAL_SOURCE_DIR)/installation-guide.md"
 	test -f "$(DOCS_MANUAL_SOURCE_DIR)/user-manual.md"
+	test -f "$(DOCS_MANUAL_SOURCE_DIR)/s3-api-compatibility-reference.md"
+	test -f "$(DOCS_MANUAL_SOURCE_DIR)/s3-api-swagger.md"
+	test -f "$(DOCS_SOURCE_DIR)/api/namros-s3.openapi.json"
 	test -f "$(DOCS_MANUAL_SOURCE_DIR)/admin-guide.md"
 	test -f "$(DOCS_MANUAL_SOURCE_DIR)/architecture-manual/index.md"
 	test -f "$(DOCS_MANUAL_SOURCE_DIR)/ko/index.md"
+	test -f "$(DOCS_MANUAL_SOURCE_DIR)/ko/s3-api-compatibility-reference.md"
 	$(GREP) -Eq '^docs_dir:[[:space:]]+docs-src$$' "$(MKDOCS_CONFIG)"
 	@# md_in_html renders Markdown inside the component <div> blocks the manual
 	@# sources rely on. Without it the manual bodies publish as raw text.
@@ -408,8 +413,15 @@ docs-source-check:
 		exit 1; \
 	fi
 	bash scripts/docs/check-html-docs.sh
+	$(MAKE) s3-api-spec-check
 
-docs-build: docs-source-check
+s3-api-spec-check:
+	$(PYTHON) scripts/docs/check-s3-api-spec.py
+
+s3-api-openapi-check:
+	$(PYTHON) -m openapi_spec_validator "$(DOCS_SOURCE_DIR)/api/namros-s3.openapi.json"
+
+docs-build: docs-source-check s3-api-openapi-check
 	$(MKDOCS) build --strict --config-file "$(MKDOCS_CONFIG)"
 
 docs-render-check: docs-build

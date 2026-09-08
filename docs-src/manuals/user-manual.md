@@ -12,13 +12,17 @@ User Workflow
 
 NAMROS provides S3-compatible bucket and object APIs. Under the Community edition, S3 clients can run bucket creation, object put/get/head/range/list/delete, multipart uploads, copy, object tagging, and versioning workflows.
 
+NAMROS does not implement every AWS S3 API. Before integrating an SDK or
+application, check the [S3 API compatibility reference](s3-api-compatibility-reference.md)
+for exact operations, parameter subsets, and known semantic differences.
+
 The stateless gateway decouples object payloads from metadata. The metadata backend serves as the authoritative source for bucket, object, and version status, whereas the storage backend stores payload segment bytes.
 
 ## Endpoint, Credentials, Region
 
 ```sh
-export AWS_ACCESS_KEY_ID=namros
-export AWS_SECRET_ACCESS_KEY=namros-secret
+export AWS_ACCESS_KEY_ID=namrosroot
+export AWS_SECRET_ACCESS_KEY=namrosrootsecret
 export AWS_DEFAULT_REGION=us-east-1
 export NAMROS_ENDPOINT=http://127.0.0.1:9000
 ```
@@ -112,7 +116,7 @@ aws --endpoint-url "$NAMROS_ENDPOINT" s3api put-bucket-versioning \
 | Client | Example | Notes |
 | --- | --- | --- |
 | AWS CLI | `aws --endpoint-url "$NAMROS_ENDPOINT" s3 ls` | Primary compatibility reference. |
-| MinIO client | `mc alias set namros "$NAMROS_ENDPOINT" namros namros-secret` | Used for copy/cat/stat/list smoke. |
+| MinIO client | `mc alias set namros "$NAMROS_ENDPOINT" namrosroot namrosrootsecret` | Used for copy/cat/stat/list smoke. |
 | rclone | `rclone lsd namros:` | Used for copy/list/read/move/delete smoke. |
 | s3fs-fuse | Linux FUSE host procedure | Requires FUSE mount permissions. |
 

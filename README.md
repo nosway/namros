@@ -26,8 +26,8 @@ NAMROS Community provides:
 - S3-compatible bucket and object CRUD, list, HEAD, range GET, copy, delete,
   multipart upload, tagging, user metadata, CORS, presigned URLs, and
   versioning/delete-marker behavior.
-- SigV4 authentication with local access keys and basic bucket/prefix policy
-  evaluation.
+- SigV4 authentication with local access keys and bucket-policy document CRUD.
+  General bucket/prefix data-plane policy enforcement is not yet implemented.
 - Memory and Pebble metadata for local development, and TiKV as the
   authoritative distributed metadata backend.
 - Stateless active-active gateways with etcd registration, health, and
@@ -46,8 +46,10 @@ NAMROS Community provides:
 - Packaging for Go binaries, Docker Compose, Helm, and kind, with compatibility
   paths for AWS CLI, MinIO Client, rclone, and s3fs-fuse.
 
-See the [manual portal](docs-src/manuals/index.md) for capability details and
-the [S3 client compatibility guide](docs-src/manuals/s3-client-compatibility-guide.md)
+See the [S3 API compatibility reference](docs-src/manuals/s3-api-compatibility-reference.md)
+for the exact implemented operation set and known differences, the
+[Swagger view](docs-src/manuals/s3-api-swagger.md) for its OpenAPI rendering,
+and the [S3 client compatibility guide](docs-src/manuals/s3-client-compatibility-guide.md)
 for tested client workflows.
 
 ## Quick Start
@@ -224,6 +226,8 @@ Useful starting points:
 - [Manual portal](docs-src/manuals/index.md)
 - [Installation guide](docs-src/manuals/installation-guide.md)
 - [Container deployment guide](docs-src/manuals/container-deployment-guide.md)
+- [S3 API compatibility reference](docs-src/manuals/s3-api-compatibility-reference.md)
+- [S3 API Swagger view](docs-src/manuals/s3-api-swagger.md)
 - [S3 client compatibility guide](docs-src/manuals/s3-client-compatibility-guide.md)
 - [Architecture manual](docs-src/manuals/architecture-manual/index.md)
 - [Contributing guide](CONTRIBUTING.md)

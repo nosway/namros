@@ -19,6 +19,10 @@ mean that a generally available Enterprise release exists.
 - [Installation guide](manuals/installation-guide.md) — prerequisites, bring-up,
   and verification.
 - [User manual](manuals/user-manual.md) — S3 workflows and client usage.
+- [S3 API compatibility reference](manuals/s3-api-compatibility-reference.md) —
+  current operation-by-operation support, edition gates, and known differences.
+- [S3 API Swagger view](manuals/s3-api-swagger.md) — view-only OpenAPI rendering
+  of the physical S3 dispatchers and logical operation catalog.
 - [Admin guide](manuals/admin-guide.md) — day-2 operations and troubleshooting.
 - [Architecture manual](manuals/architecture-manual/index.md) — component
   ownership, metadata authority, and storage contracts.

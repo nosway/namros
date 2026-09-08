@@ -17,6 +17,10 @@ Appendix <span class="badge">Community</span> <span class="badge enterprise">Ent
 
 ## S3 Gateway
 
+See the [S3 API compatibility reference](../../s3-api-compatibility-reference.md)
+for the current operation selectors, edition status, supported parameter
+subsets, and known deviations.
+
 | Surface | Examples | Owner | Stable Contract |
 | --- | --- | --- | --- |
 | bucket/object API | PUT/GET/HEAD/DELETE/LIST | `internal/gateway`, `internal/s3api` | S3-compatible XML responses, request ids, error mapping |

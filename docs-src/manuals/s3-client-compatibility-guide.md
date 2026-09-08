@@ -12,6 +12,10 @@ Compatibility
 
 Run these client checks against a local gateway started with `make run-dev` or a container stack started from the container deployment guide. s3fs-fuse is validated separately on a Linux host because it requires FUSE mount privileges.
 
+Client smoke coverage is not a complete API claim. Use the
+[S3 API compatibility reference](s3-api-compatibility-reference.md) for the
+current operation matrix and semantic limitations.
+
 | Client | Coverage | Example |
 | --- | --- | --- |
 | AWS CLI | put/get/head/range/list, metadata, copy, versioning, CORS, presign, MPU list/abort | `aws s3api list-buckets` |
@@ -46,7 +50,7 @@ aws --endpoint-url "$NAMROS_ENDPOINT" s3api list-buckets
 
 Expected result: the command returns a normal S3 list-buckets response for the configured endpoint.
 
-## MinIO Client Smoke
+## MinIO Client Smoke { #mc }
 
 ```sh
 mc alias set namros "$NAMROS_ENDPOINT" "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY"
