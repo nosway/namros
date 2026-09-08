@@ -18,6 +18,25 @@ require_pattern() {
 	fi
 }
 
+require_exact_line() {
+	file="$1"
+	line="$2"
+	description="$3"
+	if ! grep -Fqx "$line" "$repo_root/$file"; then
+		fail "$description missing in $file"
+	fi
+}
+
+require_namrbd_context_alignment() {
+	file="$1"
+	expected="namrbd: \${NAMROS_NAMRBD_CONTEXT:-$namrbd_context_url}"
+	total="$(grep -Ec '^[[:space:]]+namrbd:[[:space:]]' "$repo_root/$file" || true)"
+	matching="$(grep -Fc "$expected" "$repo_root/$file" || true)"
+	if [ "$total" -eq 0 ] || [ "$total" -ne "$matching" ]; then
+		fail "NAMRBD build contexts in $file must match go.mod version $namrbd_module_version"
+	fi
+}
+
 reject_pattern() {
 	file="$1"
 	pattern="$2"
@@ -34,6 +53,13 @@ require_executable() {
 		fail "$description is not executable: $file"
 	fi
 }
+
+namrbd_module_version="$(awk '$1 == "github.com/nosway/namrbd" { print $2; exit }' "$repo_root/go.mod")"
+case "$namrbd_module_version" in
+v[0-9]*.[0-9]*.[0-9]*) ;;
+*) fail "go.mod NAMRBD dependency must use a semantic version tag" ;;
+esac
+namrbd_context_url="https://github.com/nosway/namrbd.git#$namrbd_module_version"
 
 require_pattern packaging/docker/Dockerfile.gateway '^USER 65532:65532$' 'non-root runtime user'
 require_pattern packaging/docker/Dockerfile.gateway '^HEALTHCHECK .*readyz' 'gateway Dockerfile healthcheck'
@@ -137,7 +163,9 @@ require_pattern scripts/container/ensure-local-files.sh 'chmod 444 "\$access_key
 require_pattern packaging/docker/namrbd-context.dockerignore '^\.cache/' 'NAMRBD context excludes cache directories'
 require_pattern packaging/docker/namrbd-context.dockerignore '^bin/' 'NAMRBD context excludes local binaries'
 require_pattern packaging/docker/namrbd-context.dockerignore '^kernel/module/\*\.ko' 'NAMRBD context excludes kernel build artifacts'
-require_pattern packaging/docker/.env.example '^NAMROS_NAMRBD_CONTEXT=https://github.com/nosway/namrbd\.git#v[0-9]' 'pinned NAMRBD context default'
+require_exact_line packaging/docker/.env.example "NAMROS_NAMRBD_CONTEXT=$namrbd_context_url" 'NAMRBD context default aligned with go.mod'
+require_namrbd_context_alignment packaging/docker/compose.yaml
+require_namrbd_context_alignment packaging/docker/compose.sbs-quickstart.yml
 require_pattern packaging/docker/.env.example '^NAMROS_COMMUNITY_SBS_VOLUME_ID=[0-9a-f]{8}$' 'Community SBS primary volume id default'
 require_pattern packaging/docker/.env.example '^NAMROS_COMMUNITY_SBS_VOLUME_IDS=[0-9a-f]{8},[0-9a-f]{8}$' 'Community SBS volume list default'
 require_pattern packaging/docker/.env.example '^NAMROS_COMMUNITY_SBS_VOLUME_POOL_ID=' 'Community volume-pool id default'
