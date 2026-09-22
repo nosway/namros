@@ -22,6 +22,10 @@ release history stays in this file.
 
 ### Fixed
 
+- Replaced the retired floating MinIO Client download URL in Community CI with
+  a pinned official `minio/mc` release asset and verified SHA-256 before
+  installation.
+
 ### Deprecated
 
 ### Removed

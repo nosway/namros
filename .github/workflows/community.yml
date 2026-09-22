@@ -77,6 +77,8 @@ jobs:
     name: Public S3 compatibility
     runs-on: ubuntu-latest
     env:
+      MINIO_MC_VERSION: RELEASE.2025-08-13T08-35-41Z
+      MINIO_MC_LINUX_AMD64_SHA256: 01f866e9c5f9b87c2b09116fa5d7c06695b106242d829a8bb32990c00312e891
       NAMROS_COMPAT_AUTOSTART_GATEWAY: "1"
       NAMROS_COMPAT_GATEWAY_START_TIMEOUT_SECONDS: "60"
       NAMROS_COMPAT_MC_LARGE_OBJECT_MIB: "70"
@@ -99,11 +101,18 @@ jobs:
 
       - name: Install S3 clients
         run: |
+          set -euo pipefail
           python -m pip install awscli
           sudo apt-get update
           sudo apt-get install -y curl jq rclone
-          sudo curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc
-          sudo chmod +x /usr/local/bin/mc
+          mc_asset="mc.linux-amd64.${MINIO_MC_VERSION}"
+          mc_url="https://github.com/minio/mc/releases/download/${MINIO_MC_VERSION}/${mc_asset}"
+          curl --fail --silent --show-error --location --retry 3 \
+            "$mc_url" -o "$RUNNER_TEMP/$mc_asset"
+          printf '%s  %s\n' \
+            "$MINIO_MC_LINUX_AMD64_SHA256" "$RUNNER_TEMP/$mc_asset" \
+            | sha256sum --check --strict
+          sudo install -m 0755 "$RUNNER_TEMP/$mc_asset" /usr/local/bin/mc
           aws --version
           mc --version
           rclone version
