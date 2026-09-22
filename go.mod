@@ -10,13 +10,13 @@ require (
 
 require (
 	github.com/cockroachdb/pebble v1.1.5
-	github.com/nosway/namrbd v1.1.1
+	github.com/nosway/namrbd v1.1.2
 	github.com/pingcap/kvproto v0.0.0-20230403051650-e166ae588106
 	github.com/prometheus/client_golang v1.23.2
 	github.com/tikv/client-go/v2 v2.0.7
 	go.etcd.io/etcd/api/v3 v3.7.1
 	golang.org/x/crypto v0.55.0
-	google.golang.org/grpc v1.83.1
+	google.golang.org/grpc v1.83.2
 )
 
 require (
@@ -88,7 +88,7 @@ require (
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	golang.org/x/arch v0.22.0 // indirect
 	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df // indirect
-	golang.org/x/net v0.57.0 // indirect
+	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.41.0 // indirect

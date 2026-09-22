@@ -17,6 +17,9 @@ release history stays in this file.
 
 ### Changed
 
+- Updated the NAMRBD module dependency and default NAMRBD container build
+  contexts from v1.1.1 to v1.1.2.
+
 ### Fixed
 
 ### Deprecated
@@ -24,6 +27,10 @@ release history stays in this file.
 ### Removed
 
 ### Security
+
+- Adopted NAMRBD v1.1.2 and gRPC-Go 1.83.2 so NAMROS does not retain the
+  `GHSA-2v4p-qf9q-27wj` / `CVE-2026-84445` denial-of-service vulnerability in
+  its module graph or default SBS build context.
 
 ### Edition: Community
 
@@ -34,6 +41,9 @@ release history stays in this file.
 ### Upgrade & Migration
 
 ### Compatibility
+
+- NAMRBD v1.1.2 is now the expected SBS module and container build-context
+  version. No NAMROS metadata or object-data migration is required.
 
 ### Known Limits
 

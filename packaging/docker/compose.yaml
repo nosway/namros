@@ -11,7 +11,7 @@ services:
         NAMROS_COMMIT: ${NAMROS_COMMIT:-unknown}
         NAMROS_BUILD_DATE: ${NAMROS_BUILD_DATE:-unknown}
       additional_contexts:
-        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.1}
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.2}
     environment:
       NAMROS_LISTEN: 0.0.0.0:9000
       NAMROS_REGION: ${NAMROS_REGION:-us-east-1}
@@ -55,7 +55,7 @@ services:
         NAMROS_COMMIT: ${NAMROS_COMMIT:-unknown}
         NAMROS_BUILD_DATE: ${NAMROS_BUILD_DATE:-unknown}
       additional_contexts:
-        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.1}
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.2}
     environment:
       NAMROS_ENDPOINT: http://gateway:9000
       NAMROS_REGION: ${NAMROS_REGION:-us-east-1}
@@ -135,7 +135,7 @@ services:
       dockerfile: packaging/docker/Dockerfile.sbs
       target: sbs-service
       additional_contexts:
-        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.1}
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.2}
     command:
       - --cluster-id=${NAMROS_COMMUNITY_CLUSTER_ID:-namros-community}
       - --sbs-cluster-id=${NAMROS_COMMUNITY_SBS_CLUSTER_ID:-namros-community-sbs}
@@ -173,7 +173,7 @@ services:
       dockerfile: packaging/docker/Dockerfile.sbs
       target: sbs-service
       additional_contexts:
-        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.1}
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.2}
     command:
       - --cluster-id=${NAMROS_COMMUNITY_CLUSTER_ID:-namros-community}
       - --sbs-cluster-id=${NAMROS_COMMUNITY_SBS_CLUSTER_ID:-namros-community-sbs}
@@ -211,7 +211,7 @@ services:
       dockerfile: packaging/docker/Dockerfile.sbs
       target: sbs-data
       additional_contexts:
-        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.1}
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.2}
     command:
       - --path=/var/lib/namrbd/sbs-data
       - --sbs-data-listen=0.0.0.0:9444
@@ -242,7 +242,7 @@ services:
       dockerfile: packaging/docker/Dockerfile.sbs
       target: sbs-data
       additional_contexts:
-        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.1}
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.2}
     command:
       - --path=/var/lib/namrbd/sbs-data
       - --sbs-data-listen=0.0.0.0:9444
@@ -273,7 +273,7 @@ services:
       dockerfile: packaging/docker/Dockerfile.sbs
       target: sbs-data
       additional_contexts:
-        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.1}
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.2}
     command:
       - --path=/var/lib/namrbd/sbs-data
       - --sbs-data-listen=0.0.0.0:9444
@@ -304,7 +304,7 @@ services:
       dockerfile: packaging/docker/Dockerfile.sbs
       target: sbs-data
       additional_contexts:
-        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.1}
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.2}
     command:
       - --path=/var/lib/namrbd/sbs-data
       - --sbs-data-listen=0.0.0.0:9444
@@ -363,7 +363,7 @@ services:
       dockerfile: packaging/docker/Dockerfile.sbs
       target: sbsctl
       additional_contexts:
-        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.1}
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.2}
     environment:
       NAMROS_COMMUNITY_CLUSTER_ID: ${NAMROS_COMMUNITY_CLUSTER_ID:-namros-community}
       NAMROS_COMMUNITY_SBS_CLUSTER_ID: ${NAMROS_COMMUNITY_SBS_CLUSTER_ID:-namros-community-sbs}
@@ -403,7 +403,7 @@ services:
         NAMROS_COMMIT: ${NAMROS_COMMIT:-unknown}
         NAMROS_BUILD_DATE: ${NAMROS_BUILD_DATE:-unknown}
       additional_contexts:
-        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.1}
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.2}
     environment:
       NAMROS_METADATA_BACKEND: tikv
       NAMROS_TIKV_PD_ENDPOINTS: pd:2379
@@ -442,7 +442,7 @@ services:
         NAMROS_COMMIT: ${NAMROS_COMMIT:-unknown}
         NAMROS_BUILD_DATE: ${NAMROS_BUILD_DATE:-unknown}
       additional_contexts:
-        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.1}
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.2}
     environment:
       NAMROS_LISTEN: 0.0.0.0:9000
       NAMROS_DEPLOYMENT_PROFILE: ${NAMROS_COMMUNITY_DEPLOYMENT_PROFILE:-production}
@@ -509,7 +509,7 @@ services:
         NAMROS_COMMIT: ${NAMROS_COMMIT:-unknown}
         NAMROS_BUILD_DATE: ${NAMROS_BUILD_DATE:-unknown}
       additional_contexts:
-        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.1}
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.2}
     environment:
       NAMROS_LISTEN: 0.0.0.0:9000
       NAMROS_DEPLOYMENT_PROFILE: ${NAMROS_COMMUNITY_DEPLOYMENT_PROFILE:-production}
@@ -590,7 +590,7 @@ services:
         NAMROS_COMMIT: ${NAMROS_COMMIT:-unknown}
         NAMROS_BUILD_DATE: ${NAMROS_BUILD_DATE:-unknown}
       additional_contexts:
-        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.1}
+        namrbd: ${NAMROS_NAMRBD_CONTEXT:-https://github.com/nosway/namrbd.git#v1.1.2}
     environment:
       NAMROS_ENDPOINT: http://s3-lb:9000
       NAMROS_REGION: ${NAMROS_REGION:-us-east-1}
