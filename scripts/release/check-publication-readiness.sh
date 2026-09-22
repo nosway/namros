@@ -311,7 +311,9 @@ if ! git grep -q -F -e 'make compat-public-s3' -- .github/workflows/community.ym
 fi
 for pattern in \
 	'awscli' \
-	'dl.min.io/client/mc' \
+	'github.com/minio/mc/releases/download' \
+	'MINIO_MC_LINUX_AMD64_SHA256' \
+	'sha256sum --check --strict' \
 	'rclone' \
 	'NAMROS_COMPAT_AUTOSTART_GATEWAY' \
 	'NAMROS_COMPAT_MC_LARGE_OBJECT_MIB' \
