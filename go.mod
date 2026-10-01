@@ -14,7 +14,7 @@ require (
 	github.com/pingcap/kvproto v0.0.0-20230403051650-e166ae588106
 	github.com/prometheus/client_golang v1.23.2
 	github.com/tikv/client-go/v2 v2.0.7
-	go.etcd.io/etcd/api/v3 v3.7.1
+	go.etcd.io/etcd/api/v3 v3.7.2
 	golang.org/x/crypto v0.55.0
 	google.golang.org/grpc v1.83.2
 )
